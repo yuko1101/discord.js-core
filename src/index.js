@@ -1,15 +1,15 @@
 "use strict";
 
 const Core = require("./core/Core");
-// import Command from "./Command";
-// import Reaction from "./Reaction";
-// import ConfigFile from "./ConfigFile";
-// import Pages from "./Pages";
-// import CustomEmoji from "./CustomEmoji";
+const Command = require("./command/Command");
+// const Reaction = require("./Reaction");
+// const ConfigFile = require("./ConfigFile");
+// const Pages = require("./Pages");
+// const CustomEmoji = require("./CustomEmoji");
 
 module.exports = {
     Core: Core,
-    // Command,
+    Command: Command,
     // Reaction,
     // ConfigFile,
     // Pages,
