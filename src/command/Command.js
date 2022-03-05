@@ -1,4 +1,4 @@
-const { Message, MessageOptions } = require("discord.js");
+const { Message, MessageOptions, CommandInteractionOption } = require("discord.js");
 const Core = require("../core/Core");
 
 const defaultData = {
@@ -16,7 +16,7 @@ module.exports = class Command {
      * @param {string} data.name
      * @param {string} data.description
      * @param {string[]} data.args - for message command
-     * @param {import("discord.js").CommandInteractionOption[]} data.options - for slash command
+     * @param {CommandInteractionOption[]} data.options - for slash command
      * @param {string[]} data.aliases
      * @param {(msg: Message, args: object, core: Core) => MessageOptions | Promise<MessageOptions>} data.run
      * @param {(msg: Message, sent: Message, args: object, core: Core) => void | Promise<void>} data.runAfter
