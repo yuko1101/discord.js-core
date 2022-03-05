@@ -20,6 +20,8 @@ module.exports = class Core {
     constructor(client, options) {
         this.client = client;
         this.options = { ...defaultOptions, ...options };
+        /** @type {...Command} */
+        this.commands = [];
     }
 
     async login() {

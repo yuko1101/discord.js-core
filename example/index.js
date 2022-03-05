@@ -1,5 +1,5 @@
 "use strict";
-import { Core } from "discord-core";
+import { Core, Command } from "discord-core";
 import { Client, Intents } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -12,3 +12,17 @@ const core = new Core(
 );
 
 core.login();
+
+
+const command = new Command({
+    name: "ping",
+    description: "Pong!",
+    args: [],
+    options: [],
+    aliases: [],
+    run: async (msg, args, core) => {
+        return {
+            content: "Pong!"
+        };
+    }
+});
