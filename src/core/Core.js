@@ -15,16 +15,12 @@ const defaultOptions = {
 module.exports = class Core {
     /**
      * @param {Client} client 
-     * @param {object} options
-     * @param {boolean} options.debug
-     * @param {string} options.token
-     * @param {string} options.prefix
-     * @param {string | null} options.guildId
+     * @param {{ debug: boolean, token: string, prefix: string, guildId?: string }} options
      */
     constructor(client, options) {
         /** @readonly */
         this.client = client;
-        /** @type {{ debug: boolean, token: string, prefix: string, guildId?: string  }} @readonly */
+        /** @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} @readonly */
         this.options = { ...defaultOptions, ...options };
         /** @type {Command[]} @readonly */
         this.commands = [];

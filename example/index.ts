@@ -7,7 +7,7 @@ const core: Core = new Core(
     new Client({
         intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
     }),
-    { debug: true, prefix: "pt!", token: process.env.TOKEN, guildId: null }
+    { debug: true, prefix: "pt!", token: process.env.TOKEN }
 );
 
 core.login();
