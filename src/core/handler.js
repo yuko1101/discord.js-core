@@ -1,0 +1,93 @@
+"use strict";
+const InteractionCore = require("../command/InteractionCore");
+const Core = require("./Core");
+const { CommandInteractionOption } = require("discord.js");
+
+module.exports = {
+    /** @param {Core} core */
+    init: (core) => {
+        // handle message command
+        core.client.on("messageCreate", async (msg) => {
+            if (!msg.content.startsWith(core.options.prefix)) return;
+            const args = msg.content.slice(core.options.prefix.length).split(/ +/);
+            const commandName = args.shift().toLowerCase();
+
+            const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.aliases.map(a => a.toLowerCase()).includes(commandName));
+            if (!command) return;
+            if (command.type === "MESSAGE_COMMAND" || command.type === "BOTH") {
+
+                const result = await command.run(new InteractionCore({ msg: msg }), argsToObject(args, command.args), core);
+
+                const sent = await msg.reply(result);
+
+                if (command.runAfter) {
+                    await command.runAfter(new InteractionCore({ msg: msg }), sent, argsToObject(args, command.args), core);
+                }
+            }
+        });
+
+        // handle slash command
+        core.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isCommand()) return;
+            const commandName = interaction.commandName.toLowerCase();
+
+            const command = core.commands.find(c => c.name.toLowerCase() === commandName);
+            if (!command) return;
+            if (command.type === "SLASH_COMMAND" || command.type === "BOTH") {
+
+                const args = optionsToObject(interaction.options?.data);
+
+                const result = await command.run(new InteractionCore({ interaction: interaction }), args, core);
+
+                await interaction.reply(result);
+                const sent = await interaction.fetchReply();
+
+                if (command.runAfter) {
+                    await command.runAfter(new InteractionCore({ interaction: interaction }), sent, args, core);
+                }
+            }
+        });
+    }
+}
+
+/**
+ * @private
+ * @param {string[]} args
+ * @param {string[]} msgArgsOption
+ * @returns {object}
+ */
+function argsToObject(args, msgArgsOption) {
+    const argObj = {}
+    if (args.length <= msgArgsOption.length) {
+        args.forEach((arg, i, _) => argObj[msgArgsOption[i]] = arg)
+        return argObj
+    } else if (args.length > msgArgsOption.length) {
+        for (let i = 0; i < msgArgsOption.length; i++) {
+            if (i === msgArgsOption.length - 1) {
+                argObj[msgArgsOption[i]] = args.join(" ")
+                break
+            }
+            argObj[msgArgsOption[i]] = args.shift()
+        }
+        return argObj
+    }
+    return argObj
+}
+
+/**
+ * @private
+ * @param {CommandInteractionOption[]} options 
+ * @returns {object}
+ */
+function optionsToObject(options) {
+    if (!options) return {}
+    const obj = {}
+    for (const option of options) {
+        if (option.options || option.type === "SUB_COMMAND") {
+            obj[option.name] = optionsToObject(option.options || []) || {}
+        } else {
+            obj[option.name] = option.value
+        }
+    }
+    return obj
+}
