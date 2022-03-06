@@ -1,25 +1,30 @@
-const { Message, MessageOptions, CommandInteractionOption } = require("discord.js");
+"use strict";
+const { Message, MessageOptions, ApplicationCommandOptionData } = require("discord.js");
 const Core = require("../core/Core");
+const InteractionCore = require("./InteractionCore");
 
 const defaultData = {
-    name: "",
-    description: "",
+    name: "", //required
+    description: "", //required
     args: [],
     options: [],
     aliases: [],
-    run: (msg, args, core) => { return {} },
-    runAfter: (msg, sent, args, core) => { },
+    type: "BOTH",
+    run: async (ic, args, core) => { return {} }, //required
+    runAfter: async (ic, sent, args, core) => { },
 }
 
 module.exports = class Command {
     /**
+     * @param {object} data
      * @param {string} data.name
      * @param {string} data.description
-     * @param {string[]} data.args - for message command
-     * @param {CommandInteractionOption[]} data.options - for slash command
-     * @param {string[]} data.aliases
-     * @param {(msg: Message, args: object, core: Core) => MessageOptions | Promise<MessageOptions>} data.run
-     * @param {(msg: Message, sent: Message, args: object, core: Core) => void | Promise<void>} data.runAfter
+     * @param {string[] | null} data.args - for message command
+     * @param {ApplicationCommandOptionData[] | null} data.options - for slash command
+     * @param {string[] | null} data.aliases
+     * @param {"BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE"} data.type
+     * @param {(ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>} data.run
+     * @param {(ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null} data.runAfter
      */
     constructor(data) {
         this.data = { ...defaultData, ...data };
@@ -28,6 +33,7 @@ module.exports = class Command {
         this.args = this.data.args;
         this.options = this.data.options;
         this.aliases = this.data.aliases;
+        this.type = this.data.type;
         this.run = this.data.run;
         this.runAfter = this.data.runAfter;
     }
