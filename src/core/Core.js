@@ -19,7 +19,7 @@ module.exports = class Core {
      * @param {boolean} options.debug
      * @param {string} options.token
      * @param {string} options.prefix
-     * @param {?string} options.guildId
+     * @param {string | null} options.guildId
      */
     constructor(client, options) {
         /** @readonly */
