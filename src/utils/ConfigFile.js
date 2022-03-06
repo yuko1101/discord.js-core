@@ -1,15 +1,24 @@
 const fs = require('fs');
 
 module.exports = class ConfigFile {
+    /**
+     * @param {string} filePath 
+     * @param {*} defaultConfig 
+     * @param {Array<[string | number]>} route 
+     */
     constructor(filePath, defaultConfig, route = []) {
+        /** @readonly @type {string} */
         this.filePath = filePath;
+        /** @readonly @type {*} */
         this.defaultConfig = defaultConfig;
+        /** @readonly @type {*} */
         this.data = defaultConfig;
+        /** @readonly @type {Array<[string | number]>} */
         this.route = route;
     }
 
     /**
-     * @param {Boolean} [compact=false]
+     * @param {boolean} [compact=false]
      * @returns {Promise<ConfigFile>}
      */
     async save(compact = false) {
@@ -40,7 +49,7 @@ module.exports = class ConfigFile {
     }
 
     /**
-     * @param {String|Number} key
+     * @param {string | number} key
      * @param {*} value
      * @returns {ConfigFile}
      */
@@ -79,7 +88,7 @@ module.exports = class ConfigFile {
     }
 
     /**
-     * @param {String|Number} key
+     * @param {string | number} key
      * @returns {*}
      */
     getValue(key = null) {
@@ -90,7 +99,7 @@ module.exports = class ConfigFile {
     }
 
     /**
-     * @param {String|Number} key
+     * @param {Array<[string | number]>} key
      * @returns {ConfigFile}
      */
     get(...key) {
@@ -100,8 +109,8 @@ module.exports = class ConfigFile {
 
     /**
      * 
-     * @param  {...String|Number} key 
-     * @returns {Boolean}
+     * @param  {Array<[string | number]>} key 
+     * @returns {boolean}
      */
     has(...key) {
         const newRoute = [...this.route, ...key];
@@ -116,7 +125,7 @@ module.exports = class ConfigFile {
     }
 
     /**
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     exists() {
         return this.has(...this.route);
