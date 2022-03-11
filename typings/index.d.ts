@@ -1,4 +1,5 @@
 import Core = require("./core/Core");
 import Command = require("./command/Command");
 import ConfigFile = require("./utils/ConfigFile");
-export { Core, Command, ConfigFile };
+import CustomEmoji = require("./utils/CustomEmoji");
+export { Core, Command, ConfigFile, CustomEmoji };

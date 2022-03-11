@@ -5,7 +5,7 @@ const Command = require("./command/Command");
 // const Reaction = require("./Reaction");
 const ConfigFile = require("./utils/ConfigFile");
 // const Pages = require("./Pages");
-// const CustomEmoji = require("./CustomEmoji");
+const CustomEmoji = require("./utils/CustomEmoji");
 
 module.exports = {
     Core: Core,
@@ -13,5 +13,5 @@ module.exports = {
     // Reaction,
     ConfigFile: ConfigFile,
     // Pages,
-    // CustomEmoji
+    CustomEmoji: CustomEmoji
 }

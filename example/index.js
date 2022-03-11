@@ -1,8 +1,20 @@
 "use strict";
-import { Core, Command } from "discord-core";
+import { Core, Command, CustomEmoji } from "discord-core";
 import { Client, Intents } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
+
+const core = new Core(
+    new Client({
+        intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+        allowedMentions: { repliedUser: false }
+    }),
+    { token: process.env.TOKEN, prefix: "pt!", debug: true, guildId: "736829048373903377" }
+);
+
+const emojis = [
+    new CustomEmoji(core, "951644270312427570"),
+]
 
 const command = new Command({
     name: "ping",
@@ -24,20 +36,15 @@ const command = new Command({
         };
     },
     runAfter: async (ic, sent, args, core) => {
-        sent.edit(`pong ${args["test"]} again`);
+        sent.edit(`pong ${args["test"]} again with emoji ${emojis[0].emoji}`);
     }
 });
-
-const core = new Core(
-    new Client({
-        intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
-        allowedMentions: { repliedUser: false }
-    }),
-    { token: process.env.TOKEN, prefix: "pt!", debug: true, guildId: "736829048373903377" }
-);
 
 core.login();
 
 core.addCommand(command);
 
-core.client.on("ready", () => { core.applySlashCommands(); });
+core.client.on("ready", () => {
+    core.applySlashCommands();
+    emojis.forEach(emoji => emoji.fetch()); // or just use CustomEmoji.fetch() on send
+});
