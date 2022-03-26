@@ -16,13 +16,7 @@ module.exports = {
             if (!command) return;
             if (command.type === "MESSAGE_COMMAND" || command.type === "BOTH") {
 
-                const result = await command.run(new InteractionCore({ msg: msg }), argsToObject(args, command.args), core);
-
-                const sent = await msg.reply(result);
-
-                if (command.runAfter) {
-                    await command.runAfter(new InteractionCore({ msg: msg }), sent, argsToObject(args, command.args), core);
-                }
+                await command.run(new InteractionCore({ msg: msg }), argsToObject(args, command.args), core);
             }
         });
 
@@ -37,14 +31,7 @@ module.exports = {
 
                 const args = optionsToObject(interaction.options?.data);
 
-                const result = await command.run(new InteractionCore({ interaction: interaction }), args, core);
-
-                await interaction.reply(result);
-                const sent = await interaction.fetchReply();
-
-                if (command.runAfter) {
-                    await command.runAfter(new InteractionCore({ interaction: interaction }), sent, args, core);
-                }
+                await command.run(new InteractionCore({ interaction: interaction }), args, core);
             }
         });
     }

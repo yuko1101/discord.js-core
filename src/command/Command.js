@@ -10,8 +10,7 @@ const defaultData = {
     options: [],
     aliases: [],
     type: "BOTH",
-    run: async (ic, args, core) => { return {} }, //required
-    runAfter: async (ic, sent, args, core) => { },
+    run: async (ic, args, core) => { }, //required
 }
 
 module.exports = class Command {
@@ -23,8 +22,7 @@ module.exports = class Command {
      * @param {ApplicationCommandOptionData[] | null} data.options - for slash command
      * @param {string[] | null} data.aliases
      * @param {"BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE"} data.type
-     * @param {(ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>} data.run
-     * @param {(ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null} data.runAfter
+     * @param {(ic: InteractionCore, args: object, core: Core) => Promise<void>} data.run
      */
     constructor(data) {
         this.data = { ...defaultData, ...data };
@@ -35,6 +33,5 @@ module.exports = class Command {
         this.aliases = this.data.aliases;
         this.type = this.data.type;
         this.run = this.data.run;
-        this.runAfter = this.data.runAfter;
     }
 }
