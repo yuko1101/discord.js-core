@@ -1,6 +1,7 @@
 "use strict";
 
 const { CommandInteraction, Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions } = require("discord.js");
+const { bindOptions } = require("../utils/utils");
 
 module.exports = class InteractionCore {
     /**
