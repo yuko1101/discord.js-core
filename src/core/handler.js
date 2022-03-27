@@ -34,6 +34,31 @@ module.exports = {
                 await command.run(new InteractionCore({ interaction: interaction }), args, core);
             }
         });
+
+        // handle emoji actions
+        core.client.on("messageReactionAdd", (messageReaction, user) => {
+            if (user.id === core.client.user.id) return;
+            core.emojiActions
+                .filter(action => messageReaction.emoji.toString() === action.label)
+                .filter(action => action.appliedMessages.includes(messageReaction.message.id))
+                .forEach(action => action.run(messageReaction, user, true));
+        });
+
+        core.client.on("messageReactionRemove", (messageReaction, user) => {
+            if (user.id === core.client.user.id) return;
+            core.emojiActions
+                .filter(action => messageReaction.emoji.toString() === action.label)
+                .filter(action => action.appliedMessages.includes(messageReaction.message.id))
+                .forEach(action => action.run(messageReaction, user, false));
+        });
+
+        // handle button actions
+        core.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isButton()) return;
+            const buttonAction = core.buttonActions.find(action => interaction.customId === action.customId);
+            if (!buttonAction) return;
+            await buttonAction.run(interaction);
+        });
     }
 }
 

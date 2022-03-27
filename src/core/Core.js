@@ -4,6 +4,8 @@ const { Client } = require("discord.js");
 const Command = require("../command/Command");
 const commandManager = require("./slashCommandManager");
 const handler = require("./handler");
+const EmojiAction = require("../action/EmojiAction");
+const ButtonAction = require("../action/ButtonAction");
 
 const defaultOptions = {
     debug: false,
@@ -20,12 +22,23 @@ module.exports = class Core {
     constructor(client, options) {
         /** @readonly */
         this.client = client;
-        /** @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} @readonly */
+        /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
         this.options = { ...defaultOptions, ...options };
-        /** @type {Command[]} @readonly */
+        /** @readonly @type {Command[]} */
         this.commands = [];
+        /** @readonly @type {EmojiAction[]} */
+        this.emojiActions = [];
+        /** @readonly @type {ButtonAction[]} */
+        this.buttonActions = [];
 
         handler.init(this);
+
+
+        // emoji actions
+
+
+
+
     }
 
     async login() {
