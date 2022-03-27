@@ -4,6 +4,8 @@
  * @returns {object}
  */
 module.exports.bindOptions = (defaultOptions, options) => {
+    if (!options) return defaultOptions;
+    if (!defaultOptions) return options;
     const result = { ...defaultOptions };
     for (const option of getValuesWithPath(options)) {
         const { path, value } = option;
