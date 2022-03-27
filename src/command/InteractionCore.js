@@ -27,10 +27,12 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {boolean} fetchReply Whether to fetch the reply (only for slash command)
-     * @param {boolean} ephemeral Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
+     * @param {object} options
+     * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
+     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
      */
-    async deferReply(fetchReply = false, ephemeral = false) {
+    async deferReply(options) {
+        options = bindOptions({ fetchReply: false, ephemeral: false }, options);
         if (!this.isSlashCommand) {
             return await this.msg.channel.sendTyping();
         }
@@ -40,30 +42,34 @@ module.exports = class InteractionCore {
 
     /** 
      * @param {MessageOptions} messageOptions 
-     * @param {boolean} fetchReply Whether to fetch the reply (only for slash command)
-     * @param {boolean} ephemeral Whether to send the message as ephemeral (only for slash command)
+     * @param {object} options
+     * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
+     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (only for slash command)
      * @returns {Message}
      */
-    async reply(messageOptions, fetchReply = true, ephemeral = false) {
+    async reply(messageOptions, options) {
+        options = bindOptions({ fetchReply: true, ephemeral: false }, options);
         if (!this.isSlashCommand) {
             /** @private @type {Message} */
             this.sentMessage = await this.msg.reply(messageOptions);
             return this.sentMessage;
         }
-        return await this.interaction.reply({ ...messageOptions, fetchReply: fetchReply, ephemeral: ephemeral });
+        return await this.interaction.reply({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
     }
 
     /** 
-     * @param {MessageOptions} messageOptions 
-     * @param {boolean} fetchReply Whether to fetch the reply (only for slash command)
-     * @param {boolean} ephemeral Whether to send the message as ephemeral (only for slash command)
-     * @param {boolean} reply Whether to reply to the previous message (only for message command)
+     * @param {MessageOptions} messageOptions
+     * @param {object} options
+     * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
+     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (only for slash command)
+     * @param {boolean} options.reply Whether to reply to the previous message (only for message command)
      * @returns {Message}
      */
-    async followUp(messageOptions, fetchReply = true, ephemeral = false, reply = true) {
+    async followUp(messageOptions, options) {
+        options = bindOptions({ fetchReply: true, ephemeral: false, reply: true }, options);
         if (!this.isSlashCommand) {
             if (this.sentMessage) {
-                return reply ? await this.sentMessage.reply(messageOptions) : await this.msg.channel.send(messageOptions);
+                return options.reply ? await this.sentMessage.reply(messageOptions) : await this.msg.channel.send(messageOptions);
             }
 
             /** @private @type {Message} */
@@ -71,6 +77,8 @@ module.exports = class InteractionCore {
             return this.sentMessage;
 
         }
-        return await this.interaction.followUp({ ...messageOptions, fetchReply: fetchReply, ephemeral: ephemeral });
+        return await this.interaction.followUp({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
     }
+
+    // TODO: add editReply, deleteReply, sendPages, and more
 }
