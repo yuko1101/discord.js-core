@@ -37,7 +37,7 @@ module.exports = class InteractionCore {
         if (!this.isSlashCommand) {
             return await this.msg.channel.sendTyping();
         }
-        return await this.interaction.deferReply({ fetchReply: fetchReply, ephemeral: ephemeral });
+        return await this.interaction.deferReply({ fetchReply: options.fetchReply, ephemeral: options.ephemeral });
     }
 
 
@@ -80,6 +80,11 @@ module.exports = class InteractionCore {
         }
         return await this.interaction.followUp({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
     }
+
+    // /**
+    //  * 
+    //  */
+    // async edit
 
     // TODO: add editReply, deleteReply, sendPages, and more
 }
