@@ -25,6 +25,9 @@ module.exports = class InteractionCore {
         this.member = this.isSlashCommand ? this.interaction.member : this.msg.member;
         /** @type {User} @readonly */
         this.user = this.isSlashCommand ? this.interaction.user : this.msg.author;
+
+        /** @type {Message | null} @readonly */
+        this.sentMessage = null;
     }
 
     /**
@@ -51,7 +54,6 @@ module.exports = class InteractionCore {
     async reply(messageOptions, options) {
         options = bindOptions({ fetchReply: true, ephemeral: false }, options);
         if (!this.isSlashCommand) {
-            /** @private @type {Message} */
             this.sentMessage = await this.msg.reply(messageOptions);
             return this.sentMessage;
         }
@@ -80,11 +82,6 @@ module.exports = class InteractionCore {
         }
         return await this.interaction.followUp({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
     }
-
-    // /**
-    //  * 
-    //  */
-    // async edit
 
     // TODO: add editReply, deleteReply, sendPages, and more
 }
