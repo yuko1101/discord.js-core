@@ -12,15 +12,19 @@ declare class Core {
     });
     /** @readonly */
     readonly client: Client<boolean>;
-    /** @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} @readonly */
+    /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
     readonly options: {
         debug: boolean;
         token: string;
         prefix: string;
         guildId?: string;
     };
-    /** @type {Command[]} @readonly */
+    /** @readonly @type {Command[]} */
     readonly commands: Command[];
+    /** @readonly @type {EmojiAction[]} */
+    readonly emojiActions: EmojiAction[];
+    /** @readonly @type {ButtonAction[]} */
+    readonly buttonActions: ButtonAction[];
     login(): Promise<void>;
     /** @param {Command} command */
     addCommand(command: Command): void;
@@ -30,3 +34,5 @@ declare class Core {
 }
 import { Client } from "discord.js";
 import Command = require("../command/Command");
+import EmojiAction = require("../action/EmojiAction");
+import ButtonAction = require("../action/ButtonAction");

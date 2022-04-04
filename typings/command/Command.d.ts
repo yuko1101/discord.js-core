@@ -8,8 +8,7 @@ declare class Command {
      * @param {ApplicationCommandOptionData[] | null} data.options - for slash command
      * @param {string[] | null} data.aliases
      * @param {"BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE"} data.type
-     * @param {(ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>} data.run
-     * @param {(ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null} data.runAfter
+     * @param {(ic: InteractionCore, args: object, core: Core) => Promise<void>} data.run
      */
     constructor(data: {
         name: string;
@@ -18,8 +17,7 @@ declare class Command {
         options: ApplicationCommandOptionData[] | null;
         aliases: string[] | null;
         type: "BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE";
-        run: (ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>;
-        runAfter: (ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null;
+        run: (ic: InteractionCore, args: object, core: Core) => Promise<void>;
     });
     data: {
         name: string;
@@ -28,8 +26,7 @@ declare class Command {
         options: ApplicationCommandOptionData[] | null;
         aliases: string[] | null;
         type: "BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE";
-        run: (ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>;
-        runAfter: (ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null;
+        run: (ic: InteractionCore, args: object, core: Core) => Promise<void>;
     };
     name: string;
     description: string;
@@ -37,11 +34,8 @@ declare class Command {
     options: ApplicationCommandOptionData[];
     aliases: string[];
     type: "NONE" | "BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND";
-    run: (ic: InteractionCore, args: object, core: Core) => Promise<MessageOptions>;
-    runAfter: (ic: InteractionCore, sent: Message, args: object, core: Core) => Promise<void> | null;
+    run: (ic: InteractionCore, args: object, core: Core) => Promise<void>;
 }
 import { ApplicationCommandOptionData } from "discord.js";
 import InteractionCore = require("./InteractionCore");
 import Core = require("../core/Core");
-import { MessageOptions } from "discord.js";
-import { Message } from "discord.js";
