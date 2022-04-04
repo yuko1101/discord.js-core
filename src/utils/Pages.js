@@ -21,7 +21,7 @@ const visuals = ["BACK", "FORWARD", "FIRST", "LAST"];
 
 module.exports = class Pages {
     /**
-     * @param {MessageOptions[]} messages 
+     * @param {Array<[MessageOptions | () => Promise<MessageOptions>]>} messages 
      * @param {object} options
      * @param {number} options.startPage
      * @param {object} options.visuals
@@ -35,7 +35,7 @@ module.exports = class Pages {
      * @param {(user: User) => boolean} options.userFilter
      */
     constructor(messages, options = {}) {
-        /** @readonly @type {MessageOptions[]} */
+        /** @readonly @type {Array<[MessageOptions | () => Promise<MessageOptions>]>} */
         this.messages = messages;
         /** @readonly */
         this.options = bindOptions(defaultOptions, options);
@@ -60,7 +60,7 @@ module.exports = class Pages {
         this.interaction = null;
 
         /** @readonly @type {number} */
-        this.currentPage = this.options.startPage;
+        this.currentPageIndex = this.options.startPage;
     }
 
     /**
@@ -71,7 +71,7 @@ module.exports = class Pages {
     async sendTo(channel) {
         if (this.isSent) throw new Error("This message pages has already been sent.");
 
-        this.sentMessage = await channel.send(this.getMessageOptionsWithButtons(this.currentPage));
+        this.sentMessage = await channel.send(await this.getMessageOptionsWithButtons(this.currentPageIndex));
 
         this.isSent = true;
 
@@ -107,8 +107,8 @@ module.exports = class Pages {
             throw new Error("Interaction must have the followUp() function. Please check the interaction is followUpable.");
         }
 
-        this.sentMessage = !options.followUp ? await interaction.reply({ ...this.getMessageOptionsWithButtons(this.currentPage), fetchReply: true, ephemeral: options.ephemeral })
-            : await interaction.followUp({ ...this.getMessageOptionsWithButtons(this.currentPage), fetchReply: true, ephemeral: options.ephemeral });
+        this.sentMessage = !options.followUp ? await interaction.reply({ ...(await this.getMessageOptionsWithButtons(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral })
+            : await interaction.followUp({ ...(await this.getMessageOptionsWithButtons(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral });
 
         this.isSent = true;
         this.interaction = interaction;
@@ -122,62 +122,62 @@ module.exports = class Pages {
     }
 
     async nextPage() {
-        if (this.currentPage === this.messages.length - 1) return;
+        if (this.currentPageIndex === this.messages.length - 1) return;
 
         // if this.isSent is false, just increment the currentPage
-        this.currentPage++;
+        this.currentPageIndex++;
 
         if (!this.isSent) return;
 
         if (this.interaction) {
             if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
 
-            await this.interaction.editReply(this.getMessageOptionsWithButtons(this.currentPage));
+            await this.interaction.editReply(await this.getMessageOptionsWithButtons(this.currentPageIndex));
         } else {
-            await this.sentMessage.edit(this.getMessageOptionsWithButtons(this.currentPage));
+            await this.sentMessage.edit(await this.getMessageOptionsWithButtons(this.currentPageIndex));
         }
 
 
     }
 
     async previousPage() {
-        if (this.currentPage === 0) return;
+        if (this.currentPageIndex === 0) return;
 
         // if this.isSent is false, just decrement the currentPage
-        this.currentPage--;
+        this.currentPageIndex--;
 
         if (!this.isSent) return;
 
         if (this.interaction) {
             if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
 
-            await this.interaction.editReply(this.getMessageOptionsWithButtons(this.currentPage));
+            await this.interaction.editReply(await this.getMessageOptionsWithButtons(this.currentPageIndex));
         } else {
-            await this.sentMessage.edit(this.getMessageOptionsWithButtons(this.currentPage));
+            await this.sentMessage.edit(await this.getMessageOptionsWithButtons(this.currentPageIndex));
         }
     }
 
     /** 
      * @private 
      * @param {number} page
-     * @returns {MessageOptions}
+     * @returns {Promise<MessageOptions>}
      */
-    getMessageOptionsWithButtons(page) {
+    async getMessageOptionsWithButtons(page) {
         const buttons = new MessageActionRow();
         if (this.useButtons) {
             for (const label of this.visuals.shows) {
                 if (visuals.includes(label)) {
                     if (label === "FIRST") buttons.addComponents(
-                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_FIRST").setStyle("PRIMARY").setLabel(this.visuals.first).setDisabled(this.currentPage === 0)
+                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_FIRST").setStyle("PRIMARY").setLabel(this.visuals.first).setDisabled(this.currentPageIndex === 0)
                     );
                     if (label === "BACK") buttons.addComponents(
-                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_BACK").setStyle("PRIMARY").setLabel(this.visuals.back).setDisabled(this.currentPage === 0)
+                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_BACK").setStyle("PRIMARY").setLabel(this.visuals.back).setDisabled(this.currentPageIndex === 0)
                     );
                     if (label === "FORWARD") buttons.addComponents(
                         new MessageButton().setCustomId("DISCORD_CORE_PAGE_FORWARD").setStyle("PRIMARY").setLabel(this.visuals.forward).setDisabled(page === this.messages.length - 1)
                     );
                     if (label === "LAST") buttons.addComponents(
-                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_LAST").setStyle("PRIMARY").setLabel(this.visuals.last).setDisabled(this.currentPage === this.messages.length - 1)
+                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_LAST").setStyle("PRIMARY").setLabel(this.visuals.last).setDisabled(this.currentPageIndex === this.messages.length - 1)
                     );
                 } else {
                     if (label.isButtonAction) {
@@ -188,7 +188,7 @@ module.exports = class Pages {
 
         }
 
-        const messageOptions = { ...this.messages[page] }; // make immutable
+        const messageOptions = { ...(await this.getPage(page)) }; // make immutable
         if (this.useButtons) {
             messageOptions.components = [...(messageOptions.components || []), buttons];
         }
@@ -225,15 +225,30 @@ module.exports = class Pages {
         collector.on("end", async (collected, reason) => {
             console.log(`MessagePages collector ended with reason: ${reason}`);
             if (reason === "time") {
+                const currentPage = await this.getPage();
                 if (this.interaction) {
                     if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
 
-                    await this.interaction.editReply({ ...this.messages[this.currentPage], components: this.messages[this.currentPage].components || [] });
+                    await this.interaction.editReply({ ...currentPage, components: currentPage.components || [] });
                 } else {
-                    await this.sentMessage.edit({ ...this.messages[this.currentPage], components: this.messages[this.currentPage].components || [] });
+                    await this.sentMessage.edit({ ...currentPage, components: currentPage.components || [] });
                 }
             }
         });
+    }
+
+
+    /**
+     * @private
+     * @param {number} page
+     * @returns {Promise<MessageOptions>}
+     */
+    async getPage(page = this.currentPageIndex) {
+        const current = this.messages[page];
+        if (typeof current === "function") {
+            return await current();
+        }
+        return current;
     }
 
     /**
@@ -244,13 +259,13 @@ module.exports = class Pages {
         collector.on("collect", async (reaction, user) => {
             // return if the reaction is from the bot
             if (user.id === this.sentMessage.author.id) return;
-            if (reaction.emoji.toString() === this.visuals.first) {
+            if (reaction.emoji.toString() === this.visuals.first && this.visuals.shows.includes("FIRST")) {
                 this.firstPage();
-            } else if (reaction.emoji.toString() === this.visuals.back) {
+            } else if (reaction.emoji.toString() === this.visuals.back && this.visuals.shows.includes("BACK")) {
                 this.previousPage();
-            } else if (reaction.emoji.toString() === this.visuals.forward) {
+            } else if (reaction.emoji.toString() === this.visuals.forward && this.visuals.shows.includes("FORWARD")) {
                 this.nextPage();
-            } else if (reaction.emoji.toString() === this.visuals.last) {
+            } else if (reaction.emoji.toString() === this.visuals.last && this.visuals.shows.includes("LAST")) {
                 this.lastPage();
             } else {
                 return;
