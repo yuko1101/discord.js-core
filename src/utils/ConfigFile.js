@@ -4,7 +4,7 @@ module.exports = class ConfigFile {
     /**
      * @param {string} filePath 
      * @param {*} defaultConfig 
-     * @param {Array<[string | number]>} route 
+     * @param {(string | number)[]} route 
      */
     constructor(filePath, defaultConfig, route = []) {
         /** @readonly @type {string} */
@@ -13,7 +13,7 @@ module.exports = class ConfigFile {
         this.defaultConfig = defaultConfig;
         /** @readonly @type {*} */
         this.data = defaultConfig;
-        /** @readonly @type {Array<[string | number]>} */
+        /** @readonly @type {(string | number)[]} */
         this.route = route;
     }
 
@@ -99,7 +99,7 @@ module.exports = class ConfigFile {
     }
 
     /**
-     * @param {Array<[string | number]>} key
+     * @param {(string | number)[]} key
      * @returns {ConfigFile}
      */
     get(...key) {
@@ -109,7 +109,7 @@ module.exports = class ConfigFile {
 
     /**
      * 
-     * @param  {Array<[string | number]>} key 
+     * @param  {(string | number)[]} key 
      * @returns {boolean}
      */
     has(...key) {
