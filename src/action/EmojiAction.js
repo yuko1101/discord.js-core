@@ -3,6 +3,7 @@ const Core = require("../core/Core");
 const { bindOptions } = require("../utils/utils");
 const Action = require("./Action");
 
+/** @extends {Action} */
 module.exports = class EmojiAction extends Action {
     /**
      * @param {object} options 
@@ -32,12 +33,12 @@ module.exports = class EmojiAction extends Action {
 
     /**
      * @param {Message} message
-     * @param {object} options
-     * @param {number} options.timeout
-     * @param {boolean} options.autoReact
+     * @param {object} [options={}]
+     * @param {number | null} [options.timeout=null]
+     * @param {boolean} [options.autoReact=true]
      */
-    async apply(message, options) {
-        options = bindOptions({ timeout: -1, autoReact: true }, options)
+    async apply(message, options = {}) {
+        options = bindOptions({ timeout: null, autoReact: true }, options)
 
         if (this.deleted) throw new Error("This emoji action has been deleted.");
 
@@ -55,7 +56,7 @@ module.exports = class EmojiAction extends Action {
         }
         this.appliedMessages.push(message.id);
 
-        if (options.timeout !== -1) {
+        if (options.timeout !== null) {
             setTimeout(() => {
                 this.appliedMessages.splice(this.appliedMessages.indexOf(message.id), 1);
                 if (message.reactions.resolve(this.label)?.users?.resolve(this.core.client.user.id)) {

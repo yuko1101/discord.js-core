@@ -22,6 +22,7 @@ const { bindOptions } = require("../utils/utils");
 
 module.exports = class InteractionCore {
     /**
+     * @param {object} data
      * @param {Message | null} data.msg
      * @param {CommandInteraction | null} data.interaction
      */
@@ -73,9 +74,9 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=false] Whether to fetch the reply (only for slash command)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
      */
     async deferReply(options = {}) {
         options = bindOptions({ fetchReply: false, ephemeral: false }, options);
@@ -94,9 +95,9 @@ module.exports = class InteractionCore {
 
     /** 
      * @param {MessageOptions} messageOptions 
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (Only for slash command)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
     async reply(messageOptions, options = {}) {
@@ -118,8 +119,8 @@ module.exports = class InteractionCore {
 
     /**
      * @param {*} messageOptions 
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
     async editReply(messageOptions, options = {}) {
@@ -139,8 +140,8 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {object} options
-     * @param {boolean} showError Whether to show the error stack trace while deleting the reply
+     * @param {object} [options={}]
+     * @param {boolean} [showError=false] Whether to show the error stack trace while deleting the reply
      * @returns {boolean} Whether the reply message deleted successfully
      */
     async deleteReply(options = {}) {
@@ -177,10 +178,10 @@ module.exports = class InteractionCore {
 
     /** 
      * @param {MessageOptions} messageOptions
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (Only for slash command)
-     * @param {boolean} options.reply Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
+     * @param {boolean} [options.reply=true] Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
     async followUp(messageOptions, options = {}) {

@@ -6,6 +6,7 @@ const commandManager = require("./slashCommandManager");
 const handler = require("./handler");
 const EmojiAction = require("../action/EmojiAction");
 const ButtonAction = require("../action/ButtonAction");
+const { bindOptions } = require("../utils/utils");
 
 const defaultOptions = {
     debug: false,
@@ -20,10 +21,13 @@ module.exports = class Core {
      * @param {{ debug: boolean, token: string, prefix: string, guildId?: string }} options
      */
     constructor(client, options) {
+        if (!options) throw new Error("Core options are required.");
         /** @readonly */
         this.client = client;
         /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
-        this.options = { ...defaultOptions, ...options };
+        this.options = bindOptions(defaultOptions, options);
+
+
         /** @readonly @type {Command[]} */
         this.commands = [];
         /** @readonly @type {EmojiAction[]} */
@@ -41,9 +45,11 @@ module.exports = class Core {
 
     }
 
-    async login() {
+    /** @param {() => *} [callback] */
+    async login(callback) {
         this.client.once("ready", () => { console.log(`Logged in as ${this.client.user.tag}!`); });
         await this.client.login(this.options.token);
+        if (callback) callback();
     }
 
     /** @param {Command} command */
