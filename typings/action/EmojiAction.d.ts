@@ -27,13 +27,21 @@ declare class EmojiAction extends Action {
     readonly deleted: boolean;
     /**
      * @param {Message} message
-     * @param {object} options
-     * @param {number} options.timeout
-     * @param {boolean} options.autoReact
+     * @param {object} [options={}]
+     * @param {number | null} [options.timeout=null]
+     * @param {boolean} [options.autoReact=true]
      */
-    apply(message: Message, options: {
-        timeout: number;
-        autoReact: boolean;
+    apply(message: Message, options?: {
+        timeout?: number | null;
+        autoReact?: boolean;
+    }): Promise<void>;
+    /**
+     * @param {Message} message
+     * @param {object} [options={}]
+     * @param {boolean} [options.autoRemoveReaction=true]
+     */
+    removeApply(message: Message, options?: {
+        autoRemoveReaction?: boolean;
     }): Promise<void>;
     delete(): void;
 }

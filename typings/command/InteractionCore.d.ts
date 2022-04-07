@@ -1,10 +1,14 @@
 export = InteractionCore;
 declare class InteractionCore {
     /**
+     * @param {object} data
      * @param {Message | null} data.msg
      * @param {CommandInteraction | null} data.interaction
      */
-    constructor(data: any);
+    constructor(data: {
+        msg: Message | null;
+        interaction: CommandInteraction | null;
+    });
     /** @type {Message | null} @readonly */
     readonly msg: Message | null;
     /** @type {CommandInteraction | null} @readonly */
@@ -36,52 +40,52 @@ declare class InteractionCore {
     /** @type {boolean} @readonly */
     readonly isReplyMessageDeleted: boolean;
     /**
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=false] Whether to fetch the reply (only for slash command)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
      */
-    deferReply(options: {
-        fetchReply: boolean;
-        ephemeral: boolean;
+    deferReply(options?: {
+        fetchReply?: boolean;
+        ephemeral?: boolean;
     }): Promise<void>;
     /**
      * @param {MessageOptions} messageOptions
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (Only for slash command)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    reply(messageOptions: MessageOptions, options: {
-        fetchReply: boolean;
-        ephemeral: boolean;
+    reply(messageOptions: MessageOptions, options?: {
+        fetchReply?: boolean;
+        ephemeral?: boolean;
     }): Promise<Message | null>;
     /**
      * @param {*} messageOptions
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    editReply(messageOptions: any, options: {
-        fetchReply: boolean;
+    editReply(messageOptions: any, options?: {
+        fetchReply?: boolean;
     }): Promise<Message | null>;
     /**
-     * @param {object} options
-     * @param {boolean} showError Whether to show the error stack trace while deleting the reply
+     * @param {object} [options={}]
+     * @param {boolean} [showError=false] Whether to show the error stack trace while deleting the reply
      * @returns {boolean} Whether the reply message deleted successfully
      */
-    deleteReply(options: object): boolean;
+    deleteReply(options?: object): boolean;
     /**
      * @param {MessageOptions} messageOptions
-     * @param {object} options
-     * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
-     * @param {boolean} options.ephemeral Whether to send the message as ephemeral (Only for slash command)
-     * @param {boolean} options.reply Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
+     * @param {object} [options={}]
+     * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
+     * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
+     * @param {boolean} [options.reply=true] Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    followUp(messageOptions: MessageOptions, options: {
-        fetchReply: boolean;
-        ephemeral: boolean;
-        reply: boolean;
+    followUp(messageOptions: MessageOptions, options?: {
+        fetchReply?: boolean;
+        ephemeral?: boolean;
+        reply?: boolean;
     }): Promise<Message | null>;
 }
 import { Message } from "discord.js";

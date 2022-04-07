@@ -3,17 +3,17 @@ declare class ConfigFile {
     /**
      * @param {string} filePath
      * @param {*} defaultConfig
-     * @param {Array<[string | number]>} route
+     * @param {(string | number)[]} route
      */
-    constructor(filePath: string, defaultConfig: any, route?: Array<[string | number]>);
+    constructor(filePath: string, defaultConfig: any, route?: (string | number)[]);
     /** @readonly @type {string} */
     readonly filePath: string;
     /** @readonly @type {*} */
     readonly defaultConfig: any;
     /** @readonly @type {*} */
     readonly data: any;
-    /** @readonly @type {Array<[string | number]>} */
-    readonly route: Array<[string | number]>;
+    /** @readonly @type {(string | number)[]} */
+    readonly route: (string | number)[];
     /**
      * @param {boolean} [compact=false]
      * @returns {Promise<ConfigFile>}
@@ -40,16 +40,16 @@ declare class ConfigFile {
      */
     getValue(key?: string | number): any;
     /**
-     * @param {Array<[string | number]>} key
+     * @param {(string | number)[]} key
      * @returns {ConfigFile}
      */
-    get(...key: Array<[string | number]>): ConfigFile;
+    get(...key: (string | number)[]): ConfigFile;
     /**
      *
-     * @param  {Array<[string | number]>} key
+     * @param  {(string | number)[]} key
      * @returns {boolean}
      */
-    has(...key: Array<[string | number]>): boolean;
+    has(...key: (string | number)[]): boolean;
     /**
      * @returns {boolean}
      */

@@ -14,11 +14,23 @@ module.exports.bindOptions = (defaultOptions, options) => {
         if (!hasPath(result, path)) {
             for (var i = 0; i < path.length; i++) {
                 const checkPath = path.slice(0, i + 1);
+
                 if (!hasPath(result, checkPath)) {
                     const resultPath = checkPath.slice(0, -1);
-                    const object = resultPath.reduce((acc, key) => acc[key], result);
-                    setPath(object, path.slice(i), value);
-                    break;
+
+                    if (getPath(result, resultPath) === null) {
+                        resultPath.pop()
+                        const object = resultPath.reduce((acc, key) => acc[key], result);
+                        const adjustPath = path.slice(i - 1);
+                        const key = adjustPath.pop();
+                        setPath(object, adjustPath, { [key]: value })
+                        break;
+                    } else {
+                        const object = resultPath.reduce((acc, key) => acc[key], result);
+                        setPath(object, path.slice(i), value);
+                        break;
+                    }
+
                 }
             }
         } else {
@@ -51,12 +63,28 @@ function getValuesWithPath(object, path = []) {
 }
 
 /**
+ * @param {object} object 
+ * @param {string[]} path 
+ * @returns {*}
+ */
+function getPath(object, path) {
+    for (const key of path) {
+        if (!object.hasOwnProperty(key)) {
+            return undefined;
+        }
+        object = object[key];
+    }
+    return object;
+}
+
+/**
  * @param {object} object
  * @param {string[]} path
  * @returns {boolean}
  */
 function hasPath(object, path) {
     for (const key of path) {
+        if (typeof object !== "object" || object === null) return false;
         if (!object.hasOwnProperty(key)) {
             return false;
         }
@@ -71,14 +99,16 @@ function hasPath(object, path) {
  * @param {*} value 
  */
 function setPath(object, path, value) {
+    const last = path.pop();
     for (const key of path) {
-        if (!object.hasOwnProperty(key)) {
+        if (object.hasOwnProperty(key)) {
             object = object[key];
         } else {
-            object = object[key] = {};
+            object[key] = {};
+            object = object[key];
         }
     }
-    object[path[path.length - 1]] = value;
+    object[last] = value;
 }
 
 /** @returns {string} */

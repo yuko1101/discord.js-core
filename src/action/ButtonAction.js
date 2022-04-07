@@ -9,7 +9,7 @@ module.exports = class ButtonAction extends Action {
      * @param {object} options 
      * @param {string} options.label
      * @param {Core} options.core
-     * @param {MessageButtonStyleResolvable} style
+     * @param {MessageButtonStyleResolvable} options.style
      * @param {(interaction: ButtonInteraction) => Promise<void>} options.run
      */
     constructor(options) {
@@ -18,7 +18,7 @@ module.exports = class ButtonAction extends Action {
         if (!options.run) throw new Error("options.run is required.");
 
         /** @readonly @type {{label: string, core: Core, style: MessageButtonStyleResolvable, run: (interaction: ButtonInteraction) => Promise<void> }} */
-        this.options = options
+        this.options = options;
         /** @type {string} */
         this.label = this.options.label;
         /** @type {MessageButtonStyleResolvable} */

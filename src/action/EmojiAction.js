@@ -50,7 +50,7 @@ module.exports = class EmojiAction extends Action {
 
         if (options.autoReact) {
             // if the message doesn't have the reaction, add it
-            if (!message.reactions.resolve(this.label)) {
+            if (!message.reactions.resolve(this.label)?.users?.resolve(this.core.client.user.id)) {
                 await message.react(this.label);
             }
         }
@@ -65,6 +65,28 @@ module.exports = class EmojiAction extends Action {
             }, options.timeout);
         }
 
+    }
+
+    /**
+     * @param {Message} message
+     * @param {object} [options={}]
+     * @param {boolean} [options.autoRemoveReaction=true]
+     */
+    async removeApply(message, options = {}) {
+        options = bindOptions({ autoRemoveReaction: true }, options)
+
+        if (this.deleted) throw new Error("This emoji action has been deleted.");
+
+        const index = this.appliedMessages.indexOf(message.id);
+        if (index !== -1) {
+            this.appliedMessages.splice(index, 1);
+        }
+
+        if (options.autoRemoveReaction) {
+            if (message.reactions.resolve(this.label)?.users?.resolve(this.core.client.user.id)) {
+                message.reactions.resolve(this.label).users.remove(this.core.client.user);
+            }
+        }
     }
 
     delete() {

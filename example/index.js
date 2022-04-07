@@ -1,5 +1,5 @@
 "use strict";
-import { Core, Command, CustomEmoji, Pages, EmojiAction, ButtonAction } from "discord-core";
+import { Core, Command, CustomEmoji, Pages, EmojiAction, ButtonAction, MessageCore } from "discord-core";
 import { Client, Intents } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -31,8 +31,14 @@ const command = new Command({
     type: "BOTH",
     run: async (ic, args, core) => {
         await ic.deferReply();
-        await ic.followUp({ content: "pong 2" });
-        ic.interaction.deleteReply();
+        const messageCores = [
+            new MessageCore({ message: { content: "pong 1" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
+            new MessageCore({ message: { content: "pong 2" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
+            new MessageCore({ message: { content: "pong 3" }, buttonActions: [new ButtonAction({ core: core, label: "Click!", run: async (interaction) => { console.log("clicked!") } }).register()] }),
+        ]
+        const pages = new Pages(messageCores);
+
+        pages.interactionReply(ic.interaction, { followUp: true });
     }
 });
 

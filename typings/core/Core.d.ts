@@ -25,7 +25,8 @@ declare class Core {
     readonly emojiActions: EmojiAction[];
     /** @readonly @type {ButtonAction[]} */
     readonly buttonActions: ButtonAction[];
-    login(): Promise<void>;
+    /** @param {() => *} [callback] */
+    login(callback?: () => any): Promise<void>;
     /** @param {Command} command */
     addCommand(command: Command): void;
     /** @param {Command} command */

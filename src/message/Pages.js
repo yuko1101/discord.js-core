@@ -1,7 +1,8 @@
-const { MessageOptions, Message, TextBasedChannel, MessageActionRow, MessageButton, Interaction, User } = require("discord.js");
+const { MessageOptions, Message, TextBasedChannel, MessageActionRow, MessageButton, Interaction, User, MessageReaction } = require("discord.js");
 const Action = require("../action/Action");
 const EmojiAction = require("../action/EmojiAction");
-const { bindOptions } = require("./utils");
+const MessageCore = require("./MessageCore");
+const { bindOptions } = require("../utils/utils");
 
 const defaultOptions = {
     startPage: 0,
@@ -21,27 +22,27 @@ const visuals = ["BACK", "FORWARD", "FIRST", "LAST"];
 
 module.exports = class Pages {
     /**
-     * @param {Array<[MessageOptions | () => Promise<MessageOptions>]>} messages 
-     * @param {object} options
-     * @param {number} options.startPage
-     * @param {object} options.visuals
-     * @param {string} options.visuals.first
-     * @param {string} options.visuals.back
-     * @param {string} options.visuals.forward
-     * @param {string} options.visuals.last
-     * @param {Array<["FIRST"|"BACK"|"FORWARD"|"LAST"|Action]>} options.visuals.shows
-     * @param {boolean} options.useButtons
-     * @param {number} options.timeout
-     * @param {(user: User) => boolean} options.userFilter
+     * @param {MessageCore[]} messageCores
+     * @param {object} [options={}]
+     * @param {number} [options.startPage=0]
+     * @param {object} [options.visuals={first: "⏪", back: "◀", forward: "▶", last: "⏩", shows: ["BACK", "FORWARD"]}]
+     * @param {string} [options.visuals.first="⏪"]
+     * @param {string} [options.visuals.back="◀"]
+     * @param {string} [options.visuals.forward="▶"]
+     * @param {string} [options.visuals.last="⏩"]
+     * @param {("FIRST"|"BACK"|"FORWARD"|"LAST"|Action)[]} [options.visuals.shows=["BACK", "FORWARD"]]
+     * @param {boolean} [options.useButtons=false]
+     * @param {number | null} [options.timeout=null]
+     * @param {(user: User) => boolean} [options.userFilter=(user) => true]
      */
-    constructor(messages, options = {}) {
-        /** @readonly @type {Array<[MessageOptions | () => Promise<MessageOptions>]>} */
-        this.messages = messages;
+    constructor(messageCores, options = {}) {
+        /** @readonly @type {MessageCore[]} */
+        this.messageCores = messageCores;
         /** @readonly */
         this.options = bindOptions(defaultOptions, options);
         /** @readonly @type {number} */
         this.startPage = this.options.startPage;
-        /** @readonly @type {{first: string, back: string, forward: string, last: string, shows: Array<["FIRST"|"BACK"|"FORWARD"|"LAST"|Action]>}} */
+        /** @readonly @type {{first: string, back: string, forward: string, last: string, shows: ("FIRST"|"BACK"|"FORWARD"|"LAST"|Action)[]}} */
         this.visuals = this.options.visuals;
         /** @readonly @type {boolean} */
         this.useButtons = this.options.useButtons;
@@ -64,7 +65,7 @@ module.exports = class Pages {
     }
 
     /**
-     * @description Sends the message pages to the channel
+     * Sends the message pages to the channel
      * @param {TextBasedChannel} channel
      * @returns {Promise<Message>}
      */
@@ -75,26 +76,27 @@ module.exports = class Pages {
 
         this.isSent = true;
 
-
         if (this.useButtons) {
             this.collectInteraction();
         } else {
-            this.setupReactions();
-
             this.collectReactions();
+            await this.setupReactions();
         }
+
+        // call this after setupReactions()
+        this.messageCores[this.currentPageIndex].apply(this.sentMessage);
 
         return this.sentMessage;
     }
 
     /**
-     * @description Sends the message pages as a reply of interaction
+     * Sends the message pages as a reply of interaction
      * @param {Interaction} interaction 
-     * @param {object} options
-     * @param {boolean} options.followUp
-     * @param {boolean} options.ephemeral
+     * @param {object} [options={}]
+     * @param {boolean} [options.followUp=false]
+     * @param {boolean} [options.ephemeral=false]
      */
-    async reply(interaction, options) {
+    async interactionReply(interaction, options = {}) {
         options = bindOptions({ followUp: false, ephemeral: false }, options);
         if (this.isSent) throw new Error("This message pages has already been sent.");
 
@@ -111,18 +113,22 @@ module.exports = class Pages {
             : await interaction.followUp({ ...(await this.getMessageOptionsWithButtons(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral });
 
         this.isSent = true;
+
+
         this.interaction = interaction;
         if (this.useButtons) {
             this.collectInteraction();
         } else {
-            this.setupReactions();
-
             this.collectReactions();
+            await this.setupReactions();
         }
+
+        // call this after setupReactions()
+        this.messageCores[this.currentPageIndex].apply(this.sentMessage);
     }
 
     async nextPage() {
-        if (this.currentPageIndex === this.messages.length - 1) return;
+        if (this.currentPageIndex === this.messageCores.length - 1) return;
 
         // if this.isSent is false, just increment the currentPage
         this.currentPageIndex++;
@@ -174,10 +180,10 @@ module.exports = class Pages {
                         new MessageButton().setCustomId("DISCORD_CORE_PAGE_BACK").setStyle("PRIMARY").setLabel(this.visuals.back).setDisabled(this.currentPageIndex === 0)
                     );
                     if (label === "FORWARD") buttons.addComponents(
-                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_FORWARD").setStyle("PRIMARY").setLabel(this.visuals.forward).setDisabled(page === this.messages.length - 1)
+                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_FORWARD").setStyle("PRIMARY").setLabel(this.visuals.forward).setDisabled(page === this.messageCores.length - 1)
                     );
                     if (label === "LAST") buttons.addComponents(
-                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_LAST").setStyle("PRIMARY").setLabel(this.visuals.last).setDisabled(this.currentPageIndex === this.messages.length - 1)
+                        new MessageButton().setCustomId("DISCORD_CORE_PAGE_LAST").setStyle("PRIMARY").setLabel(this.visuals.last).setDisabled(this.currentPageIndex === this.messageCores.length - 1)
                     );
                 } else {
                     if (label.isButtonAction) {
@@ -205,6 +211,7 @@ module.exports = class Pages {
         collector.on("collect", async (interaction) => {
             if (!interaction.isButton()) return;
             if (interaction.customId.startsWith("DISCORD_CORE_PAGE_")) {
+                this.messageCores[this.currentPageIndex].removeApply(this.sentMessage, { autoRemoveReaction: false });
                 await interaction.deferUpdate();
                 switch (interaction.customId) {
                     case "DISCORD_CORE_PAGE_FIRST":
@@ -220,6 +227,8 @@ module.exports = class Pages {
                         await this.lastPage();
                         break;
                 }
+                this.removeUselessReactions();
+                this.messageCores[this.currentPageIndex].apply(this.sentMessage);
             }
         });
         collector.on("end", async (collected, reason) => {
@@ -240,14 +249,11 @@ module.exports = class Pages {
 
     /**
      * @private
-     * @param {number} page
+     * @param {number} [page=this.currentPageIndex]
      * @returns {Promise<MessageOptions>}
      */
     async getPage(page = this.currentPageIndex) {
-        const current = this.messages[page];
-        if (typeof current === "function") {
-            return await current();
-        }
+        const current = this.messageCores[page].getMessage();
         return current;
     }
 
@@ -259,6 +265,8 @@ module.exports = class Pages {
         collector.on("collect", async (reaction, user) => {
             // return if the reaction is from the bot
             if (user.id === this.sentMessage.author.id) return;
+            if (!this.getPageChangeEmojis().includes(reaction.emoji.toString())) return
+            this.messageCores[this.currentPageIndex].removeApply(this.sentMessage, { autoRemoveReaction: false });
             if (reaction.emoji.toString() === this.visuals.first && this.visuals.shows.includes("FIRST")) {
                 this.firstPage();
             } else if (reaction.emoji.toString() === this.visuals.back && this.visuals.shows.includes("BACK")) {
@@ -267,10 +275,10 @@ module.exports = class Pages {
                 this.nextPage();
             } else if (reaction.emoji.toString() === this.visuals.last && this.visuals.shows.includes("LAST")) {
                 this.lastPage();
-            } else {
-                return;
             }
             reaction.users.remove(user);
+            this.removeUselessReactions();
+            this.messageCores[this.currentPageIndex].apply(this.sentMessage);
         });
         collector.on("end", async (collected, reason) => {
             console.log(`MessagePages collector ended with reason: ${reason}`);
@@ -312,17 +320,41 @@ module.exports = class Pages {
     }
 
     /**
+     * This function is used to get emojis which reacted at the message pages by the bot.
      * @private
-     * @description This function is used to get emojis which reacted at the message pages by the bot.
      */
     getPageEmojis() {
+        const pageEmojis = [];
+        pageEmojis.push(...this.getPageChangeEmojis());
+        pageEmojis.push(...this.visuals.shows.filter(show => !visuals.includes(show)).filter(show => show.isEmojiAction).map(emojiAction => emojiAction.label));
+        return pageEmojis;
+    }
+
+    /**
+     * This function is used to get emojis which is used to change the page.
+     * @private
+     */
+    getPageChangeEmojis() {
         const pageEmojis = [];
         if (this.visuals.shows.includes("FIRST")) pageEmojis.push(this.visuals.first);
         if (this.visuals.shows.includes("BACK")) pageEmojis.push(this.visuals.back);
         if (this.visuals.shows.includes("FORWARD")) pageEmojis.push(this.visuals.forward);
         if (this.visuals.shows.includes("LAST")) pageEmojis.push(this.visuals.last);
-        pageEmojis.push(...this.visuals.shows.filter(show => !visuals.includes(show)).filter(show => show.isEmojiAction).map(emojiAction => emojiAction.label));
-        console.log(pageEmojis);
         return pageEmojis;
+    }
+
+    /**
+     * @private
+     */
+    removeUselessReactions() {
+        /** @type {MessageReaction[]} */
+        const emojis = [...this.sentMessage.reactions.cache.filter(reaction => reaction.users.resolve(this.sentMessage.author.id)).values()];
+
+        const needed = this.messageCores[this.currentPageIndex].getEmojis();
+        needed.push(...this.getPageEmojis());
+
+        for (const emoji of emojis) {
+            if (!needed.some(n => n === emoji.emoji.toString())) emoji.users.remove();
+        }
     }
 }
