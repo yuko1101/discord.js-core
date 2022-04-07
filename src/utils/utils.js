@@ -34,7 +34,7 @@ module.exports.bindOptions = (defaultOptions, options) => {
 /** 
  * @private
  * @param {object} object 
- * @returns {Array<{path: string[], value: any}>}
+ * @returns {{path: string[], value: any}[]}
  */
 function getValuesWithPath(object, path = []) {
     const result = [];
