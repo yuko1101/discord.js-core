@@ -77,7 +77,7 @@ module.exports = class InteractionCore {
      * @param {boolean} options.fetchReply Whether to fetch the reply (only for slash command)
      * @param {boolean} options.ephemeral Whether to send the message as ephemeral (for message command, whether show the typing in the channel)
      */
-    async deferReply(options) {
+    async deferReply(options = {}) {
         options = bindOptions({ fetchReply: false, ephemeral: false }, options);
         if (this.deferred) throw new Error("You can't defer a `InteractionCore` twice");
         if (this.replied) throw new Error("You can't defer a `InteractionCore` after it has replied");
@@ -99,7 +99,7 @@ module.exports = class InteractionCore {
      * @param {boolean} options.ephemeral Whether to send the message as ephemeral (Only for slash command)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async reply(messageOptions, options) {
+    async reply(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true, ephemeral: false }, options);
         if (this.deferred) throw new Error("You cannot reply to a message after deferring it. Consider using `followUp` instead.");
         if (this.replied) throw new Error("You can't reply twice");
@@ -122,7 +122,7 @@ module.exports = class InteractionCore {
      * @param {boolean} options.fetchReply Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async editReply(messageOptions, options) {
+    async editReply(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true }, options);
         if (!this.isSlashCommand) {
             if (!this.replyMessage) {
@@ -143,7 +143,7 @@ module.exports = class InteractionCore {
      * @param {boolean} showError Whether to show the error stack trace while deleting the reply
      * @returns {boolean} Whether the reply message deleted successfully
      */
-    async deleteReply(options) {
+    async deleteReply(options = {}) {
         options = bindOptions({ showError: false }, options);
         if (this.isReplyMessageDeleted) throw new Error("You can't delete a reply that has already been deleted.");
         if (!this.isSlashCommand) {
@@ -183,7 +183,7 @@ module.exports = class InteractionCore {
      * @param {boolean} options.reply Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async followUp(messageOptions, options) {
+    async followUp(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true, ephemeral: false, reply: true }, options);
         if (!this.isSlashCommand) {
             if (!this.replyMessage && !this.deferred) throw new Error("You must reply to a message before following up to it");
