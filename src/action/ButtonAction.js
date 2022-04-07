@@ -3,6 +3,7 @@ const Action = require("./Action");
 const { generateUuid } = require("../utils/utils");
 const Core = require("../core/Core");
 
+/** @extends {Action} */
 module.exports = class ButtonAction extends Action {
     /**
      * @param {object} options 
