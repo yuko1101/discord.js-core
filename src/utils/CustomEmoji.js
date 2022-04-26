@@ -27,7 +27,7 @@ module.exports = class CustomEmoji {
 
         if (!emoji) throw new Error("Emoji not found");
 
-        this.emoji = emoji.toString();
+        this.emoji = emoji.name;
         this.fetched = true;
 
         return this.emoji;

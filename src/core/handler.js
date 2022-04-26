@@ -39,7 +39,7 @@ module.exports = {
         core.client.on("messageReactionAdd", (messageReaction, user) => {
             if (user.id === core.client.user.id) return;
             core.emojiActions
-                .filter(action => messageReaction.emoji.toString() === action.label)
+                .filter(action => messageReaction.emoji.name === action.label)
                 .filter(action => action.appliedMessages.includes(messageReaction.message.id))
                 .forEach(action => action.run(messageReaction, user, true));
         });
@@ -47,7 +47,7 @@ module.exports = {
         core.client.on("messageReactionRemove", (messageReaction, user) => {
             if (user.id === core.client.user.id) return;
             core.emojiActions
-                .filter(action => messageReaction.emoji.toString() === action.label)
+                .filter(action => messageReaction.emoji.name === action.label)
                 .filter(action => action.appliedMessages.includes(messageReaction.message.id))
                 .forEach(action => action.run(messageReaction, user, false));
         });
