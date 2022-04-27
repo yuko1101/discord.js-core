@@ -54,7 +54,7 @@ async function apply(applicationCommandManager, oldCommands, newCommands) {
         }
     }
     console.log(`[DiscordCore] Applied ${toAdd.length} new commands, ${toRemove.length} removed commands, ${toUpdate.length} updated commands.`);
-    console.log(oldCommands, newCommands);
+    // console.log(oldCommands, newCommands);
 }
 
 /** 
