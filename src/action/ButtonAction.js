@@ -1,6 +1,5 @@
 const { ButtonInteraction, MessageButton, MessageButtonStyleResolvable } = require("discord.js");
 const Action = require("./Action");
-const { generateUuid } = require("../utils/utils");
 const Core = require("../core/Core");
 
 /** @extends {Action} */
