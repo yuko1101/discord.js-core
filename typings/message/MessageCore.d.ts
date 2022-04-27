@@ -39,9 +39,11 @@ declare class MessageCore {
      * @param {Message} message
      * @param {object} [options={}]
      * @param {boolean} [options.autoRemoveReaction=true]
+     * @param {boolean} [options.fastMode=false]
      */
     removeApply(message: Message, options?: {
         autoRemoveReaction?: boolean;
+        fastMode?: boolean;
     }): Promise<void>;
     /**
      * @param {TextBasedChannel} channel
