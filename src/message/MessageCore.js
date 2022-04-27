@@ -77,10 +77,25 @@ module.exports = class MessageCore {
      * @param {Message} message
      * @param {object} [options={}]
      * @param {boolean} [options.autoRemoveReaction=true]
+     * @param {boolean} [options.fastMode=false]
      */
     async removeApply(message, options = {}) {
-        for (const action of this.emojiActions) {
-            await action.removeApply(message, options);
+        const fastMode = options.fastMode ?? false;
+        delete options.fastMode;
+        if (fastMode) {
+            await new Promise(resolve => {
+                var count = 0;
+                this.emojiActions.forEach(action => {
+                    action.removeApply(message, options).then(() => {
+                        count++;
+                        if (count === this.emojiActions.length) resolve();
+                    });
+                })
+            })
+        } else {
+            for (const action of this.emojiActions) {
+                await action.removeApply(message, options);
+            }
         }
     }
 
