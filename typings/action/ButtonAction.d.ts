@@ -4,13 +4,15 @@ declare class ButtonAction extends Action {
      * @param {object} options
      * @param {string} options.label
      * @param {Core} options.core
-     * @param {MessageButtonStyleResolvable} options.style
+     * @param {MessageButtonStyleResolvable} [options.style]
+     * @param {boolean} [options.disabled]
      * @param {(interaction: ButtonInteraction) => Promise<void>} options.run
      */
     constructor(options: {
         label: string;
         core: Core;
-        style: MessageButtonStyleResolvable;
+        style?: MessageButtonStyleResolvable;
+        disabled?: boolean;
         run: (interaction: ButtonInteraction) => Promise<void>;
     });
     /** @readonly @type {{label: string, core: Core, style: MessageButtonStyleResolvable, run: (interaction: ButtonInteraction) => Promise<void> }} */

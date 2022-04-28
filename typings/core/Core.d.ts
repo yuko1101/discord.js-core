@@ -25,6 +25,8 @@ declare class Core {
     readonly emojiActions: EmojiAction[];
     /** @readonly @type {ButtonAction[]} */
     readonly buttonActions: ButtonAction[];
+    /** @readonly @type {SelectMenuAction[]} */
+    readonly selectMenuActions: SelectMenuAction[];
     /** @param {() => *} [callback] */
     login(callback?: () => any): Promise<void>;
     /** @param {Command} command */
@@ -37,3 +39,4 @@ import { Client } from "discord.js";
 import Command = require("../command/Command");
 import EmojiAction = require("../action/EmojiAction");
 import ButtonAction = require("../action/ButtonAction");
+import SelectMenuAction = require("../action/SelectMenuAction");

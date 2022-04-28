@@ -9,8 +9,9 @@ declare class MessagePages {
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.back]
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.next]
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.last]
+     *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
-     * @param {boolean} [options.useButtons]
+     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
      * @param {number} [options.timeout]
      * @param {(User) => Promise<boolean>} [options.userFilter]
      */
@@ -34,15 +35,16 @@ declare class MessagePages {
                 label?: string;
                 buttonStyle?: MessageButtonStyleResolvable;
             };
+            selectMenu?: SelectMenuAction;
         };
         enabledActions?: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
-        useButtons?: boolean;
+        type?: "REACTION" | "BUTTON" | "SELECT_MENU";
         timeout?: number;
         userFilter?: (User: any) => Promise<boolean>;
     });
     /** @readonly @type {object} */
     readonly options: object;
-    /** @readonly @type {(MessageCore|() => Promise<MessageCore>)[]} */
+    /** @readonly @type {(MessageCore | () => Promise<MessageCore>)[]} */
     readonly messageCores: (MessageCore | (() => Promise<MessageCore>))[];
     /** @readonly @type {number} */
     readonly startPageIndex: number;
@@ -67,8 +69,10 @@ declare class MessagePages {
     };
     /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
     readonly enabledActions: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
-    /** @readonly @type {boolean} */
-    readonly useButtons: boolean;
+    /** @readonly @type {SelectMenuAction | null } */
+    readonly selectMenu: SelectMenuAction | null;
+    /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
+    readonly type: "REACTION" | "BUTTON" | "SELECT_MENU";
     /** @readonly @type {number | null} */
     readonly timeout: number | null;
     /** @readonly @type {(User) => Promise<boolean>} */
@@ -87,6 +91,18 @@ declare class MessagePages {
      * @returns {Promise<Message>}
      */
     sendTo(channel: TextBasedChannel): Promise<Message>;
+    /**
+     * Sends this MessagePages message as a reply of the interaction
+     * @param {Interaction} interaction
+     * @param {object} [options]
+     * @param {boolean} [options.followUp]
+     * @param {boolean} [options.ephemeral]
+     * @returns {Promise<Message>}
+     */
+    interactionReply(interaction: Interaction, options?: {
+        followUp?: boolean;
+        ephemeral?: boolean;
+    }): Promise<Message>;
     /**
      *
      * @param {number} index
@@ -112,16 +128,13 @@ declare class MessagePages {
      */
     private _getButtons;
     /**
+     * @private
      * @param {object} options
      * @param {number} [options.oldIndex]
      * @param {number} options.newIndex
      * @param {boolean} [options.shouldApplyPageActions]
      */
-    _manageActions(options: {
-        oldIndex?: number;
-        newIndex: number;
-        shouldApplyPageActions?: boolean;
-    }): Promise<void>;
+    private _manageActions;
     /**
      * Updates reactions at the sent MessagePages message for current page
      * @private
@@ -152,10 +165,17 @@ declare class MessagePages {
      * @private
      */
     private _activateReactionCollector;
-    _deactivateEmojiActions(): void;
+    /**
+     * @private
+     */
+    private _activateInteractionCollector;
+    /** @private */
+    private _deactivateEmojiActions;
 }
 import MessageCore = require("./MessageCore");
 import { MessageButtonStyleResolvable } from "discord.js";
 import Action = require("../action/Action");
+import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
+import { Interaction } from "discord.js";
 import { TextBasedChannel } from "discord.js";
