@@ -7,6 +7,7 @@ const handler = require("./handler");
 const EmojiAction = require("../action/EmojiAction");
 const ButtonAction = require("../action/ButtonAction");
 const { bindOptions } = require("../utils/utils");
+const SelectMenuAction = require("../action/SelectMenuAction");
 
 const defaultOptions = {
     debug: false,
@@ -34,14 +35,10 @@ module.exports = class Core {
         this.emojiActions = [];
         /** @readonly @type {ButtonAction[]} */
         this.buttonActions = [];
+        /** @readonly @type {SelectMenuAction[]} */
+        this.selectMenuActions = [];
 
         handler.init(this);
-
-
-        // emoji actions
-
-
-
 
     }
 
