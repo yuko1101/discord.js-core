@@ -5,10 +5,10 @@ const Command = require("./command/Command");
 const ConfigFile = require("./utils/ConfigFile");
 const MessageCore = require("./message/MessageCore");
 const MessagePages = require("./message/MessagePages");
-const Pages = require("./message/Pages");
 const CustomEmoji = require("./utils/CustomEmoji");
 const EmojiAction = require("./action/EmojiAction");
 const ButtonAction = require("./action/ButtonAction");
+const SelectMenuAction = require("./action/SelectMenuAction");
 const Action = require("./action/Action");
 
 module.exports = {
@@ -17,9 +17,9 @@ module.exports = {
     ConfigFile: ConfigFile,
     MessageCore: MessageCore,
     MessagePages: MessagePages,
-    Pages: Pages,
     CustomEmoji: CustomEmoji,
     EmojiAction: EmojiAction,
     ButtonAction: ButtonAction,
+    SelectMenuAction: SelectMenuAction,
     Action: Action
 }
