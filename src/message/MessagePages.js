@@ -87,7 +87,7 @@ module.exports = class MessagePages {
      * @returns {Promise<Message>}
      */
     async sendTo(channel) {
-        if (this.isSent) throw new Error("This MessagePages is already sent");
+        if (this.isSent) throw new Error("This MessagePages has already been sent.");
 
         // send message
         this.sentMessage = await channel.send(await this._getMessageOptionsWithComponents(this.currentPageIndex));
