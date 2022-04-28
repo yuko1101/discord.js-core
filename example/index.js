@@ -39,7 +39,8 @@ const command = new Command({
         const pages = new MessagePages({
             messageCores: messageCores,
             enabledActions: ["BACK", new EmojiAction({ core: core, label: "❌", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
-            useButtons: false,
+            type: "BUTTON",
+            timeout: 10000,
         })
 
         pages.sendTo(ic.channel);
