@@ -55,7 +55,7 @@ module.exports = class MessagePages {
         /** @readonly @type {(MessageCore|() => Promise<MessageCore>)[]} */
         this.messageCores = this.options.messageCores;
         if (this.messageCores.length === 0) {
-            throw new Error("MessageCores is empty");
+            throw new Error("MessageCores cannot be empty");
         }
         /** @readonly @type {number} */
         this.startPageIndex = this.options.startPageIndex;
