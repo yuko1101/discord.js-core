@@ -7,6 +7,8 @@ const EmojiAction = require("../action/EmojiAction");
 
 const actionsList = ["FIRST", "BACK", "NEXT", "LAST"];
 
+// const interactionActions = ["BUTTON", "SELECT_MENU"];
+
 const defaultOptions = {
     messageCores: [],
     startPageIndex: 0,
@@ -30,6 +32,7 @@ const defaultOptions = {
     },
     enabledActions: ["BACK", "NEXT"],
     useButtons: false,
+    // type: "REACTION",
     timeout: null,
     userFilter: (user) => true
 };
@@ -46,6 +49,7 @@ module.exports = class MessagePages {
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.last]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {boolean} [options.useButtons]
+     /** @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type] * /
      * @param {number} [options.timeout]
      * @param {(User) => Promise<boolean>} [options.userFilter]
      */
@@ -65,6 +69,8 @@ module.exports = class MessagePages {
         this.enabledActions = this.options.enabledActions;
         /** @readonly @type {boolean} */
         this.useButtons = this.options.useButtons;
+        // /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
+        // this.type = this.options.type;
         /** @readonly @type {number | null} */
         this.timeout = this.options.timeout;
         /** @readonly @type {(User) => Promise<boolean>} */
@@ -97,18 +103,10 @@ module.exports = class MessagePages {
         this._manageActions({ newIndex: this.currentPageIndex, shouldApplyPageActions: true });
         this._updateReactions();
 
-        if (this.useButtons) {
-
-        } else {
-            this._activateReactionCollector();
-        }
-
-        // TODO: setup buttons collector and apply the EmojiActions.
-
+        this._activateReactionCollector();
+        this._activateInteractionCollector();
 
     }
-
-    // TODO: add support for interactions
 
     /**
      * 
@@ -188,6 +186,7 @@ module.exports = class MessagePages {
     }
 
     /**
+     * @private
      * @param {object} options
      * @param {number} [options.oldIndex]
      * @param {number} options.newIndex
@@ -210,11 +209,14 @@ module.exports = class MessagePages {
 
         if (options.shouldApplyPageActions) {
             for (const action of this.enabledActions) {
-                if (typeof action === "object" && action instanceof EmojiAction) {
-                    // timeout is not necessary because the collector has timeout, 
-                    // and the collector will remove this reaction after timeout.
-                    action.apply(this.sentMessage, { autoReact: false });
+                if (typeof action === "object") {
+                    if (action instanceof EmojiAction) {
+                        // timeout is not necessary because the collector has timeout, 
+                        // and the collector will remove this reaction after timeout.
+                        action.apply(this.sentMessage, { autoReact: false });
+                    }
                 }
+
             }
         }
     }
@@ -225,9 +227,6 @@ module.exports = class MessagePages {
      */
     async _updateReactions() {
 
-        // TODO: apply EmojiActions
-
-        // TODO: remove unused EmojiActions
 
         const emojis = await this._getEmojis(this.currentPageIndex);
 
@@ -332,6 +331,8 @@ module.exports = class MessagePages {
         collector.on("collect", async (reaction, user) => {
             // handle system emojis, not EmojiAction(s) in enabledActions
 
+            if (this.useButtons) return;
+
             // if the reaction is from the client bot, ignore it
             if (user.id === this.sentMessage.author.id) return;
 
@@ -363,11 +364,52 @@ module.exports = class MessagePages {
                     }
                 }
 
-                _deactivateEmojiActions();
+                this._deactivateEmojiActions();
             }
         });
     }
 
+    /**
+     * @private
+     */
+    _activateInteractionCollector() {
+        if (!this.useButtons) return;
+
+        const collector = this.sentMessage.createMessageComponentCollector({
+            filter: (interaction) => this.userFilter(interaction.user),
+            time: this.timeout
+        });
+
+        collector.on("collect", async (interaction) => {
+            if (!interaction.isButton()) return;
+            const id = interaction.customId;
+            if (!id.startsWith("DISCORD_CORE_MESSAGE_PAGES_")) return;
+            await interaction.deferUpdate();
+            const pageIndex = id === "DISCORD_CORE_MESSAGE_PAGES_FIRST" ? 0
+                : id === "DISCORD_CORE_MESSAGE_PAGES_BACK" ? Math.max(this.currentPageIndex - 1, 0)
+                    : id === "DISCORD_CORE_MESSAGE_PAGES_NEXT" ? Math.min(this.currentPageIndex + 1, this.messageCores.length - 1)
+                        : id === "DISCORD_CORE_MESSAGE_PAGES_LAST" ? this.messageCores.length - 1 : -1;
+            if (pageIndex === -1) return;
+            await this.gotoPage(pageIndex);
+        });
+
+        collector.on("end", async (collected, reason) => {
+            if (reason === "time") {
+                const currentPage = await this._getPage(this.currentPageIndex);
+                const message = currentPage.getMessage();
+                const messageOptions = { ...message, components: message.components ?? [] };
+                if (this.interaction) {
+                    if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
+
+                    await this.interaction.editReply(messageOptions);
+                } else {
+                    await this.sentMessage.edit(messageOptions);
+                }
+            }
+        });
+    }
+
+    /** @private */
     _deactivateEmojiActions() {
         for (const emoji of this.enabledActions) {
             if (typeof emoji === "object" && emoji instanceof EmojiAction) {
