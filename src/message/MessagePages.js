@@ -1,13 +1,14 @@
-const { Message, TextBasedChannel, MessageOptions, MessageButton, MessageActionRow, MessageButtonStyleResolvable, MessageReaction } = require("discord.js");
+const { Message, TextBasedChannel, MessageOptions, MessageButton, MessageActionRow, MessageButtonStyleResolvable, MessageReaction, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
 const MessageCore = require("./MessageCore");
 const EmojiAction = require("../action/EmojiAction");
+const SelectMenuAction = require("../action/SelectMenuAction");
 
 const actionsList = ["FIRST", "BACK", "NEXT", "LAST"];
 
-// const interactionActions = ["BUTTON", "SELECT_MENU"];
+const interactionActions = ["BUTTON", "SELECT_MENU"];
 
 const defaultOptions = {
     messageCores: [],
@@ -28,11 +29,11 @@ const defaultOptions = {
         last: {
             label: "⏩",
             buttonStyle: "PRIMARY",
-        }
+        },
+        selectMenu: null
     },
     enabledActions: ["BACK", "NEXT"],
-    useButtons: false,
-    // type: "REACTION",
+    type: "BUTTON",
     timeout: null,
     userFilter: (user) => true
 };
@@ -47,16 +48,16 @@ module.exports = class MessagePages {
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.back]
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.next]
      *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.last]
+     *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
-     * @param {boolean} [options.useButtons]
-     /** @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type] * /
+     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
      * @param {number} [options.timeout]
      * @param {(User) => Promise<boolean>} [options.userFilter]
      */
     constructor(options) {
         /** @readonly @type {object} */
         this.options = bindOptions(defaultOptions, options);
-        /** @readonly @type {(MessageCore|() => Promise<MessageCore>)[]} */
+        /** @readonly @type {(MessageCore | () => Promise<MessageCore>)[]} */
         this.messageCores = this.options.messageCores;
         if (this.messageCores.length === 0) {
             throw new Error("MessageCores cannot be empty");
@@ -67,10 +68,11 @@ module.exports = class MessagePages {
         this.pageActions = this.options.pageActions;
         /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
         this.enabledActions = this.options.enabledActions;
-        /** @readonly @type {boolean} */
-        this.useButtons = this.options.useButtons;
-        // /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
-        // this.type = this.options.type;
+        /** @readonly @type {SelectMenuAction | null } */
+        this.selectMenu = this.options.pageActions.selectMenu;
+        /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
+        this.type = this.options.type;
+        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions");
         /** @readonly @type {number | null} */
         this.timeout = this.options.timeout;
         /** @readonly @type {(User) => Promise<boolean>} */
@@ -109,6 +111,45 @@ module.exports = class MessagePages {
     }
 
     /**
+     * Sends this MessagePages message as a reply of the interaction
+     * @param {Interaction} interaction
+     * @param {object} [options]
+     * @param {boolean} [options.followUp]
+     * @param {boolean} [options.ephemeral]
+     * @returns {Promise<Message>}
+     */
+    async interactionReply(interaction, options = {}) {
+        options = bindOptions({
+            followUp: false,
+            ephemeral: false
+        }, options);
+
+        if (this.isSent) throw new Error("This MessagePages has already been sent.");
+
+        if ((interaction.ephemeral || options.ephemeral) && (this.type === "REACTION" || this.enabledActions.some(action => typeof action === "object" && action instanceof EmojiAction))) {
+            throw new Error("Ephemeral messages cannot have reactions.");
+        }
+
+        if (!options.followUp && !interaction.reply) {
+            throw new Error("Interaction must have the reply() function. Please check the interaction is replyable.");
+        }
+        if (options.followUp && !interaction.followUp) {
+            throw new Error("Interaction must have the followUp() function. Please check the interaction is followUpable.");
+        }
+
+        const params = { ...(await this._getMessageOptionsWithComponents(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral };
+        this.sentMessage = options.followUp ? await interaction.followUp(params) : await interaction.reply(params);
+        this.isSent = true;
+        this.interaction = interaction;
+
+        this._manageActions({ newIndex: this.currentPageIndex, shouldApplyPageActions: true });
+        this._updateReactions();
+
+        if (!interaction.ephemeral && !options.ephemeral) this._activateReactionCollector();
+        this._activateInteractionCollector();
+    }
+
+    /**
      * 
      * @param {number} index 
      * @returns 
@@ -142,6 +183,9 @@ module.exports = class MessagePages {
         if (buttons.length > 0) {
             messageOptions.components = [...(messageOptions.components || []), new MessageActionRow().addComponents(...buttons)];
         }
+        if (this.type === "SELECT_MENU") {
+            messageOptions.components.push(new MessageActionRow().addComponents(this.pageActions.selectMenu));
+        }
         return messageOptions;
     }
 
@@ -168,7 +212,7 @@ module.exports = class MessagePages {
         for (const action of this.enabledActions) {
             if (typeof action === "object" && action instanceof ButtonAction) {
                 buttons.push(action.getButton());
-            } else if (typeof action === "string" && this.useButtons) {
+            } else if (typeof action === "string" && this.type === "BUTTON") {
                 if (actionsList.includes(action)) {
                     if (action === "FIRST") {
                         buttons.push(new MessageButton().setCustomId("DISCORD_CORE_MESSAGE_PAGES_FIRST").setStyle(this.pageActions.first.buttonStyle).setLabel(this.pageActions.first.label).setDisabled(this.currentPageIndex === 0));
@@ -214,10 +258,13 @@ module.exports = class MessagePages {
                         // timeout is not necessary because the collector has timeout, 
                         // and the collector will remove this reaction after timeout.
                         action.apply(this.sentMessage, { autoReact: false });
+                    } else if (action instanceof ButtonAction) {
+                        action.register();
                     }
                 }
 
             }
+            if (this.type === "SELECT_MENU") this.selectMenu.register();
         }
     }
 
@@ -275,7 +322,7 @@ module.exports = class MessagePages {
         for (const emoji of this.enabledActions) {
             if (typeof emoji === "object" && emoji instanceof EmojiAction) {
                 emojis.push(emoji.label);
-            } else if (typeof emoji === "string" && !this.useButtons) {
+            } else if (typeof emoji === "string" && this.type === "REACTION") {
                 if (actionsList.includes(emoji)) {
                     if (emoji === "FIRST") {
                         emojis.push(this.pageActions.first.label);
@@ -301,7 +348,7 @@ module.exports = class MessagePages {
     _getSystemEmojis() {
         const emojis = [];
         for (const emoji of this.enabledActions) {
-            if (typeof emoji === "string" && !this.useButtons) {
+            if (typeof emoji === "string" && this.type === "REACTION") {
                 if (actionsList.includes(emoji)) {
                     if (emoji === "FIRST") {
                         emojis.push(this.pageActions.first.label);
@@ -331,7 +378,7 @@ module.exports = class MessagePages {
         collector.on("collect", async (reaction, user) => {
             // handle system emojis, not EmojiAction(s) in enabledActions
 
-            if (this.useButtons) return;
+            if (this.type !== "REACTION") return;
 
             // if the reaction is from the client bot, ignore it
             if (user.id === this.sentMessage.author.id) return;
@@ -373,7 +420,7 @@ module.exports = class MessagePages {
      * @private
      */
     _activateInteractionCollector() {
-        if (!this.useButtons) return;
+        if (!interactionActions.includes(this.type)) return;
 
         const collector = this.sentMessage.createMessageComponentCollector({
             filter: (interaction) => this.userFilter(interaction.user),
@@ -384,12 +431,12 @@ module.exports = class MessagePages {
             if (!interaction.isButton()) return;
             const id = interaction.customId;
             if (!id.startsWith("DISCORD_CORE_MESSAGE_PAGES_")) return;
-            await interaction.deferUpdate();
             const pageIndex = id === "DISCORD_CORE_MESSAGE_PAGES_FIRST" ? 0
                 : id === "DISCORD_CORE_MESSAGE_PAGES_BACK" ? Math.max(this.currentPageIndex - 1, 0)
                     : id === "DISCORD_CORE_MESSAGE_PAGES_NEXT" ? Math.min(this.currentPageIndex + 1, this.messageCores.length - 1)
                         : id === "DISCORD_CORE_MESSAGE_PAGES_LAST" ? this.messageCores.length - 1 : -1;
             if (pageIndex === -1) return;
+            await interaction.deferUpdate();
             await this.gotoPage(pageIndex);
         });
 
