@@ -59,6 +59,15 @@ module.exports = {
             if (!buttonAction) return;
             await buttonAction.run(interaction);
         });
+
+
+        // handle select menu actions
+        core.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isSelectMenu()) return;
+            const selectMenuAction = core.selectMenuActions.find(action => interaction.customId === action.customId);
+            if (!selectMenuAction) return;
+            await selectMenuAction.run(interaction);
+        });
     }
 }
 
