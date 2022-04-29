@@ -9,8 +9,7 @@ module.exports = {
         // handle message command
         core.client.on("messageCreate", async (msg) => {
             if (!msg.content.startsWith(core.options.prefix)) return;
-            const args = msg.content.slice(core.options.prefix.length).split(/ +/);
-            const commandName = args.shift().toLowerCase();
+            const [commandName, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.aliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
