@@ -7,7 +7,9 @@ module.exports.bindOptions = (defaultOptions, options) => {
     if (!options) return defaultOptions;
     if (!defaultOptions) return options;
     const result = { ...defaultOptions };
-    for (const option of getValuesWithPath(options)) {
+
+    const nullPath = getNullPath(defaultOptions);
+    for (const option of getValuesWithPath(options, [], nullPath)) {
         const { path, value } = option;
 
         // もしパスが途中で途切れていたら、その奥は直接コピーする
@@ -43,18 +45,45 @@ module.exports.bindOptions = (defaultOptions, options) => {
     return result;
 }
 
-/** 
- * @private
- * @param {object} object 
- * @returns {{path: string[], value: any}[]}
+/**
+ * Get the path where the value is null, or undefined.
+ * @param {*} object 
+ * @param {*} path 
+ * @returns {string[][]}
  */
-function getValuesWithPath(object, path = []) {
+function getNullPath(object, path = []) {
     const result = [];
     for (const key of Object.keys(object)) {
         const value = object[key];
         const newPath = [...path, key];
-        if (typeof value === "object" && !Array.isArray(value)) {
-            result.push(...getValuesWithPath(value, newPath));
+        if (typeof value === "object" && !Array.isArray(value) && value !== null && value !== undefined) {
+            result.push(...getNullPath(value, newPath));
+        } else if (value === null || value === undefined) {
+            result.push(newPath);
+        }
+    }
+    return result;
+}
+
+/** 
+ * Warning: This function will not work with circular object.
+ * @private
+ * @param {object} object 
+ * @returns {{path: string[], value: any}[]}
+ */
+function getValuesWithPath(object, path = [], defaultOptionsNullPath = []) {
+    const result = [];
+    for (const key of Object.keys(object)) {
+        const value = object[key];
+        const newPath = [...path, key];
+        if (defaultOptionsNullPath.length !== 0) {
+            if (defaultOptionsNullPath.some(p => p.every((v, i) => v === newPath[i]) && newPath.length === p.length)) {
+                result.push({ path: newPath, value: value });
+                continue;
+            }
+        }
+        if (typeof value === "object" && !Array.isArray(value) && value !== null && value !== undefined) {
+            result.push(...getValuesWithPath(value, newPath, defaultOptionsNullPath));
         } else {
             result.push({ path: newPath, value: value });
         }
