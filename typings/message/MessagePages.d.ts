@@ -69,7 +69,7 @@ declare class MessagePages {
     };
     /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
     readonly enabledActions: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
-    /** @readonly @type {SelectMenuAction | null } */
+    /** @readonly @type {SelectMenuAction | null} */
     readonly selectMenu: SelectMenuAction | null;
     /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
     readonly type: "REACTION" | "BUTTON" | "SELECT_MENU";
@@ -85,6 +85,12 @@ declare class MessagePages {
     readonly interaction: Interaction | null;
     /** @readonly @type {number} */
     readonly currentPageIndex: number;
+    /**
+     * This function is available when the type is "SELECT_MENU"
+     * @param {MessageSelectMenu} selectMenu
+     * @returns {MessagePages}
+     */
+    setSelectMenu(selectMenu: MessageSelectMenu): MessagePages;
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel} channel
@@ -178,4 +184,5 @@ import Action = require("../action/Action");
 import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
 import { Interaction } from "discord.js";
+import { MessageSelectMenu } from "discord.js";
 import { TextBasedChannel } from "discord.js";

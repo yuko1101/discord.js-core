@@ -1,16 +1,16 @@
 export = SelectMenuAction;
 declare class SelectMenuAction extends Action {
     /**
-     * @param {object} options
-     * @param {string} options.label
-     * @param {Core} options.core
-     * @param {number} [options.maxValues]
-     * @param {number} [options.minValues]
-     * @param {MessageSelectOptionData[]} [options.options]
-     * @param {boolean} [options.disabled]
-     * @param {(interaction: SelectMenuInteraction) => Promise<void>} options.run
+     * @param {object} data
+     * @param {string} data.label
+     * @param {Core} data.core
+     * @param {number} [data.maxValues]
+     * @param {number} [data.minValues]
+     * @param {MessageSelectOptionData[]} [data.options]
+     * @param {boolean} [data.disabled]
+     * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
      */
-    constructor(options: {
+    constructor(data: {
         label: string;
         core: Core;
         maxValues?: number;
@@ -19,15 +19,19 @@ declare class SelectMenuAction extends Action {
         disabled?: boolean;
         run: (interaction: SelectMenuInteraction) => Promise<void>;
     });
-    options: MessageSelectOptionData[];
+    data: any;
     /** @type {number} */
     maxValues: number;
     /** @type {number} */
     minValues: number;
+    /** @readonly @type {MessageSelectOptionData[]} */
+    readonly options: MessageSelectOptionData[];
     /** @type {boolean} */
     disabled: boolean;
     /** @type {(interaction: SelectMenuInteraction) => Promise<void>} */
     run: (interaction: SelectMenuInteraction) => Promise<void>;
+    /** @readonly @type {string} */
+    readonly customId: string;
     /** @returns {MessageSelectMenu} */
     getSelectMenu(): MessageSelectMenu;
     /**
