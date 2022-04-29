@@ -1,5 +1,5 @@
 "use strict";
-import { Core, Command, CustomEmoji, Pages, EmojiAction, ButtonAction, MessageCore, MessagePages } from "discord-core";
+import { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } from "discord-core";
 import { Client, Intents } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -41,9 +41,22 @@ const command = new Command({
             enabledActions: ["BACK", new EmojiAction({ core: core, label: "❌", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
             type: "BUTTON",
             timeout: 10000,
-        })
+            pageActions: {
+                back: {
+                    buttonStyle: "DANGER"
+                }
+            }
+        });
 
-        pages.sendTo(ic.channel);
+        // pages.setSelectMenu(new SelectMenuAction({
+        //     core: core, label: "SELECT!", run: async (interaction) => {
+        //         await interaction.deferUpdate();
+        //         if (interaction.values.includes("a")) pages.gotoPage(1);
+        //         else pages.gotoPage(2);
+        //     }, options: [{ label: "a", value: "a" }, { label: "b", value: "b" }], disabled: false
+        // }));
+
+        pages.interactionReply(ic.interaction);
 
 
 
