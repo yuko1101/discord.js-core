@@ -131,6 +131,7 @@ module.exports = class MessagePages {
      * @returns {Promise<Message>}
      */
     async interactionReply(interaction, options = {}) {
+        if (interaction === null || interaction === undefined) throw new Error("Interaction cannot be null or undefined");
         options = bindOptions({
             followUp: false,
             ephemeral: false
