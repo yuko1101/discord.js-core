@@ -27,49 +27,49 @@ module.exports = class InteractionCore {
      * @param {CommandInteraction | null} data.interaction
      */
     constructor(data) {
-        /** @type {Message | null} @readonly */
+        /** @readonly @type {Message | null} */
         this.msg = data.msg;
-        /** @type {CommandInteraction | null} @readonly */
+        /** @readonly @type {CommandInteraction | null} */
         this.interaction = data.interaction;
-        /** @type {boolean} @readonly */
+        /** @readonly @type {boolean} */
         this.isSlashCommand = !!data.interaction;
 
 
-        /** @type {TextBasedChannel} @readonly */
+        /** @readonly @type {TextBasedChannel} */
         this.channel = this.isSlashCommand ? this.interaction.channel : this.msg.channel;
-        /** @type {Guild} @readonly */
+        /** @readonly @type {Guild} */
         this.guild = this.isSlashCommand ? this.interaction.guild : this.msg.guild;
-        /** @type {GuildMember} @readonly */
+        /** @readonly @type {GuildMember} */
         this.member = this.isSlashCommand ? this.interaction.member : this.msg.member;
-        /** @type {User} @readonly */
+        /** @readonly @type {User} */
         this.user = this.isSlashCommand ? this.interaction.user : this.msg.author;
 
 
 
         // Data
 
-        /** @type {Message | null} @readonly */
+        /** @readonly @type {Message | null} */
         this.replyMessage = null;
 
-        /** @type {Message | null} @readonly */
+        /** @readonly @type {Message | null} */
         this.followUpMessage = null;
 
-        /** @type {boolean} @readonly */
+        /** @readonly @type {boolean} */
         this.deferred = false;
 
-        /** @type {boolean} @readonly */
+        /** @readonly @type {boolean} */
         this.replied = false;
 
-        /** @type {boolean} @readonly */
+        /** @readonly @type {boolean} */
         this.followedUp = false;
 
-        /** @type {boolean | null} @readonly */
+        /** @readonly @type {boolean | null} */
         this.isReplyMessageSentAsEphemeral = null;
 
-        /** @type {boolean | null} @readonly */
+        /** @readonly @type {boolean | null} */
         this.isFollowUpMessageSentAsEphemeral = null;
 
-        /** @type {boolean} @readonly */
+        /** @readonly @type {boolean} */
         this.isReplyMessageDeleted = false;
     }
 

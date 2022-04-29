@@ -12,14 +12,14 @@ const SelectMenuAction = require("./action/SelectMenuAction");
 const Action = require("./action/Action");
 
 module.exports = {
-    Core: Core,
-    Command: Command,
-    ConfigFile: ConfigFile,
-    MessageCore: MessageCore,
-    MessagePages: MessagePages,
-    CustomEmoji: CustomEmoji,
-    EmojiAction: EmojiAction,
-    ButtonAction: ButtonAction,
-    SelectMenuAction: SelectMenuAction,
-    Action: Action
+    Core,
+    Command,
+    ConfigFile,
+    MessageCore,
+    MessagePages,
+    CustomEmoji,
+    EmojiAction,
+    ButtonAction,
+    SelectMenuAction,
+    Action
 }

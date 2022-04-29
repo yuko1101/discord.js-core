@@ -164,9 +164,7 @@ module.exports = class MessagePages {
     }
 
     /**
-     * 
      * @param {number} index 
-     * @returns 
      */
     async gotoPage(index) {
         if (!this.isSent) throw new Error("This MessagePages hasn't been sent yet. Please send it first.");
