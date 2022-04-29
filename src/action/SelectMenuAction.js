@@ -5,42 +5,47 @@ const { bindOptions } = require("../utils/utils");
 /** @extends {Action} */
 module.exports = class SelectMenuAction extends Action {
     /** 
-     * @param {object} options
-     * @param {string} options.label
-     * @param {Core} options.core
-     * @param {number} [options.maxValues]
-     * @param {number} [options.minValues]
-     * @param {MessageSelectOptionData[]} [options.options]
-     * @param {boolean} [options.disabled]
-     * @param {(interaction: SelectMenuInteraction) => Promise<void>} options.run
+     * @param {object} data
+     * @param {string} data.label
+     * @param {Core} data.core
+     * @param {number} [data.maxValues]
+     * @param {number} [data.minValues]
+     * @param {MessageSelectOptionData[]} [data.options]
+     * @param {boolean} [data.disabled]
+     * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
      */
-    constructor(options) {
-        super(options);
-        this.options = bindOptions({
+    constructor(data) {
+        super(data);
+        this.data = bindOptions({
+            core: null,
+            label: "",
             maxValues: 1,
             minValues: 1,
             options: [],
             disabled: false,
             run: async () => { }
-        }, options);
+        }, data);
 
         /** @type {number} */
-        this.maxValues = this.options.maxValues;
+        this.maxValues = this.data.maxValues;
         /** @type {number} */
-        this.minValues = this.options.minValues;
+        this.minValues = this.data.minValues;
         /** @readonly @type {MessageSelectOptionData[]} */
-        this.options = this.options.options;
+        this.options = this.data.options;
         /** @type {boolean} */
-        this.disabled = this.options.disabled;
+        this.disabled = this.data.disabled;
         /** @type {(interaction: SelectMenuInteraction) => Promise<void>} */
-        this.run = this.options.run;
+        this.run = this.data.run;
+
+        /** @readonly @type {string} */
+        this.customId = `SELECT_MENU_ACTION:${this.id}`;
 
     }
 
     /** @returns {MessageSelectMenu} */
     getSelectMenu() {
         return new MessageSelectMenu()
-            .setCustomId(`SELECT_MENU_ACTION:${this.id}`)
+            .setCustomId(this.customId)
             .setPlaceholder(this.label)
             .setMaxValues(this.maxValues)
             .setMinValues(this.minValues)

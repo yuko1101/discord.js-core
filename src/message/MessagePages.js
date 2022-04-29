@@ -1,4 +1,4 @@
-const { Message, TextBasedChannel, MessageOptions, MessageButton, MessageActionRow, MessageButtonStyleResolvable, MessageReaction, Interaction } = require("discord.js");
+const { Message, TextBasedChannel, MessageOptions, MessageButton, MessageActionRow, MessageButtonStyleResolvable, MessageReaction, Interaction, MessageSelectMenu } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
@@ -68,11 +68,10 @@ module.exports = class MessagePages {
         this.pageActions = this.options.pageActions;
         /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
         this.enabledActions = this.options.enabledActions;
-        /** @readonly @type {SelectMenuAction | null } */
+        /** @readonly @type {SelectMenuAction | null} */
         this.selectMenu = this.options.pageActions.selectMenu;
         /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
         this.type = this.options.type;
-        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions");
         /** @readonly @type {number | null} */
         this.timeout = this.options.timeout;
         /** @readonly @type {(User) => Promise<boolean>} */
@@ -90,12 +89,25 @@ module.exports = class MessagePages {
     }
 
     /**
+     * This function is available when the type is "SELECT_MENU"
+     * @param {MessageSelectMenu} selectMenu 
+     * @returns {MessagePages}
+     */
+    setSelectMenu(selectMenu) {
+        if (this.type !== "SELECT_MENU") throw new Error("This function is only available when the type is \"SELECT_MENU\"");
+        this.options.selectMenu = selectMenu;
+        this.selectMenu = selectMenu;
+        return this;
+    }
+
+    /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel} channel
      * @returns {Promise<Message>}
      */
     async sendTo(channel) {
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
+        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
 
         // send message
         this.sentMessage = await channel.send(await this._getMessageOptionsWithComponents(this.currentPageIndex));
@@ -125,6 +137,7 @@ module.exports = class MessagePages {
         }, options);
 
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
+        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
 
         if ((interaction.ephemeral || options.ephemeral) && (this.type === "REACTION" || this.enabledActions.some(action => typeof action === "object" && action instanceof EmojiAction))) {
             throw new Error("Ephemeral messages cannot have reactions.");
@@ -184,7 +197,7 @@ module.exports = class MessagePages {
             messageOptions.components = [...(messageOptions.components || []), new MessageActionRow().addComponents(...buttons)];
         }
         if (this.type === "SELECT_MENU") {
-            messageOptions.components.push(new MessageActionRow().addComponents(this.pageActions.selectMenu));
+            messageOptions.components.push(new MessageActionRow().addComponents(this.selectMenu.getSelectMenu()));
         }
         return messageOptions;
     }
