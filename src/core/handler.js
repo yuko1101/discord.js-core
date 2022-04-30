@@ -113,7 +113,8 @@ function optionsToObject(options) {
     if (!options) return {}
     const obj = {}
     for (const option of options) {
-        if (option.options || option.type === "SUB_COMMAND") {
+        if (option.options) {
+            // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
             obj[option.name] = optionsToObject(option.options || []) || {}
         } else {
             obj[option.name] = option.value
