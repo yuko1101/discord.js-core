@@ -32,21 +32,21 @@ module.exports = class InteractionCore {
         /** @readonly @type {CommandInteraction | null} */
         this.interaction = data.interaction;
         /** @readonly @type {boolean} */
-        this.isSlashCommand = !!data.interaction;
+        this.hasInteraction = !!data.interaction;
 
 
         /** @readonly @type {TextBasedChannel} */
-        this.channel = this.isSlashCommand ? this.interaction.channel : this.msg.channel;
+        this.channel = this.hasInteraction ? this.interaction.channel : this.msg.channel;
         /** @readonly @type {Guild} */
-        this.guild = this.isSlashCommand ? this.interaction.guild : this.msg.guild;
+        this.guild = this.hasInteraction ? this.interaction.guild : this.msg.guild;
         /** @readonly @type {GuildMember} */
-        this.member = this.isSlashCommand ? this.interaction.member : this.msg.member;
+        this.member = this.hasInteraction ? this.interaction.member : this.msg.member;
         /** @readonly @type {User} */
-        this.user = this.isSlashCommand ? this.interaction.user : this.msg.author;
+        this.user = this.hasInteraction ? this.interaction.user : this.msg.author;
 
 
 
-        // Data
+        /* Data */
 
         /** @readonly @type {Message | null} */
         this.replyMessage = null;
@@ -82,7 +82,7 @@ module.exports = class InteractionCore {
         options = bindOptions({ fetchReply: false, ephemeral: false }, options);
         if (this.deferred) throw new Error("You can't defer a `InteractionCore` twice");
         if (this.replied) throw new Error("You can't defer a `InteractionCore` after it has replied");
-        if (!this.isSlashCommand) {
+        if (!this.hasInteraction) {
             await this.msg.channel.sendTyping();
         } else {
             await this.interaction.deferReply({ fetchReply: options.fetchReply, ephemeral: options.ephemeral });
@@ -104,7 +104,7 @@ module.exports = class InteractionCore {
         options = bindOptions({ fetchReply: true, ephemeral: false }, options);
         if (this.deferred) throw new Error("You cannot reply to a message after deferring it. Consider using `followUp` instead.");
         if (this.replied) throw new Error("You can't reply twice");
-        if (!this.isSlashCommand) {
+        if (!this.hasInteraction) {
             this.replyMessage = await this.msg.reply(messageOptions);
         } else {
             const message = await this.interaction.reply({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
@@ -125,7 +125,7 @@ module.exports = class InteractionCore {
      */
     async editReply(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true }, options);
-        if (!this.isSlashCommand) {
+        if (!this.hasInteraction) {
             if (!this.replyMessage) {
                 throw new Error("You must reply to a message before editing it");
             }
@@ -147,7 +147,7 @@ module.exports = class InteractionCore {
     async deleteReply(options = {}) {
         options = bindOptions({ showError: false }, options);
         if (this.isReplyMessageDeleted) throw new Error("You can't delete a reply that has already been deleted.");
-        if (!this.isSlashCommand) {
+        if (!this.hasInteraction) {
             if (!this.replyMessage) {
                 throw new Error("You must reply to a message before deleting it");
             }
@@ -186,7 +186,7 @@ module.exports = class InteractionCore {
      */
     async followUp(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true, ephemeral: false, reply: true }, options);
-        if (!this.isSlashCommand) {
+        if (!this.hasInteraction) {
             if (!this.replyMessage && !this.deferred) throw new Error("You must reply to a message before following up to it");
             if (this.deferred) {
                 this.followUpMessage = await this.msg.reply(messageOptions);

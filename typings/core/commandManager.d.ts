@@ -2,5 +2,5 @@
  * @param {Command[]} commands
  * @param {Core} core
  */
-export function applySlashCommands(core: Core): Promise<void>;
+export function applyCommands(core: Core): Promise<void>;
 import Core = require("./Core");

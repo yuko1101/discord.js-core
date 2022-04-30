@@ -9,35 +9,35 @@ declare class InteractionCore {
         msg: Message | null;
         interaction: CommandInteraction | null;
     });
-    /** @type {Message | null} @readonly */
+    /** @readonly @type {Message | null} */
     readonly msg: Message | null;
-    /** @type {CommandInteraction | null} @readonly */
+    /** @readonly @type {CommandInteraction | null} */
     readonly interaction: CommandInteraction | null;
-    /** @type {boolean} @readonly */
-    readonly isSlashCommand: boolean;
-    /** @type {TextBasedChannel} @readonly */
+    /** @readonly @type {boolean} */
+    readonly hasInteraction: boolean;
+    /** @readonly @type {TextBasedChannel} */
     readonly channel: TextBasedChannel;
-    /** @type {Guild} @readonly */
+    /** @readonly @type {Guild} */
     readonly guild: Guild;
-    /** @type {GuildMember} @readonly */
+    /** @readonly @type {GuildMember} */
     readonly member: GuildMember;
-    /** @type {User} @readonly */
+    /** @readonly @type {User} */
     readonly user: User;
-    /** @type {Message | null} @readonly */
+    /** @readonly @type {Message | null} */
     readonly replyMessage: Message | null;
-    /** @type {Message | null} @readonly */
+    /** @readonly @type {Message | null} */
     readonly followUpMessage: Message | null;
-    /** @type {boolean} @readonly */
+    /** @readonly @type {boolean} */
     readonly deferred: boolean;
-    /** @type {boolean} @readonly */
+    /** @readonly @type {boolean} */
     readonly replied: boolean;
-    /** @type {boolean} @readonly */
+    /** @readonly @type {boolean} */
     readonly followedUp: boolean;
-    /** @type {boolean | null} @readonly */
+    /** @readonly @type {boolean | null} */
     readonly isReplyMessageSentAsEphemeral: boolean | null;
-    /** @type {boolean | null} @readonly */
+    /** @readonly @type {boolean | null} */
     readonly isFollowUpMessageSentAsEphemeral: boolean | null;
-    /** @type {boolean} @readonly */
+    /** @readonly @type {boolean} */
     readonly isReplyMessageDeleted: boolean;
     /**
      * @param {object} [options={}]

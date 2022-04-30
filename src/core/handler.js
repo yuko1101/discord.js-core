@@ -13,8 +13,7 @@ module.exports = {
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.aliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
-            if (command.type === "MESSAGE_COMMAND" || command.type === "BOTH") {
-
+            if (command.supports.includes("MESSAGE_COMMAND")) {
                 await command.run(new InteractionCore({ msg: msg }), argsToObject(args, command.args), core);
             }
         });
@@ -26,11 +25,22 @@ module.exports = {
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
-            if (command.type === "SLASH_COMMAND" || command.type === "BOTH") {
-
+            if (command.supports.includes("SLASH_COMMAND")) {
                 const args = optionsToObject(interaction.options?.data);
 
                 await command.run(new InteractionCore({ interaction: interaction }), args, core);
+            }
+        });
+
+        // handle context menu
+        core.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isContextMenu()) return;
+            const commandName = interaction.commandName.toLowerCase();
+
+            const command = core.commands.find(c => c.name.toLowerCase() === commandName);
+            if (!command) return;
+            if (command.supports.includes("USER_CONTEXT_MENU") || command.supports.includes("MESSAGE_CONTEXT_MENU")) {
+                await command.run(new InteractionCore({ interaction: interaction }), { [interaction.targetType.toLowerCase()]: interaction.targetId }, core);
             }
         });
 

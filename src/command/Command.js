@@ -10,7 +10,7 @@ const defaultData = {
     args: [],
     options: [],
     aliases: [],
-    type: "BOTH",
+    supports: ["SLASH_COMMAND", "MESSAGE_COMMAND"],
     run: async (ic, args, core) => { }, //required
 }
 
@@ -22,7 +22,7 @@ module.exports = class Command {
      * @param {string[]} [data.args=[]] - for message command
      * @param {ApplicationCommandOptionData[]} [data.options=[]] - for slash command
      * @param {string[]} [data.aliases=[]]
-     * @param {"BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE"} [data.type="BOTH"]
+     * @param {("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[]} [data.supports=["SLASH_COMMAND", "MESSAGE_COMMAND"]]
      * @param {(ic: InteractionCore, args: object, core: Core) => Promise<void>} data.run
      */
     constructor(data) {
@@ -37,8 +37,8 @@ module.exports = class Command {
         this.options = this.data.options;
         /** @type {string[]} */
         this.aliases = this.data.aliases;
-        /** @type {"BOTH" | "MESSAGE_COMMAND" | "SLASH_COMMAND" | "NONE"} */
-        this.type = this.data.type;
+        /** @type {("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[]} */
+        this.supports = this.data.supports;
         /** @type {(ic: InteractionCore, args: object, core: Core) => Promise<void>} */
         this.run = this.data.run;
     }

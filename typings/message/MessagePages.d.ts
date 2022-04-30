@@ -110,9 +110,7 @@ declare class MessagePages {
         ephemeral?: boolean;
     }): Promise<Message>;
     /**
-     *
      * @param {number} index
-     * @returns
      */
     gotoPage(index: number): Promise<void>;
     /**

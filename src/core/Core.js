@@ -2,7 +2,7 @@
 
 const { Client } = require("discord.js");
 const Command = require("../command/Command");
-const commandManager = require("./slashCommandManager");
+const commandManager = require("./commandManager");
 const handler = require("./handler");
 const EmojiAction = require("../action/EmojiAction");
 const ButtonAction = require("../action/ButtonAction");
@@ -59,6 +59,6 @@ module.exports = class Core {
     }
 
     async applySlashCommands() {
-        await commandManager.applySlashCommands(this);
+        await commandManager.applyCommands(this);
     }
 }
