@@ -3,16 +3,16 @@ declare class InteractionCore {
     /**
      * @param {object} data
      * @param {Message | null} data.msg
-     * @param {CommandInteraction | null} data.interaction
+     * @param {BaseCommandInteraction | null} data.interaction
      */
     constructor(data: {
         msg: Message | null;
-        interaction: CommandInteraction | null;
+        interaction: BaseCommandInteraction | null;
     });
     /** @readonly @type {Message | null} */
     readonly msg: Message | null;
-    /** @readonly @type {CommandInteraction | null} */
-    readonly interaction: CommandInteraction | null;
+    /** @readonly @type {BaseCommandInteraction | null} */
+    readonly interaction: BaseCommandInteraction | null;
     /** @readonly @type {boolean} */
     readonly hasInteraction: boolean;
     /** @readonly @type {TextBasedChannel} */
@@ -93,7 +93,7 @@ declare class InteractionCore {
     }): Promise<Message | null>;
 }
 import { Message } from "discord.js";
-import { CommandInteraction } from "discord.js";
+import { BaseCommandInteraction } from "discord.js";
 import { TextBasedChannel } from "discord.js";
 import { Guild } from "discord.js";
 import { GuildMember } from "discord.js";
