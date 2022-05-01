@@ -93,10 +93,10 @@ declare class MessagePages {
     setSelectMenu(selectMenu: MessageSelectMenu): MessagePages;
     /**
      * Sends this MessagePages message to the channel
-     * @param {TextBasedChannel} channel
+     * @param {TextBasedChannel | Message} whereToSend
      * @returns {Promise<Message>}
      */
-    sendTo(channel: TextBasedChannel): Promise<Message>;
+    sendTo(whereToSend: TextBasedChannel | Message): Promise<Message>;
     /**
      * Sends this MessagePages message as a reply of the interaction
      * @param {Interaction} interaction

@@ -25,8 +25,12 @@ declare class InteractionCore {
     readonly user: User;
     /** @readonly @type {Message | null} */
     readonly replyMessage: Message | null;
+    /** @private @type {MessageOptions | MessageCore | MessagePages} */
+    private replyMessageData;
     /** @readonly @type {Message | null} */
     readonly followUpMessage: Message | null;
+    /** @private @type {MessageOptions | MessageCore | MessagePages} */
+    private followUpMessageData;
     /** @readonly @type {boolean} */
     readonly deferred: boolean;
     /** @readonly @type {boolean} */
@@ -49,13 +53,13 @@ declare class InteractionCore {
         ephemeral?: boolean;
     }): Promise<void>;
     /**
-     * @param {MessageOptions} messageOptions
+     * @param {MessageOptions | MessageCore | MessagePages} message
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    reply(messageOptions: MessageOptions, options?: {
+    reply(message: MessageOptions | MessageCore | MessagePages, options?: {
         fetchReply?: boolean;
         ephemeral?: boolean;
     }): Promise<Message | null>;
@@ -75,14 +79,14 @@ declare class InteractionCore {
      */
     deleteReply(options?: object): boolean;
     /**
-     * @param {MessageOptions} messageOptions
+     * @param {MessageOptions | MessageCore | MessagePages} message
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @param {boolean} [options.reply=true] Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    followUp(messageOptions: MessageOptions, options?: {
+    followUp(message: MessageOptions | MessageCore | MessagePages, options?: {
         fetchReply?: boolean;
         ephemeral?: boolean;
         reply?: boolean;
@@ -95,3 +99,5 @@ import { Guild } from "discord.js";
 import { GuildMember } from "discord.js";
 import { User } from "discord.js";
 import { MessageOptions } from "discord.js";
+import MessageCore = require("../message/MessageCore");
+import MessagePages = require("../message/MessagePages");

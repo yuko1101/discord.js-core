@@ -57,7 +57,9 @@ const command = new Command({
         //     }, options: [{ label: "a", value: "a" }, { label: "b", value: "b" }], disabled: false
         // }));
 
-        pages.interactionReply(ic.interaction);
+        await ic.deferReply();
+        ic.followUp(pages);
+
 
 
 

@@ -102,15 +102,19 @@ module.exports = class MessagePages {
 
     /**
      * Sends this MessagePages message to the channel
-     * @param {TextBasedChannel} channel
+     * @param {TextBasedChannel | Message} whereToSend
      * @returns {Promise<Message>}
      */
-    async sendTo(channel) {
+    async sendTo(whereToSend) {
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
         if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
 
+        const sendFunction = async (messageOptions) => {
+            return await (whereToSend.reply ? whereToSend.reply(messageOptions) : whereToSend.send(messageOptions));
+        }
+
         // send message
-        this.sentMessage = await channel.send(await this._getMessageOptionsWithComponents(this.currentPageIndex));
+        this.sentMessage = await sendFunction(await this._getMessageOptionsWithComponents(this.currentPageIndex));
         this.isSent = true;
 
         // apply reactions

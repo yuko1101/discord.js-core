@@ -17,19 +17,21 @@
 
  */
 
-const { CommandInteraction, Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions } = require("discord.js");
+const { Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions, BaseCommandInteraction } = require("discord.js");
+const MessageCore = require("../message/MessageCore");
+const MessagePages = require("../message/MessagePages");
 const { bindOptions } = require("../utils/utils");
 
 module.exports = class InteractionCore {
     /**
      * @param {object} data
      * @param {Message | null} data.msg
-     * @param {CommandInteraction | null} data.interaction
+     * @param {BaseCommandInteraction | null} data.interaction
      */
     constructor(data) {
         /** @readonly @type {Message | null} */
         this.msg = data.msg;
-        /** @readonly @type {CommandInteraction | null} */
+        /** @readonly @type {BaseCommandInteraction | null} */
         this.interaction = data.interaction;
         /** @readonly @type {boolean} */
         this.hasInteraction = !!data.interaction;
@@ -51,8 +53,14 @@ module.exports = class InteractionCore {
         /** @readonly @type {Message | null} */
         this.replyMessage = null;
 
+        /** @private @type {MessageOptions | MessageCore | MessagePages} */
+        this.replyMessageData = null;
+
         /** @readonly @type {Message | null} */
         this.followUpMessage = null;
+
+        /** @private @type {MessageOptions | MessageCore | MessagePages} */
+        this.followUpMessageData = null;
 
         /** @readonly @type {boolean} */
         this.deferred = false;
@@ -92,28 +100,51 @@ module.exports = class InteractionCore {
         this.isReplyMessageSentAsEphemeral = options.ephemeral;
     }
 
-
     /** 
-     * @param {MessageOptions} messageOptions 
+     * @param {MessageOptions | MessageCore | MessagePages} message 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async reply(messageOptions, options = {}) {
+    async reply(message, options = {}) {
         options = bindOptions({ fetchReply: true, ephemeral: false }, options);
         if (this.deferred) throw new Error("You cannot reply to a message after deferring it. Consider using `followUp` instead.");
         if (this.replied) throw new Error("You can't reply twice");
         if (!this.hasInteraction) {
-            this.replyMessage = await this.msg.reply(messageOptions);
+            if (message instanceof MessageCore) {
+                message.buttonActions.forEach(array => array.forEach(action => action.register()));
+                this.replyMessage = await this.msg.reply(message.getMessage());
+                message.apply(this.replyMessage);
+            } else if (message instanceof MessagePages) {
+                this.replyMessage = await message.sendTo(this.msg);
+            } else {
+                this.replyMessage = await this.msg.reply(message);
+            }
         } else {
-            const message = await this.interaction.reply({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
-            if (options.fetchReply) {
-                this.replyMessage = message;
+            if (message instanceof MessageCore) {
+                message.buttonActions.forEach(array => array.forEach(action => action.register()));
+                /** @type {void | Message} */
+                const sent = await this.interaction.reply({ ...message.getMessage(), fetchReply: options.fetchReply || message.emojiActions.length !== 0, ephemeral: options.ephemeral });
+                if (sent) {
+                    this.replyMessage = sent;
+                    message.apply(sent);
+                }
+            } else if (message instanceof MessagePages) {
+                /** @type {Message} */
+                const sent = await message.interactionReply(this.interaction, { ephemeral: options.ephemeral });
+                this.replyMessage = sent;
+            } else {
+                /** @type {void | Message} */
+                const sent = await this.interaction.reply({ ...message, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
+                if (options.fetchReply) {
+                    this.replyMessage = sent;
+                }
             }
         }
         this.replied = true;
         this.isReplyMessageSentAsEphemeral = options.ephemeral;
+        this.replyMessageData = message;
         return this.replyMessage;
     }
 
@@ -177,27 +208,49 @@ module.exports = class InteractionCore {
     }
 
     /** 
-     * @param {MessageOptions} messageOptions
+     * @param {MessageOptions | MessageCore | MessagePages} message
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
      * @param {boolean} [options.reply=true] Whether to reply to the previous message (Only for message command. If deferred the InteractionCore, this option is ignored)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async followUp(messageOptions, options = {}) {
+    async followUp(message, options = {}) {
         options = bindOptions({ fetchReply: true, ephemeral: false, reply: true }, options);
+        options.reply = options.reply || this.deferred;
         if (!this.hasInteraction) {
             if (!this.replyMessage && !this.deferred) throw new Error("You must reply to a message before following up to it");
-            if (this.deferred) {
-                this.followUpMessage = await this.msg.reply(messageOptions);
-            } else {
-                this.followUpMessage = options.reply ? await this.replyMessage.reply(messageOptions) : await this.msg.channel.send(messageOptions);
+            const sendFunction = async (messageOptions) => {
+                return await (options.reply ? this.msg.reply(messageOptions) : this.msg.channel.send(messageOptions));
             }
-
+            if (message instanceof MessageCore) {
+                message.buttonActions.forEach(array => array.forEach(action => action.register()));
+                this.followUpMessage = await sendFunction(message.getMessage());
+                message.apply(this.followUpMessage);
+            } else if (message instanceof MessagePages) {
+                this.followUpMessage = await message.sendTo(this.msg);
+            } else {
+                this.followUpMessage = await sendFunction(message);
+            }
         } else {
-            const message = await this.interaction.followUp({ ...messageOptions, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
-            if (options.fetchReply) {
-                this.followUpMessage = message;
+            if (message instanceof MessageCore) {
+                message.buttonActions.forEach(array => array.forEach(action => action.register()));
+                /** @type {void | Message} */
+                const sent = await this.interaction.followUp({ ...message.getMessage(), fetchReply: options.fetchReply || message.emojiActions.length !== 0, ephemeral: options.ephemeral });
+                if (sent) {
+                    this.followUpMessage = sent;
+                    message.apply(sent);
+                }
+            } else if (message instanceof MessagePages) {
+                /** @type {Message} */
+                const sent = await message.interactionReply(this.interaction, { ephemeral: options.ephemeral, followUp: true });
+                this.followUpMessage = sent;
+            } else {
+                /** @type {void | Message} */
+                const sent = await this.interaction.followUp({ ...message, fetchReply: options.fetchReply, ephemeral: options.ephemeral });
+                if (options.fetchReply) {
+                    this.followUpMessage = sent;
+                }
             }
         }
         this.followedUp = true;
@@ -206,8 +259,9 @@ module.exports = class InteractionCore {
         } else {
             this.isFollowUpMessageSentAsEphemeral = options.ephemeral;
         }
+        this.followUpMessageData = message;
         return this.followUpMessage;
     }
 
-    // TODO: add editFollowUp, deleteFollowUp, sendPages, and more
+    // TODO: add editFollowUp, deleteFollowUp, and more
 }
