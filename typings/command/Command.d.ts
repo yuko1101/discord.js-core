@@ -5,7 +5,7 @@ declare class Command {
      * @param {string} data.name
      * @param {string} [data.description="No description."]
      * @param {string[]} [data.args=[]] - for message command
-     * @param {ApplicationCommandOptionData[]} [data.options=[]] - for slash command
+     * @param {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> })[]} [data.options=[]] - For slash command. You can use `autocompleter` recursively.
      * @param {string[]} [data.aliases=[]]
      * @param {("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[]} [data.supports=["SLASH_COMMAND", "MESSAGE_COMMAND"]]
      * @param {(ic: InteractionCore, args: object, core: Core) => Promise<void>} data.run
@@ -14,7 +14,9 @@ declare class Command {
         name: string;
         description?: string;
         args?: string[];
-        options?: ApplicationCommandOptionData[];
+        options?: (ApplicationCommandOptionData & {
+            autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void>;
+        })[];
         aliases?: string[];
         supports?: ("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[];
         run: (ic: InteractionCore, args: object, core: Core) => Promise<void>;
@@ -26,8 +28,10 @@ declare class Command {
     description: string;
     /** @type {string[]} */
     args: string[];
-    /** @type {ApplicationCommandOptionData[]} */
-    options: ApplicationCommandOptionData[];
+    /** @type {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> })[]} */
+    options: (ApplicationCommandOptionData & {
+        autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void>;
+    })[];
     /** @type {string[]} */
     aliases: string[];
     /** @type {("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[]} */
@@ -36,5 +40,6 @@ declare class Command {
     run: (ic: InteractionCore, args: object, core: Core) => Promise<void>;
 }
 import { ApplicationCommandOptionData } from "discord.js";
+import { AutocompleteInteraction } from "discord.js";
 import InteractionCore = require("./InteractionCore");
 import Core = require("../core/Core");

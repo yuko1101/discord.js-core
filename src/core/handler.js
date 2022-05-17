@@ -77,6 +77,23 @@ module.exports = {
             if (!selectMenuAction) return;
             await selectMenuAction.run(interaction);
         });
+
+
+        // handle autocompleters
+        core.client.on("interactionCreate", async (interaction) => {
+            if (!interaction.isAutocomplete()) return;
+
+            const command = core.commands.find(c => c.name.toLowerCase() === interaction.commandName.toLowerCase());
+            if (!command) return;
+            if (!command.supports.includes("SLASH_COMMAND")) return;
+            if (!interaction.options?.data) return;
+            const options = getAllAutoCompleteOptions(interaction.options.data);
+            const focused = options.find(option => option.option.focused);
+            if (!focused) return;
+            const autocompleter = getOptionWithPath(command.options, focused.path)?.autocompleter;
+            if (!autocompleter) return;
+            await autocompleter(interaction, focused.option.value);
+        });
     }
 }
 
@@ -121,4 +138,62 @@ function optionsToObject(options) {
         }
     }
     return obj
+}
+
+/**
+ * @private
+ * @param {CommandInteractionOption[]} options 
+ * @returns {{path: string[], option: CommandInteractionOption}[]}
+ */
+function getAllAutoCompleteOptions(options, path = []) {
+    const allOptions = path.length === 0 ? autoCompleteOptionsToObject(options) : options;
+    const result = [];
+    for (const key of Object.keys(allOptions)) {
+        if (typeof allOptions[key] === "object" && allOptions[key] !== null && allOptions[key] !== undefined && !allOptions[key].name) {
+            result.push(...getAllAutoCompleteOptions(allOptions[key], [...path, key]));
+        } else {
+            result.push({ path: [...path, key], option: allOptions[key] });
+        }
+    }
+    return result;
+}
+
+
+/**
+ * @private
+ * @param {CommandInteractionOption[]} options
+ * @returns {object}
+ */
+function autoCompleteOptionsToObject(options) {
+    if (!options) return {}
+    const obj = {}
+    for (const option of options) {
+        if (option.options) {
+            // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
+            obj[option.name] = autoCompleteOptionsToObject(option.options || []) || {}
+        } else {
+            obj[option.name] = option
+        }
+    }
+    return obj
+}
+
+
+/**
+ * @private
+ * @param {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> })[]} options
+ * @param {string[]} path
+ * @returns {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> }) | null}
+ */
+function getOptionWithPath(options, path) {
+    if (!options) return null
+    if (path.length === 0) return options
+    const option = options.find(o => o.name == path[0]);
+    if (!option) return null
+    if (option.options) {
+        // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
+        return getOptionWithPath(option.options, path.slice(1))
+    } else {
+        return option
+    }
 }

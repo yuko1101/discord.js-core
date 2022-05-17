@@ -1,5 +1,5 @@
 "use strict";
-const { Message, MessageOptions, ApplicationCommandOptionData } = require("discord.js");
+const { Message, MessageOptions, ApplicationCommandOptionData, AutocompleteInteraction } = require("discord.js");
 const Core = require("../core/Core");
 const { bindOptions } = require("../utils/utils");
 const InteractionCore = require("./InteractionCore");
@@ -20,7 +20,7 @@ module.exports = class Command {
      * @param {string} data.name
      * @param {string} [data.description="No description."]
      * @param {string[]} [data.args=[]] - for message command
-     * @param {ApplicationCommandOptionData[]} [data.options=[]] - for slash command
+     * @param {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> })[]} [data.options=[]] - For slash command. You can use `autocompleter` recursively.
      * @param {string[]} [data.aliases=[]]
      * @param {("SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU")[]} [data.supports=["SLASH_COMMAND", "MESSAGE_COMMAND"]]
      * @param {(ic: InteractionCore, args: object, core: Core) => Promise<void>} data.run
@@ -33,7 +33,7 @@ module.exports = class Command {
         this.description = this.data.description;
         /** @type {string[]} */
         this.args = this.data.args;
-        /** @type {ApplicationCommandOptionData[]} */
+        /** @type {(ApplicationCommandOptionData & { autocompleter?: (interaction: AutocompleteInteraction, value: any) => Promise<void> })[]} */
         this.options = this.data.options;
         /** @type {string[]} */
         this.aliases = this.data.aliases;
