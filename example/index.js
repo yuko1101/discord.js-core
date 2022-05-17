@@ -1,6 +1,6 @@
 "use strict";
 import { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } from "discord-core";
-import { Client, Intents } from "discord.js";
+import { AutocompleteInteraction, Client, Intents } from "discord.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -22,10 +22,35 @@ const command = new Command({
     args: ["test"],
     options: [
         {
-            name: "test",
-            type: "STRING",
-            description: "test",
-            required: true
+            name: "a",
+            type: "SUB_COMMAND",
+            description: "sub command",
+            options: [
+                {
+                    name: "test",
+                    type: "STRING",
+                    description: "test",
+                    required: true,
+                    autocomplete: true,
+                    autocompleter: (_interaction, value) => {
+                        /** @type {AutocompleteInteraction} */
+                        const interaction = _interaction
+                        console.log(value);
+                        if (value) interaction.respond([{ name: value.toLowerCase(), value: value.toUpperCase() }])
+                    }
+                },
+                {
+                    name: "test2",
+                    type: "STRING",
+                    description: "test",
+                    required: true,
+                    autocomplete: true,
+                    autocompleter: (interaction, value) => {
+                        console.log(value + "2");
+                        if (value) interaction.respond([{ name: value, value: value }])
+                    }
+                }
+            ]
         }
     ],
     supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
