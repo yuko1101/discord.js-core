@@ -21,10 +21,10 @@
     "url": "https://github.com/yuko1101/discord-core/issues"
   },
   "homepage": "https://github.com/yuko1101/discord-core#readme",
-  "dependencies": {
-    "discord.js": "^13.6.0"
-  },
   "devDependencies": {
     "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "discord.js": "^13.7.0"
   }
 }
