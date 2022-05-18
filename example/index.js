@@ -1,8 +1,7 @@
 "use strict";
-import { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } from "discord-core";
-import { AutocompleteInteraction, Client, Intents } from "discord.js";
-import dotenv from "dotenv";
-dotenv.config();
+const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } = require("discord-core");
+const { AutocompleteInteraction, Client, Intents, MessageActionRow, TextInputComponent, Modal } = require("discord.js");
+require("dotenv").config();
 
 const core = new Core(
     new Client({
@@ -56,11 +55,24 @@ const command = new Command({
     supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
     run: async (ic, args, core) => {
         console.log(args);
+        const modal = new Modal().setTitle("test").setCustomId("test_modal");
+        const textInput = new TextInputComponent().setCustomId('favoriteColorInput').setLabel("What's your favorite color?").setStyle('SHORT');
+        modal.addComponents(new MessageActionRow().addComponents(textInput));
         const messageCores = [
             new MessageCore({ message: { content: "pong 1" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
             new MessageCore({ message: { content: "pong 2" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
-            new MessageCore({ message: { content: "pong 3" }, buttonActions: [new ButtonAction({ core: core, label: "Click!", run: async (interaction) => { console.log("clicked!") } }).register()] }),
-        ];
+            new MessageCore({
+                message: { content: "pong 3" }, buttonActions: [new ButtonAction({
+                    core: core, label: "Click!", run: async (interaction) => {
+                        interaction.showModal(modal);
+                        const modalInteraction = await interaction.awaitModalSubmit({ time: 100000 });
+                        if (modalInteraction) {
+                            await modalInteraction.deferUpdate();
+                            interaction.editReply(modalInteraction.fields.getTextInputValue("favoriteColorInput"));
+                        }
+                    }
+                }).register()]
+            }),];
 
         const pages = new MessagePages({
             messageCores: messageCores,
