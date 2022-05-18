@@ -14,7 +14,13 @@
     "type": "git",
     "url": "git+https://github.com/yuko1101/discord-core.git"
   },
-  "keywords": [],
+  "keywords": [
+    "discord.js",
+    "discord",
+    "bot",
+    "core",
+    "library"
+  ],
   "author": "yuko1101 (https://github.com/yuko1101)",
   "license": "ISC",
   "bugs": {
