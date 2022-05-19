@@ -8,4 +8,5 @@ import EmojiAction = require("./action/EmojiAction");
 import ButtonAction = require("./action/ButtonAction");
 import SelectMenuAction = require("./action/SelectMenuAction");
 import Action = require("./action/Action");
-export { Core, Command, ConfigFile, MessageCore, MessagePages, CustomEmoji, EmojiAction, ButtonAction, SelectMenuAction, Action };
+import InteractionCore = require("./command/InteractionCore");
+export { Core, Command, ConfigFile, MessageCore, MessagePages, CustomEmoji, EmojiAction, ButtonAction, SelectMenuAction, Action, InteractionCore };
