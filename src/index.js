@@ -10,6 +10,7 @@ const EmojiAction = require("./action/EmojiAction");
 const ButtonAction = require("./action/ButtonAction");
 const SelectMenuAction = require("./action/SelectMenuAction");
 const Action = require("./action/Action");
+const InteractionCore = require("./command/InteractionCore");
 
 module.exports = {
     Core,
@@ -21,5 +22,6 @@ module.exports = {
     EmojiAction,
     ButtonAction,
     SelectMenuAction,
-    Action
+    Action,
+    InteractionCore
 }
