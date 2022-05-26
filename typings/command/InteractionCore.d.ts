@@ -64,12 +64,12 @@ declare class InteractionCore {
         ephemeral?: boolean;
     }): Promise<Message | null>;
     /**
-     * @param {*} messageOptions
+     * @param {MessageOptions} messageOptions
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    editReply(messageOptions: any, options?: {
+    editReply(messageOptions: MessageOptions, options?: {
         fetchReply?: boolean;
     }): Promise<Message | null>;
     /**
