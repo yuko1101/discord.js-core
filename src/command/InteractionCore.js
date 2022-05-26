@@ -177,11 +177,9 @@ module.exports = class InteractionCore {
         const getReplied = () => this.deferred ? this.followUpMessage : this.replyMessage;
         const getRepliedData = () => this.deferred ? this.followUpMessageData : this.replyMessageData;
 
-        console.log("repliedMessageData", getRepliedData());
         if (getRepliedData() instanceof MessageCore) {
             await getRepliedData().removeApply(getReplied(), { fastMode: true, autoRemoveReaction: false });
         } else if (getRepliedData() instanceof MessagePages) {
-            console.log("destroy");
             await getRepliedData().destroy();
         } else {
             // do nothing with MessageOptions
@@ -189,7 +187,6 @@ module.exports = class InteractionCore {
         if ((getReplied() === undefined || getReplied() === null) && this.hasInteraction) {
             setReplied(await this.interaction.fetchReply());
         }
-        console.log(getReplied());
         await getReplied().reactions.removeAll();
 
         if (!this.hasInteraction) {
