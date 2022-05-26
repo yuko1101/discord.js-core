@@ -145,6 +145,7 @@ module.exports = class InteractionCore {
         this.replied = true;
         this.isReplyMessageSentAsEphemeral = options.ephemeral;
         this.replyMessageData = message;
+
         return this.replyMessage;
     }
 
@@ -155,29 +156,54 @@ module.exports = class InteractionCore {
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
     async editReply(messageOptions, options = {}) {
+        if (!this.replied || (this.deferred && !this.followedUp)) throw new Error("You can't edit a reply or follow-up before it has been sent");
         options = bindOptions({ fetchReply: true }, options);
 
-        if (this.replyMessageData instanceof MessageCore) {
-            await this.replyMessageData.removeApply(this.replyMessage, { fastMode: true, autoRemoveReaction: false });
-        } else if (this.replyMessageData instanceof MessagePages) {
-            await this.replyMessageData.destroy();
+        // Separate the cases into reply and follow-up.
+        const setReplied = (message) => {
+            if (this.deferred) {
+                this.followUpMessage = message;
+            } else {
+                this.replyMessage = message;
+            }
+        }
+        const setRepliedData = (messageData) => {
+            if (this.deferred) {
+                this.followUpMessageData = messageData;
+            } else {
+                this.replyMessageData = messageData;
+            }
+        }
+        const getReplied = () => this.deferred ? this.followUpMessage : this.replyMessage;
+        const getRepliedData = () => this.deferred ? this.followUpMessageData : this.replyMessageData;
+
+        console.log("repliedMessageData", getRepliedData());
+        if (getRepliedData() instanceof MessageCore) {
+            await getRepliedData().removeApply(getReplied(), { fastMode: true, autoRemoveReaction: false });
+        } else if (getRepliedData() instanceof MessagePages) {
+            console.log("destroy");
+            await getRepliedData().destroy();
         } else {
             // do nothing with MessageOptions
         }
-        await this.replyMessage.reactions.removeAll();
+        if ((getReplied() === undefined || getReplied() === null) && this.hasInteraction) {
+            setReplied(await this.interaction.fetchReply());
+        }
+        console.log(getReplied());
+        await getReplied().reactions.removeAll();
 
         if (!this.hasInteraction) {
-            if (!this.replyMessage) {
+            if (!getReplied()) {
                 throw new Error("You must reply to a message before editing it");
             }
             if (messageOptions instanceof MessageCore) {
                 messageOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
-                this.replyMessage = await this.replyMessage.edit(messageOptions.getMessage());
-                messageOptions.apply(this.replyMessage);
+                setReplied(await getReplied().edit(messageOptions.getMessage()));
+                messageOptions.apply(getReplied());
             } else if (messageOptions instanceof MessagePages) {
-                this.replyMessage = await messageOptions.sendTo(this.msg, { edit: true });
+                setReplied(await messageOptions.sendTo(this.msg, { edit: true }));
             } else {
-                this.replyMessage = await this.replyMessage.edit(messageOptions);
+                setReplied(await getReplied().edit(messageOptions));
             }
         } else {
             if (messageOptions instanceof MessageCore) {
@@ -185,22 +211,22 @@ module.exports = class InteractionCore {
                 /** @type {void | Message} */
                 const sent = await this.interaction.editReply({ ...messageOptions.getMessage(), fetchReply: options.fetchReply || messageOptions.emojiActions.length !== 0 });
                 if (sent) {
-                    this.replyMessage = sent;
+                    setReplied(sent);
                     messageOptions.apply(sent);
                 }
             } else if (messageOptions instanceof MessagePages) {
                 /** @type {Message} */
                 const sent = await messageOptions.interactionReply(this.interaction, { edit: true });
-                this.replyMessage = sent;
+                setReplied(sent);
             } else {
                 const message = await this.interaction.editReply({ ...messageOptions, fetchReply: options.fetchReply });
                 if (options.fetchReply) {
-                    this.replyMessage = message;
+                    setReplied(message);
                 }
             }
         }
-        this.replyMessageData = messageOptions;
-        return this.replyMessage;
+        setRepliedData(messageOptions);
+        return getReplied();
     }
 
     /**

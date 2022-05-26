@@ -78,7 +78,7 @@ const command = new Command({
             messageCores: messageCores,
             enabledActions: ["BACK", new EmojiAction({ core: core, label: "❌", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
             type: "BUTTON",
-            timeout: 10000,
+            timeout: 1000000,
             pageActions: {
                 back: {
                     buttonStyle: "DANGER"
@@ -99,6 +99,14 @@ const command = new Command({
 
 
 
+        setTimeout(() => {
+            ic.editReply(new MessagePages({
+                messageCores: [new MessageCore({ message: { content: "pong 4" } }), new MessageCore({
+                    message: { content: "pong 5" }, emojiActions: [new EmojiAction({ core: core, label: "✅", run: console.log })]
+                })],
+                enabledActions: ["BACK", new EmojiAction({ core: core, label: "❗", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
+            }));
+        }, 10000);
 
         // await ic.deferReply();
         // const messageCores = [

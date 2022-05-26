@@ -198,7 +198,7 @@ module.exports = class MessagePages {
         (await this._getPage(this.currentPageIndex)).removeApply(this.sentMessage, options);
         /** @type {EmojiAction[]} */
         const emojiActions = this.enabledActions.filter(action => typeof action === "object" && action instanceof EmojiAction);
-        emojiActions.forEach(action => action.removeReaction(this.sentMessage));
+        emojiActions.forEach(action => action.removeApply(this.sentMessage));
     }
 
     /**
