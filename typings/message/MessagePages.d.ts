@@ -85,6 +85,8 @@ declare class MessagePages {
     readonly interaction: Interaction | null;
     /** @readonly @type {number} */
     readonly currentPageIndex: number;
+    /** @readonly @type {boolean} */
+    readonly isDestroyed: boolean;
     /**
      * This function is available when the type is "SELECT_MENU"
      * @param {MessageSelectMenu} selectMenu
@@ -94,21 +96,35 @@ declare class MessagePages {
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel | Message} whereToSend
+     * @param {object} [options]
+     * @param {boolean} [options.edit] Whether to edit the message instead of sending a new one. (`Message` must be provided as the first argument)
      * @returns {Promise<Message>}
      */
-    sendTo(whereToSend: TextBasedChannel | Message): Promise<Message>;
+    sendTo(whereToSend: TextBasedChannel | Message, options?: {
+        edit?: boolean;
+    }): Promise<Message>;
     /**
      * Sends this MessagePages message as a reply of the interaction
      * @param {Interaction} interaction
      * @param {object} [options]
      * @param {boolean} [options.followUp]
      * @param {boolean} [options.ephemeral]
+     * @param {boolean} [options.edit] Whether to edit the message instead of sending a new one.
      * @returns {Promise<Message>}
      */
     interactionReply(interaction: Interaction, options?: {
         followUp?: boolean;
         ephemeral?: boolean;
+        edit?: boolean;
     }): Promise<Message>;
+    /**
+     * @param {object} [options]
+     * @param {boolean} [options.autoRemoveReaction]
+     * @returns {Promise<void>}
+     */
+    destroy(options?: {
+        autoRemoveReaction?: boolean;
+    }): Promise<void>;
     /**
      * @param {number} index
      */
