@@ -86,6 +86,9 @@ module.exports = class MessagePages {
         this.interaction = null;
         /** @readonly @type {number} */
         this.currentPageIndex = this.startPageIndex;
+
+        /** @readonly @type {boolean} */
+        this.isDestroyed = false;
     }
 
     /**
@@ -103,13 +106,21 @@ module.exports = class MessagePages {
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel | Message} whereToSend
+     * @param {object} [options]
+     * @param {boolean} [options.edit] Whether to edit the message instead of sending a new one. (`Message` must be provided as the first argument)
      * @returns {Promise<Message>}
      */
-    async sendTo(whereToSend) {
+    async sendTo(whereToSend, options = {}) {
+        if (this.isDestroyed) throw new Error("This MessagePages has been destroyed");
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
         if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
 
+        options = bindOptions({ edit: false }, options);
+
+        if (options.edit && !whereToSend.reply) throw new Error("`whereToSend` must be a Message when editing.");
+
         const sendFunction = async (messageOptions) => {
+            if (options.edit) return await whereToSend.edit(messageOptions);
             return await (whereToSend.reply ? whereToSend.reply(messageOptions) : whereToSend.send(messageOptions));
         }
 
@@ -132,13 +143,16 @@ module.exports = class MessagePages {
      * @param {object} [options]
      * @param {boolean} [options.followUp]
      * @param {boolean} [options.ephemeral]
+     * @param {boolean} [options.edit] Whether to edit the message instead of sending a new one.
      * @returns {Promise<Message>}
      */
     async interactionReply(interaction, options = {}) {
+        if (this.isDestroyed) throw new Error("This MessagePages has been destroyed");
         if (interaction === null || interaction === undefined) throw new Error("Interaction cannot be null or undefined");
         options = bindOptions({
             followUp: false,
-            ephemeral: false
+            ephemeral: false,
+            edit: false
         }, options);
 
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
@@ -156,7 +170,9 @@ module.exports = class MessagePages {
         }
 
         const params = { ...(await this._getMessageOptionsWithComponents(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral };
-        this.sentMessage = options.followUp ? await interaction.followUp(params) : await interaction.reply(params);
+        this.sentMessage = options.followUp ? await interaction.followUp(params)
+            : options.edit ? await interaction.editReply(params)
+                : await interaction.reply(params);
         this.isSent = true;
         this.interaction = interaction;
 
@@ -168,9 +184,28 @@ module.exports = class MessagePages {
     }
 
     /**
+     * @param {object} [options]
+     * @param {boolean} [options.autoRemoveReaction]
+     * @returns {Promise<void>}
+     */
+    async destroy(options) {
+        if (this.isDestroyed) return;
+        this.isDestroyed = true;
+        if (!this.isSent) return;
+
+        options = bindOptions({ autoRemoveReaction: false }, options);
+
+        (await this._getPage(this.currentPageIndex)).removeApply(this.sentMessage, options);
+        /** @type {EmojiAction[]} */
+        const emojiActions = this.enabledActions.filter(action => typeof action === "object" && action instanceof EmojiAction);
+        emojiActions.forEach(action => action.removeReaction(this.sentMessage));
+    }
+
+    /**
      * @param {number} index 
      */
     async gotoPage(index) {
+        if (this.isDestroyed) throw new Error("This MessagePages has already been destroyed.");
         if (!this.isSent) throw new Error("This MessagePages hasn't been sent yet. Please send it first.");
         if (index === this.currentPageIndex) return;
         if (index < 0 || index >= this.messageCores.length) throw new Error("Index out of bounds");
@@ -394,6 +429,7 @@ module.exports = class MessagePages {
         collector.on("collect", async (reaction, user) => {
             // handle system emojis, not EmojiAction(s) in enabledActions
 
+            if (this.isDestroyed) return;
             if (this.type !== "REACTION") return;
 
             // if the reaction is from the client bot, ignore it
@@ -415,6 +451,7 @@ module.exports = class MessagePages {
         });
 
         collector.on("end", (collected, reason) => {
+            if (this.isDestroyed) return;
 
             // remove MessagePages' reactions (system + extra), not the page's reactions.
             if (reason === "time") {
@@ -444,6 +481,7 @@ module.exports = class MessagePages {
         });
 
         collector.on("collect", async (interaction) => {
+            if (this.isDestroyed) return;
             if (!interaction.isButton()) return;
             const id = interaction.customId;
             if (!id.startsWith("DISCORD_CORE_MESSAGE_PAGES_")) return;
@@ -457,6 +495,8 @@ module.exports = class MessagePages {
         });
 
         collector.on("end", async (collected, reason) => {
+            if (this.isDestroyed) return;
+
             if (reason === "time") {
                 const currentPage = await this._getPage(this.currentPageIndex);
                 const message = currentPage.getMessage();
