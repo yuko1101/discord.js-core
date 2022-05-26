@@ -149,24 +149,57 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {MessageOptions} messageOptions 
+     * @param {MessageOptions | MessageCore | MessagePages} messageOptions 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
     async editReply(messageOptions, options = {}) {
         options = bindOptions({ fetchReply: true }, options);
+
+        if (this.replyMessageData instanceof MessageCore) {
+            await this.replyMessageData.removeApply(this.replyMessage, { fastMode: true, autoRemoveReaction: false });
+        } else if (this.replyMessageData instanceof MessagePages) {
+            await this.replyMessageData.destroy();
+        } else {
+            // do nothing with MessageOptions
+        }
+        await this.replyMessage.reactions.removeAll();
+
         if (!this.hasInteraction) {
             if (!this.replyMessage) {
                 throw new Error("You must reply to a message before editing it");
             }
-            this.replyMessage = await this.replyMessage.edit(messageOptions);
+            if (messageOptions instanceof MessageCore) {
+                messageOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
+                this.replyMessage = await this.replyMessage.edit(messageOptions.getMessage());
+                messageOptions.apply(this.replyMessage);
+            } else if (messageOptions instanceof MessagePages) {
+                this.replyMessage = await messageOptions.sendTo(this.msg, { edit: true });
+            } else {
+                this.replyMessage = await this.replyMessage.edit(messageOptions);
+            }
         } else {
-            const message = await this.interaction.editReply({ ...messageOptions, fetchReply: options.fetchReply });
-            if (options.fetchReply) {
-                this.replyMessage = message;
+            if (messageOptions instanceof MessageCore) {
+                messageOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
+                /** @type {void | Message} */
+                const sent = await this.interaction.editReply({ ...messageOptions.getMessage(), fetchReply: options.fetchReply || messageOptions.emojiActions.length !== 0 });
+                if (sent) {
+                    this.replyMessage = sent;
+                    messageOptions.apply(sent);
+                }
+            } else if (messageOptions instanceof MessagePages) {
+                /** @type {Message} */
+                const sent = await messageOptions.interactionReply(this.interaction, { edit: true });
+                this.replyMessage = sent;
+            } else {
+                const message = await this.interaction.editReply({ ...messageOptions, fetchReply: options.fetchReply });
+                if (options.fetchReply) {
+                    this.replyMessage = message;
+                }
             }
         }
+        this.replyMessageData = messageOptions;
         return this.replyMessage;
     }
 
