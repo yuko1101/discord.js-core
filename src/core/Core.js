@@ -58,7 +58,7 @@ module.exports = class Core {
         this.commands = this.commands.filter(c => c.name !== command.name);
     }
 
-    async applySlashCommands() {
+    async applyCommands() {
         await commandManager.applyCommands(this);
     }
 }
