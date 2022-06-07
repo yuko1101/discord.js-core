@@ -1,4 +1,4 @@
-const { MessageActionRow, MessageOptions, Message, TextBasedChannel } = require("discord.js");
+const { MessageActionRow, MessageOptions, Message, TextBasedChannel, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const EmojiAction = require("../action/EmojiAction");
 const { bindOptions } = require("../utils/utils");
@@ -47,7 +47,10 @@ module.exports = class MessageCore {
     }
 
 
-    /** @returns {MessageOptions} */
+    /** 
+     * Get the complete message object to send.
+     * @returns {MessageOptions} 
+     */
     getMessage() {
         const messageOptions = { ...this.message }; // make immutable
         const components = this.getComponents();
@@ -113,5 +116,33 @@ module.exports = class MessageCore {
                 await action.apply(message);
             }
         }
+    }
+
+    /**
+     * @param {Interaction} interaction
+     * @param {object} [options={}]
+     * @param {boolean} [options.autoApplyEmojiActions=true]
+     * @param {boolean} [options.followUp=false]
+     * @param {boolean} [options.ephemeral=false]
+     * @param {boolean} [options.fetchReply=false]
+     * @returns {Promise<Message | null>} Returns null if `fetchReply` is false
+     */
+    async interactionReply(interaction, options) {
+        options = bindOptions({
+            autoApplyEmojiActions: true,
+            followUp: false,
+            ephemeral: false,
+            fetchReply: false
+        }, options);
+        if ((options.ephemeral || interaction.ephemeral) && this.emojiActions.length !== 0) {
+            throw new Error("You cannot add reactons to ephemeral message.");
+        }
+        const messageOptions = { ...this.getMessage(), fetchReply: options.fetchReply, ephemeral: options.ephemeral };
+        const message = options.followUp ? await interaction.followUp(messageOptions) : await interaction.reply(messageOptions);
+        this.buttonActions.forEach(array => array.forEach(action => action.register()));
+        if (options.autoApplyEmojiActions) {
+            await this.apply(message, { autoReact: true });
+        }
+        return message;
     }
 }
