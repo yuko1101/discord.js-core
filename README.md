@@ -79,3 +79,4 @@ core.login(() => core.applyCommands()); // login, and apply commands on ready
 
 ## More examples available in example folder
 See [example folder](example) for more examples!
+And typescript example [here](example-ts)!
