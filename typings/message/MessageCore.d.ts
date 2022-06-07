@@ -21,7 +21,10 @@ declare class MessageCore {
     getComponents(): MessageActionRow[];
     /** @param {ButtonAction[]} buttonActions */
     addButtonsAsNewRow(buttonActions: ButtonAction[]): void;
-    /** @returns {MessageOptions} */
+    /**
+     * Get the complete message object to send.
+     * @returns {MessageOptions}
+     */
     getMessage(): MessageOptions;
     /** @returns {string[]} */
     getEmojis(): string[];
@@ -54,6 +57,21 @@ declare class MessageCore {
     sendTo(channel: TextBasedChannel, options?: {
         autoApplyEmojiActions?: boolean;
     }): Promise<Message>;
+    /**
+     * @param {Interaction} interaction
+     * @param {object} [options={}]
+     * @param {boolean} [options.autoApplyEmojiActions=true]
+     * @param {boolean} [options.followUp=false]
+     * @param {boolean} [options.ephemeral=false]
+     * @param {boolean} [options.fetchReply=false]
+     * @returns {Promise<Message | null>} Returns null if `fetchReply` is false
+     */
+    interactionReply(interaction: Interaction, options?: {
+        autoApplyEmojiActions?: boolean;
+        followUp?: boolean;
+        ephemeral?: boolean;
+        fetchReply?: boolean;
+    }): Promise<Message | null>;
 }
 import { MessageOptions } from "discord.js";
 import ButtonAction = require("../action/ButtonAction");
@@ -61,3 +79,4 @@ import EmojiAction = require("../action/EmojiAction");
 import { MessageActionRow } from "discord.js";
 import { Message } from "discord.js";
 import { TextBasedChannel } from "discord.js";
+import { Interaction } from "discord.js";

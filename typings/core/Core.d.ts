@@ -33,7 +33,7 @@ declare class Core {
     addCommand(command: Command): void;
     /** @param {Command} command */
     removeCommand(command: Command): void;
-    applySlashCommands(): Promise<void>;
+    applyCommands(): Promise<void>;
 }
 import { Client } from "discord.js";
 import Command = require("../command/Command");
