@@ -20,7 +20,7 @@ const core = new Core(
     }),
     {
         prefix: "!",
-        guildId: "Your Guild ID", // if not provided, your commands will apply to global (to all guilds, DMs, and groups)
+        guildId: "Your Guild ID", // if not provided, your commands will be applied to global (to all guilds, DMs, and groups)
         token: "Your Token",
     }
 );
