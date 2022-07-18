@@ -5,10 +5,10 @@ declare class MessagePages {
      * @param {(MessageCore | () => Promise<MessageCore>)[]} options.messageCores
      * @param {number} [options.startPageIndex]
      * @param {object} [options.pageActions]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.first]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.back]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.next]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.last]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.first]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.back]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.next]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
      *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
@@ -21,19 +21,19 @@ declare class MessagePages {
         pageActions?: {
             first?: {
                 label?: string;
-                buttonStyle?: MessageButtonStyleResolvable;
+                buttonStyle?: ButtonStyle;
             };
             back?: {
                 label?: string;
-                buttonStyle?: MessageButtonStyleResolvable;
+                buttonStyle?: ButtonStyle;
             };
             next?: {
                 label?: string;
-                buttonStyle?: MessageButtonStyleResolvable;
+                buttonStyle?: ButtonStyle;
             };
             last?: {
                 label?: string;
-                buttonStyle?: MessageButtonStyleResolvable;
+                buttonStyle?: ButtonStyle;
             };
             selectMenu?: SelectMenuAction;
         };
@@ -48,23 +48,23 @@ declare class MessagePages {
     readonly messageCores: (MessageCore | (() => Promise<MessageCore>))[];
     /** @readonly @type {number} */
     readonly startPageIndex: number;
-    /** @readonly @type {{first: {label: string, buttonStyle: MessageButtonStyleResolvable}, back: {label: string, buttonStyle: MessageButtonStyleResolvable}, next: {label: string, buttonStyle: MessageButtonStyleResolvable}, last: {label: string, buttonStyle: MessageButtonStyleResolvable}}} */
+    /** @readonly @type {{first: {label: string, buttonStyle: ButtonStyle}, back: {label: string, buttonStyle: ButtonStyle}, next: {label: string, buttonStyle: ButtonStyle}, last: {label: string, buttonStyle: ButtonStyle}}} */
     readonly pageActions: {
         first: {
             label: string;
-            buttonStyle: MessageButtonStyleResolvable;
+            buttonStyle: ButtonStyle;
         };
         back: {
             label: string;
-            buttonStyle: MessageButtonStyleResolvable;
+            buttonStyle: ButtonStyle;
         };
         next: {
             label: string;
-            buttonStyle: MessageButtonStyleResolvable;
+            buttonStyle: ButtonStyle;
         };
         last: {
             label: string;
-            buttonStyle: MessageButtonStyleResolvable;
+            buttonStyle: ButtonStyle;
         };
     };
     /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
@@ -89,10 +89,10 @@ declare class MessagePages {
     readonly isDestroyed: boolean;
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {MessageSelectMenu} selectMenu
+     * @param {SelectMenuBuilder} selectMenu
      * @returns {MessagePages}
      */
-    setSelectMenu(selectMenu: MessageSelectMenu): MessagePages;
+    setSelectMenu(selectMenu: SelectMenuBuilder): MessagePages;
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel | Message} whereToSend
@@ -144,7 +144,7 @@ declare class MessagePages {
     /**
      * Gets necessary buttons for this MessagePages
      * @private
-     * @returns {MessageButton[]}
+     * @returns {ButtonBuilder[]}
      */
     private _getButtons;
     /**
@@ -193,8 +193,10 @@ declare class MessagePages {
     private _deactivateEmojiActions;
 }
 import MessageCore = require("./MessageCore");
+import { ButtonStyle } from "discord-api-types/payloads/v10/channel";
 import Action = require("../action/Action");
 import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
 import { Interaction } from "discord.js";
+import { SelectMenuBuilder } from "discord.js";
 import { TextBasedChannel } from "discord.js";

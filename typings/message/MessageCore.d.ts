@@ -4,7 +4,7 @@ declare class MessageCore {
      * @param {object} data
      * @param {MessageOptions} data.message
      * @param {ButtonAction[] | null} [data.buttonActions=[]]
-     * @param {EmojiAction[] | null} [data.emojiActions[]]
+     * @param {EmojiAction[] | null} [data.emojiActions]
      */
     constructor(data: {
         message: MessageOptions;
@@ -17,8 +17,8 @@ declare class MessageCore {
     buttonActions: ButtonAction[][];
     /** @type {EmojiAction[]} */
     emojiActions: EmojiAction[];
-    /** @returns {MessageActionRow[]} */
-    getComponents(): MessageActionRow[];
+    /** @returns {ActionRowBuilder[]} */
+    getComponents(): ActionRowBuilder[];
     /** @param {ButtonAction[]} buttonActions */
     addButtonsAsNewRow(buttonActions: ButtonAction[]): void;
     /**
@@ -76,6 +76,7 @@ declare class MessageCore {
 import { MessageOptions } from "discord.js";
 import ButtonAction = require("../action/ButtonAction");
 import EmojiAction = require("../action/EmojiAction");
+import { ActionRowBuilder } from "discord.js";
 import { Message } from "discord.js";
 import { TextBasedChannel } from "discord.js";
 import { Interaction } from "discord.js";
