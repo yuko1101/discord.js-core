@@ -1,11 +1,11 @@
 "use strict";
 const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } = require("discord-core");
-const { AutocompleteInteraction, Client, GatewayIntentBits, TextInputBuilder, ModalBuilder, ApplicationCommandOptionType, ActionRowBuilder, TextInputStyle, ButtonStyle } = require("discord.js");
+const { AutocompleteInteraction, Client, TextInputBuilder, ModalBuilder, ApplicationCommandOptionType, ActionRowBuilder, TextInputStyle, ButtonStyle } = require("discord.js");
 require("dotenv").config();
 
 const core = new Core(
     new Client({
-        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions],
+        intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
         allowedMentions: { repliedUser: false }
     }),
     { token: process.env.TOKEN, prefix: "pt!", debug: true, guildId: "736829048373903377" }
@@ -14,6 +14,10 @@ const core = new Core(
 const emojis = [
     new CustomEmoji(core, "951644270312427570"),
 ]
+
+core.client.on("messageCreate", msg => {
+    console.log(msg);
+})
 
 const command = new Command({
     name: "ping",
@@ -54,7 +58,8 @@ const command = new Command({
     ],
     supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
     run: async (ic, args, core) => {
-        console.log(args);
+        if (ic.interaction.isUserContextMenuCommand)
+            console.log(args);
         const modal = new ModalBuilder().setTitle("test").setCustomId("test_modal");
         const textInput = new TextInputBuilder().setCustomId('favoriteColorInput').setLabel("What's your favorite color?").setStyle(TextInputStyle.Short);
         modal.addComponents(new ActionRowBuilder().addComponents(textInput));
@@ -107,16 +112,6 @@ const command = new Command({
                 enabledActions: ["BACK", new EmojiAction({ core: core, label: "❗", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
             }));
         }, 10000);
-
-        // await ic.deferReply();
-        // const messageCores = [
-        //     new MessageCore({ message: { content: "pong 1" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
-        //     new MessageCore({ message: { content: "pong 2" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
-        //     new MessageCore({ message: { content: "pong 3" }, buttonActions: [new ButtonAction({ core: core, label: "Click!", run: async (interaction) => { console.log("clicked!") } }).register()] }),
-        // ]
-        // const pages = new Pages(messageCores);
-
-        // pages.interactionReply(ic.interaction, { followUp: true });
     }
 });
 
