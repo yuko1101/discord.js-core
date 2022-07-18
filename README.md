@@ -1,5 +1,5 @@
 # discord-core
-A simple bot handler for [discord.js/v13](https://github.com/discordjs/discord.js)
+A simple bot handler for [discord.js/v14](https://github.com/discordjs/discord.js)
 
 ## 1. Installation
 Run `npm install yuko1101/discord-core` in the terminal.  
@@ -14,12 +14,13 @@ const { Core } = require("discord-core");
 
 const core = new Core(
     new Client({
-        intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS"],
+        // MessageContent requires to be enabled on the application developer portal (https://discord.com/developers/applications/)
+        intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
         allowedMentions: { repliedUser: false } // Disable mention on reply (Recommended)
     }),
     {
         prefix: "!",
-        guildId: "Your Guild ID",
+        guildId: "Your Guild ID", // if not provided, your commands will be applied to global (to all guilds, DMs, and groups)
         token: "Your Token",
     }
 );
@@ -48,7 +49,7 @@ const command = new Command({
     options: [
         {
             name: "target",
-            type: "USER",
+            type: ApplicationCommandOptionType.User,
             description: "The user to mention",
             required: true,
         }
@@ -59,7 +60,7 @@ const command = new Command({
         // You can reply to Message or Interaction in the same method with InteractionCore.
         
         // If the interaction is from UserContextMenu, target id is in args["user"] (If from MessageContextMenu, in args["message"])
-        const target = (ic.hasInteraction && ic.interaction.isUserContextMenu()) ? args["user"] : args["target"]; 
+        const target = (ic.hasInteraction && ic.interaction.isUserContextMenuCommand()) ? args["user"] : args["target"]; 
         const mention = `<@${target}>`;
         await ic.reply({ content: mention }); // Send reply message
     }
