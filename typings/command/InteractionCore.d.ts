@@ -93,7 +93,6 @@ declare class InteractionCore {
     }): Promise<Message | null>;
 }
 import { Message } from "discord.js";
-import { BaseCommandInteraction } from "discord.js";
 import { TextBasedChannel } from "discord.js";
 import { Guild } from "discord.js";
 import { GuildMember } from "discord.js";

@@ -1,4 +1,4 @@
-const { Message, TextBasedChannel, MessageOptions, MessageButton, MessageActionRow, MessageButtonStyleResolvable, MessageReaction, Interaction, MessageSelectMenu } = require("discord.js");
+const { Message, TextBasedChannel, MessageOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction, SelectMenuBuilder } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
@@ -16,19 +16,19 @@ const defaultOptions = {
     pageActions: {
         first: {
             label: "⏪",
-            buttonStyle: "PRIMARY",
+            buttonStyle: ButtonStyle.Primary,
         },
         back: {
             label: "◀",
-            buttonStyle: "PRIMARY",
+            buttonStyle: ButtonStyle.Primary,
         },
         next: {
             label: "▶",
-            buttonStyle: "PRIMARY",
+            buttonStyle: ButtonStyle.Primary,
         },
         last: {
             label: "⏩",
-            buttonStyle: "PRIMARY",
+            buttonStyle: ButtonStyle.Primary,
         },
         selectMenu: null
     },
@@ -44,10 +44,10 @@ module.exports = class MessagePages {
      * @param {(MessageCore | () => Promise<MessageCore>)[]} options.messageCores
      * @param {number} [options.startPageIndex]
      * @param {object} [options.pageActions]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.first]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.back]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.next]
-     *  @param {{label?: string, buttonStyle?: MessageButtonStyleResolvable}} [options.pageActions.last]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.first]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.back]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.next]
+     *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
      *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
@@ -64,7 +64,7 @@ module.exports = class MessagePages {
         }
         /** @readonly @type {number} */
         this.startPageIndex = this.options.startPageIndex;
-        /** @readonly @type {{first: {label: string, buttonStyle: MessageButtonStyleResolvable}, back: {label: string, buttonStyle: MessageButtonStyleResolvable}, next: {label: string, buttonStyle: MessageButtonStyleResolvable}, last: {label: string, buttonStyle: MessageButtonStyleResolvable}}} */
+        /** @readonly @type {{first: {label: string, buttonStyle: ButtonStyle}, back: {label: string, buttonStyle: ButtonStyle}, next: {label: string, buttonStyle: ButtonStyle}, last: {label: string, buttonStyle: ButtonStyle}}} */
         this.pageActions = this.options.pageActions;
         /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
         this.enabledActions = this.options.enabledActions;
@@ -93,7 +93,7 @@ module.exports = class MessagePages {
 
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {MessageSelectMenu} selectMenu 
+     * @param {SelectMenuBuilder} selectMenu 
      * @returns {MessagePages}
      */
     setSelectMenu(selectMenu) {
@@ -162,8 +162,8 @@ module.exports = class MessagePages {
             throw new Error("Ephemeral messages cannot have reactions.");
         }
 
-        if (!options.followUp && !interaction.reply) {
-            throw new Error("Interaction must have the reply() function. Please check the interaction is replyable.");
+        if (!options.followUp && !interaction.isRepliable()) {
+            throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
         }
         if (options.followUp && !interaction.followUp) {
             throw new Error("Interaction must have the followUp() function. Please check the interaction is followUpable.");
@@ -214,7 +214,7 @@ module.exports = class MessagePages {
         this.currentPageIndex = index;
 
         if (this.interaction) {
-            if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
+            if (!this.interaction.isRepliable) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
             await this.interaction.editReply(await this._getMessageOptionsWithComponents(this.currentPageIndex));
         } else {
             await this.sentMessage.edit(await this._getMessageOptionsWithComponents(this.currentPageIndex));
@@ -232,10 +232,10 @@ module.exports = class MessagePages {
         const buttons = this._getButtons();
         const messageOptions = { ...(await this._getPage(index)).getMessage() }; // make immutable
         if (buttons.length > 0) {
-            messageOptions.components = [...(messageOptions.components || []), new MessageActionRow().addComponents(...buttons)];
+            messageOptions.components = [...(messageOptions.components || []), new ActionRowBuilder().addComponents(...buttons)];
         }
         if (this.type === "SELECT_MENU") {
-            messageOptions.components.push(new MessageActionRow().addComponents(this.selectMenu.getSelectMenu()));
+            messageOptions.components.push(new ActionRowBuilder().addComponents(this.selectMenu.getSelectMenu()));
         }
         return messageOptions;
     }
@@ -256,7 +256,7 @@ module.exports = class MessagePages {
     /** 
      * Gets necessary buttons for this MessagePages
      * @private
-     * @returns {MessageButton[]}
+     * @returns {ButtonBuilder[]}
      */
     _getButtons() {
         const buttons = [];
@@ -266,13 +266,13 @@ module.exports = class MessagePages {
             } else if (typeof action === "string" && this.type === "BUTTON") {
                 if (actionsList.includes(action)) {
                     if (action === "FIRST") {
-                        buttons.push(new MessageButton().setCustomId("DISCORD_CORE_MESSAGE_PAGES_FIRST").setStyle(this.pageActions.first.buttonStyle).setLabel(this.pageActions.first.label).setDisabled(this.currentPageIndex === 0));
+                        buttons.push(new ButtonBuilder().setCustomId("DISCORD_CORE_MESSAGE_PAGES_FIRST").setStyle(this.pageActions.first.buttonStyle).setLabel(this.pageActions.first.label).setDisabled(this.currentPageIndex === 0));
                     } else if (action === "BACK") {
-                        buttons.push(new MessageButton().setCustomId("DISCORD_CORE_MESSAGE_PAGES_BACK").setStyle(this.pageActions.back.buttonStyle).setLabel(this.pageActions.back.label).setDisabled(this.currentPageIndex === 0));
+                        buttons.push(new ButtonBuilder().setCustomId("DISCORD_CORE_MESSAGE_PAGES_BACK").setStyle(this.pageActions.back.buttonStyle).setLabel(this.pageActions.back.label).setDisabled(this.currentPageIndex === 0));
                     } else if (action === "NEXT") {
-                        buttons.push(new MessageButton().setCustomId("DISCORD_CORE_MESSAGE_PAGES_NEXT").setStyle(this.pageActions.next.buttonStyle).setLabel(this.pageActions.next.label).setDisabled(this.currentPageIndex === this.messageCores.length - 1));
+                        buttons.push(new ButtonBuilder().setCustomId("DISCORD_CORE_MESSAGE_PAGES_NEXT").setStyle(this.pageActions.next.buttonStyle).setLabel(this.pageActions.next.label).setDisabled(this.currentPageIndex === this.messageCores.length - 1));
                     } else if (action === "LAST") {
-                        buttons.push(new MessageButton().setCustomId("DISCORD_CORE_MESSAGE_PAGES_LAST").setStyle(this.pageActions.last.buttonStyle).setLabel(this.pageActions.last.label).setDisabled(this.currentPageIndex === this.messageCores.length - 1));
+                        buttons.push(new ButtonBuilder().setCustomId("DISCORD_CORE_MESSAGE_PAGES_LAST").setStyle(this.pageActions.last.buttonStyle).setLabel(this.pageActions.last.label).setDisabled(this.currentPageIndex === this.messageCores.length - 1));
                     }
                 }
             }

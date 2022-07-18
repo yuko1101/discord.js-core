@@ -17,7 +17,7 @@
 
  */
 
-const { Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions, BaseCommandInteraction } = require("discord.js");
+const { Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions, CommandInteraction } = require("discord.js");
 const MessageCore = require("../message/MessageCore");
 const MessagePages = require("../message/MessagePages");
 const { bindOptions } = require("../utils/utils");
@@ -26,12 +26,12 @@ module.exports = class InteractionCore {
     /**
      * @param {object} data
      * @param {Message | null} data.msg
-     * @param {BaseCommandInteraction | null} data.interaction
+     * @param {CommandInteraction | null} data.interaction
      */
     constructor(data) {
         /** @readonly @type {Message | null} */
         this.msg = data.msg;
-        /** @readonly @type {BaseCommandInteraction | null} */
+        /** @readonly @type {CommandInteraction | null} */
         this.interaction = data.interaction;
         /** @readonly @type {boolean} */
         this.hasInteraction = !!data.interaction;

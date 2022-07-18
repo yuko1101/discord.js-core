@@ -1,11 +1,12 @@
-const { ApplicationCommandManager, ChatInputApplicationCommandData, ApplicationCommand } = require("discord.js");
+const { ApplicationCommandManager, ApplicationCommandData, ApplicationCommand, ApplicationCommandType, ChatInputApplicationCommandData } = require("discord.js");
 const Command = require("../command/Command");
 const Core = require("./Core");
 
-const commandType = {
-    "SLASH_COMMAND": "CHAT_INPUT",
-    "USER_CONTEXT_MENU": "USER",
-    "MESSAGE_CONTEXT_MENU": "MESSAGE",
+const CommandType = {
+    "MESSAGE_COMMAND": "MESSAGE_COMMAND",
+    "SLASH_COMMAND": ApplicationCommandType.ChatInput,
+    "USER_CONTEXT_MENU": ApplicationCommandType.User,
+    "MESSAGE_CONTEXT_MENU": ApplicationCommandType.Message,
 }
 
 /** 
@@ -20,11 +21,11 @@ async function applyCommands(core) {
         ? await core.client.guilds.fetch(core.options.guildId).then(g => g.commands)
         : core.client.application.commands;
     const oldCommands = await applicationCommandManager.fetch().then(c => [...c.values()]);
-    const newCommands = commands.map(c => c.supports.filter(s => Object.keys(commandType).includes(s)).map(s => {
+    const newCommands = commands.map(c => c.supports.filter(s => Object.keys(CommandType).includes(s)).map(s => {
         return {
             name: c.name,
             description: s.endsWith("_CONTEXT_MENU") ? "" : c.description,
-            type: commandType[s],
+            type: CommandType[s],
             options: s.endsWith("_CONTEXT_MENU") ? [] : c.options,
             // defaultPermission: c.defaultPermission,
         }
@@ -37,12 +38,12 @@ async function applyCommands(core) {
  * @private 
  * @param {ApplicationCommandManager} applicationCommandManager
  * @param {ApplicationCommand[]} oldCommands
- * @param {ChatInputApplicationCommandData[]} newCommands
+ * @param {ApplicationCommandData[]} newCommands
  */
 async function apply(applicationCommandManager, oldCommands, newCommands) {
-    await applySlashCommands(applicationCommandManager, oldCommands.filter(c => c.type === "CHAT_INPUT"), newCommands.filter(c => c.type === "CHAT_INPUT"));
-    await applyContextMenus("USER", applicationCommandManager, oldCommands.filter(c => c.type === "USER"), newCommands.filter(c => c.type === "USER"));
-    await applyContextMenus("MESSAGE", applicationCommandManager, oldCommands.filter(c => c.type === "MESSAGE"), newCommands.filter(c => c.type === "MESSAGE"));
+    await applySlashCommands(applicationCommandManager, oldCommands.filter(c => c.type === CommandType.SLASH_COMMAND), newCommands.filter(c => c.type === CommandType.SLASH_COMMAND));
+    await applyContextMenus("USER", applicationCommandManager, oldCommands.filter(c => c.type === CommandType.USER_CONTEXT_MENU), newCommands.filter(c => c.type === CommandType.USER_CONTEXT_MENU));
+    await applyContextMenus("MESSAGE", applicationCommandManager, oldCommands.filter(c => c.type === CommandType.MESSAGE_CONTEXT_MENU), newCommands.filter(c => c.type === CommandType.MESSAGE_CONTEXT_MENU));
 }
 
 /** 
@@ -81,7 +82,7 @@ async function applySlashCommands(applicationCommandManager, oldCommands, newCom
  * @param {string} type
  * @param {ApplicationCommandManager} applicationCommandManager
  * @param {ApplicationCommand[]} oldCommands
- * @param {ChatInputApplicationCommandData[]} newCommands
+ * @param {ApplicationCommand[]} newCommands
  */
 async function applyContextMenus(type, applicationCommandManager, oldCommands, newCommands) {
     const oldNames = oldCommands.map(c => c.name);
@@ -110,7 +111,7 @@ async function applyContextMenus(type, applicationCommandManager, oldCommands, n
 
 /** 
  * @private
- * @param {ChatInputApplicationCommandData} newCommand
+ * @param {ApplicationCommandData} newCommand
  * @param {ApplicationCommand} oldCommand
  */
 function isSameCommand(newCommand, oldCommand) {

@@ -4,34 +4,34 @@ declare class ButtonAction extends Action {
      * @param {object} options
      * @param {string} options.label
      * @param {Core} options.core
-     * @param {MessageButtonStyleResolvable} [options.style]
+     * @param {ButtonStyle} [options.style]
      * @param {boolean} [options.disabled]
      * @param {(interaction: ButtonInteraction) => Promise<void>} options.run
      */
     constructor(options: {
         label: string;
         core: Core;
-        style?: MessageButtonStyleResolvable;
+        style?: ButtonStyle;
         disabled?: boolean;
         run: (interaction: ButtonInteraction) => Promise<void>;
     });
-    /** @readonly @type {{label: string, core: Core, style: MessageButtonStyleResolvable, run: (interaction: ButtonInteraction) => Promise<void> }} */
+    /** @readonly @type {{label: string, core: Core, style: ButtonStyle, run: (interaction: ButtonInteraction) => Promise<void> }} */
     readonly options: {
         label: string;
         core: Core;
-        style: MessageButtonStyleResolvable;
+        style: ButtonStyle;
         run: (interaction: ButtonInteraction) => Promise<void>;
     };
-    /** @type {MessageButtonStyleResolvable} */
-    style: MessageButtonStyleResolvable;
+    /** @type {ButtonStyle} */
+    style: ButtonStyle;
     /** @type {(interaction: ButtonInteraction) => Promise<void>} */
     run: (interaction: ButtonInteraction) => Promise<void>;
     /** @readonly @type {string} */
     readonly customId: string;
     /** @readonly @type {boolean} */
     readonly isButtonAction: boolean;
-    /** @returns {MessageButton} */
-    getButton(): MessageButton;
+    /** @returns {ButtonBuilder} */
+    getButton(): ButtonBuilder;
     /** @returns {ButtonAction} */
     register(): ButtonAction;
     /** @returns {ButtonAction} */
@@ -39,6 +39,6 @@ declare class ButtonAction extends Action {
 }
 import Action = require("./Action");
 import Core = require("../core/Core");
-import { MessageButtonStyleResolvable } from "discord.js";
+import { ButtonStyle } from "discord-api-types/payloads/v10/channel";
 import { ButtonInteraction } from "discord.js";
-import { MessageButton } from "discord.js";
+import { ButtonBuilder } from "discord.js";

@@ -18,12 +18,12 @@ const defaultOptions = {
 
 module.exports = class Core {
     /**
-     * @param {Client} client 
+     * @param {Client<boolean>} client 
      * @param {{ debug: boolean, token: string, prefix: string, guildId?: string }} options
      */
     constructor(client, options) {
         if (!options) throw new Error("Core options are required.");
-        /** @readonly */
+        /** @readonly @type {Client<boolean>} */
         this.client = client;
         /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
         this.options = bindOptions(defaultOptions, options);

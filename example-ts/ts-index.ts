@@ -1,12 +1,13 @@
-import { Command, Core, MessageCore, Pages } from "discord-core";
-import { Client, Intents } from "discord.js";
+import { Command, Core, MessageCore, MessagePages } from "discord-core";
+import { Client, GatewayIntentBits } from "discord.js";
 import 'dotenv/config'
 
 const core: Core = new Core(
     new Client({
-        intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions],
+        allowedMentions: { repliedUser: false }
     }),
-    { debug: true, prefix: "pt!", token: process.env.TOKEN as string }
+    { debug: true, prefix: "pt!", token: process.env.TOKEN as string, guildId: "736829048373903377" }
 );
 
 const pingCommand: Command = new Command({
@@ -21,11 +22,9 @@ const pingCommand: Command = new Command({
                 message: { content: "Pong! 2" }
             })
         ];
-        const pages = new Pages(messageCores, {
-            visuals: {
-
-            }
-        })
+        const pages = new MessagePages({
+            messageCores: messageCores
+        });
     }
 })
 
@@ -35,4 +34,4 @@ const commands: Command[] = [
 
 commands.forEach(command => core.addCommand(command));
 
-core.login(() => core.applySlashCommands());
+core.login(() => core.applyCommands());

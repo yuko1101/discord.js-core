@@ -1,4 +1,4 @@
-const { MessageActionRow, MessageOptions, Message, TextBasedChannel, Interaction } = require("discord.js");
+const { ActionRowBuilder, MessageOptions, Message, TextBasedChannel, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const EmojiAction = require("../action/EmojiAction");
 const { bindOptions } = require("../utils/utils");
@@ -14,7 +14,7 @@ module.exports = class MessageCore {
      * @param {object} data 
      * @param {MessageOptions} data.message
      * @param {ButtonAction[] | null} [data.buttonActions=[]]
-     * @param {EmojiAction[] | null} [data.emojiActions[]]
+     * @param {EmojiAction[] | null} [data.emojiActions]
      */
     constructor(data) {
         data = bindOptions(defaultData, data);
@@ -26,11 +26,11 @@ module.exports = class MessageCore {
         this.emojiActions = data.emojiActions ?? [];
     }
 
-    /** @returns {MessageActionRow[]} */
+    /** @returns {ActionRowBuilder[]} */
     getComponents() {
         const components = [];
         const buttonComponents = this.buttonActions.map(actions => {
-            const row = new MessageActionRow();
+            const row = new ActionRowBuilder();
             for (const action of actions) {
                 row.addComponents(action.getButton());
             }

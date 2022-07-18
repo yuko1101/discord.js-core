@@ -1,16 +1,16 @@
 export = Core;
 declare class Core {
     /**
-     * @param {Client} client
+     * @param {Client<boolean>} client
      * @param {{ debug: boolean, token: string, prefix: string, guildId?: string }} options
      */
-    constructor(client: Client, options: {
+    constructor(client: Client<boolean>, options: {
         debug: boolean;
         token: string;
         prefix: string;
         guildId?: string;
     });
-    /** @readonly */
+    /** @readonly @type {Client<boolean>} */
     readonly client: Client<boolean>;
     /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
     readonly options: {

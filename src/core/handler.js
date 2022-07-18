@@ -1,7 +1,7 @@
 "use strict";
 const InteractionCore = require("../command/InteractionCore");
 const Core = require("./Core");
-const { CommandInteractionOption } = require("discord.js");
+const { CommandInteractionOption, Interaction, Message, InteractionType } = require("discord.js");
 
 module.exports = {
     /** @param {Core} core */
@@ -20,7 +20,7 @@ module.exports = {
 
         // handle slash command
         core.client.on("interactionCreate", async (interaction) => {
-            if (!interaction.isCommand()) return;
+            if (!interaction.isChatInputCommand()) return;
             const commandName = interaction.commandName.toLowerCase();
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
@@ -34,7 +34,7 @@ module.exports = {
 
         // handle context menu
         core.client.on("interactionCreate", async (interaction) => {
-            if (!interaction.isContextMenu()) return;
+            if (!interaction.isContextMenuCommand()) return;
             const commandName = interaction.commandName.toLowerCase();
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
@@ -81,7 +81,7 @@ module.exports = {
 
         // handle autocompleters
         core.client.on("interactionCreate", async (interaction) => {
-            if (!interaction.isAutocomplete()) return;
+            if (interaction.type !== InteractionType.ApplicationCommandAutocomplete) return;
 
             const command = core.commands.find(c => c.name.toLowerCase() === interaction.commandName.toLowerCase());
             if (!command) return;

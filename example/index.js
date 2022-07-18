@@ -1,11 +1,11 @@
 "use strict";
 const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } = require("discord-core");
-const { AutocompleteInteraction, Client, Intents, MessageActionRow, TextInputComponent, Modal } = require("discord.js");
+const { AutocompleteInteraction, Client, GatewayIntentBits, TextInputBuilder, ModalBuilder, ApplicationCommandOptionType, ActionRowBuilder, TextInputStyle, ButtonStyle } = require("discord.js");
 require("dotenv").config();
 
 const core = new Core(
     new Client({
-        intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions],
         allowedMentions: { repliedUser: false }
     }),
     { token: process.env.TOKEN, prefix: "pt!", debug: true, guildId: "736829048373903377" }
@@ -22,12 +22,12 @@ const command = new Command({
     options: [
         {
             name: "a",
-            type: "SUB_COMMAND",
+            type: ApplicationCommandOptionType.Subcommand,
             description: "sub command",
             options: [
                 {
                     name: "test",
-                    type: "STRING",
+                    type: ApplicationCommandOptionType.String,
                     description: "test",
                     required: true,
                     autocomplete: true,
@@ -40,7 +40,7 @@ const command = new Command({
                 },
                 {
                     name: "test2",
-                    type: "STRING",
+                    type: ApplicationCommandOptionType.String,
                     description: "test",
                     required: true,
                     autocomplete: true,
@@ -55,9 +55,9 @@ const command = new Command({
     supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
     run: async (ic, args, core) => {
         console.log(args);
-        const modal = new Modal().setTitle("test").setCustomId("test_modal");
-        const textInput = new TextInputComponent().setCustomId('favoriteColorInput').setLabel("What's your favorite color?").setStyle('SHORT');
-        modal.addComponents(new MessageActionRow().addComponents(textInput));
+        const modal = new ModalBuilder().setTitle("test").setCustomId("test_modal");
+        const textInput = new TextInputBuilder().setCustomId('favoriteColorInput').setLabel("What's your favorite color?").setStyle(TextInputStyle.Short);
+        modal.addComponents(new ActionRowBuilder().addComponents(textInput));
         const messageCores = [
             new MessageCore({ message: { content: "pong 1" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
             new MessageCore({ message: { content: "pong 2" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
@@ -81,7 +81,7 @@ const command = new Command({
             timeout: 1000000,
             pageActions: {
                 back: {
-                    buttonStyle: "DANGER"
+                    buttonStyle: ButtonStyle.Danger
                 }
             }
         });
@@ -125,6 +125,6 @@ core.login();
 core.addCommand(command);
 
 core.client.on("ready", () => {
-    core.applySlashCommands();
+    core.applyCommands();
     emojis.forEach(emoji => emoji.fetch()); // or just use CustomEmoji.fetch() on send
 });

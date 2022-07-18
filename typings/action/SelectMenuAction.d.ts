@@ -52,6 +52,4 @@ declare class SelectMenuAction extends Action {
     unregister(): SelectMenuAction;
 }
 import Action = require("./Action");
-import { MessageSelectOptionData } from "discord.js";
 import { SelectMenuInteraction } from "discord.js";
-import { MessageSelectMenu } from "discord.js";

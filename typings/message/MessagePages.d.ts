@@ -193,10 +193,8 @@ declare class MessagePages {
     private _deactivateEmojiActions;
 }
 import MessageCore = require("./MessageCore");
-import { MessageButtonStyleResolvable } from "discord.js";
 import Action = require("../action/Action");
 import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
 import { Interaction } from "discord.js";
-import { MessageSelectMenu } from "discord.js";
 import { TextBasedChannel } from "discord.js";

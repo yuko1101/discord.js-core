@@ -1,4 +1,4 @@
-const { ButtonInteraction, MessageButton, MessageButtonStyleResolvable } = require("discord.js");
+const { ButtonInteraction, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Action = require("./Action");
 const Core = require("../core/Core");
 
@@ -8,7 +8,7 @@ module.exports = class ButtonAction extends Action {
      * @param {object} options 
      * @param {string} options.label
      * @param {Core} options.core
-     * @param {MessageButtonStyleResolvable} [options.style]
+     * @param {ButtonStyle} [options.style]
      * @param {boolean} [options.disabled]
      * @param {(interaction: ButtonInteraction) => Promise<void>} options.run
      */
@@ -17,12 +17,12 @@ module.exports = class ButtonAction extends Action {
 
         if (!options.run) throw new Error("options.run is required.");
 
-        /** @readonly @type {{label: string, core: Core, style: MessageButtonStyleResolvable, run: (interaction: ButtonInteraction) => Promise<void> }} */
+        /** @readonly @type {{label: string, core: Core, style: ButtonStyle, run: (interaction: ButtonInteraction) => Promise<void> }} */
         this.options = options;
         /** @type {string} */
         this.label = this.options.label;
-        /** @type {MessageButtonStyleResolvable} */
-        this.style = this.options.style || "PRIMARY";
+        /** @type {ButtonStyle} */
+        this.style = this.options.style || ButtonStyle.Primary;
 
         /** @type {(interaction: ButtonInteraction) => Promise<void>} */
         this.run = this.options.run;
@@ -34,9 +34,9 @@ module.exports = class ButtonAction extends Action {
         this.isButtonAction = true;
     }
 
-    /** @returns {MessageButton} */
+    /** @returns {ButtonBuilder} */
     getButton() {
-        return new MessageButton().setCustomId(this.customId).setStyle(this.style).setLabel(this.label);
+        return new ButtonBuilder().setCustomId(this.customId).setStyle(this.style).setLabel(this.label);
     }
 
     /** @returns {ButtonAction} */

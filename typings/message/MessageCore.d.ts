@@ -76,7 +76,6 @@ declare class MessageCore {
 import { MessageOptions } from "discord.js";
 import ButtonAction = require("../action/ButtonAction");
 import EmojiAction = require("../action/EmojiAction");
-import { MessageActionRow } from "discord.js";
 import { Message } from "discord.js";
 import { TextBasedChannel } from "discord.js";
 import { Interaction } from "discord.js";
