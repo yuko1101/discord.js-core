@@ -1,4 +1,4 @@
-const { MessageSelectOptionData, MessageSelectMenu, SelectMenuInteraction } = require("discord.js");
+const { SelectMenuOptionBuilder, SelectMenuBuilder, SelectMenuInteraction } = require("discord.js");
 const Action = require("./Action");
 const { bindOptions } = require("../utils/utils");
 
@@ -10,7 +10,7 @@ module.exports = class SelectMenuAction extends Action {
      * @param {Core} data.core
      * @param {number} [data.maxValues]
      * @param {number} [data.minValues]
-     * @param {MessageSelectOptionData[]} [data.options]
+     * @param {SelectMenuOptionBuilder[]} [data.options]
      * @param {boolean} [data.disabled]
      * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
      */
@@ -30,7 +30,7 @@ module.exports = class SelectMenuAction extends Action {
         this.maxValues = this.data.maxValues;
         /** @type {number} */
         this.minValues = this.data.minValues;
-        /** @readonly @type {MessageSelectOptionData[]} */
+        /** @readonly @type {SelectMenuOptionBuilder[]} */
         this.options = this.data.options;
         /** @type {boolean} */
         this.disabled = this.data.disabled;
@@ -42,9 +42,9 @@ module.exports = class SelectMenuAction extends Action {
 
     }
 
-    /** @returns {MessageSelectMenu} */
+    /** @returns {SelectMenuBuilder} */
     getSelectMenu() {
-        return new MessageSelectMenu()
+        return new SelectMenuBuilder()
             .setCustomId(this.customId)
             .setPlaceholder(this.label)
             .setMaxValues(this.maxValues)
@@ -54,7 +54,7 @@ module.exports = class SelectMenuAction extends Action {
     }
 
     /**
-     * @param {MessageSelectOptionData[]} options
+     * @param {SelectMenuOptionBuilder[]} options
      * @returns {SelectMenuAction}
      */
     addOptions(...options) {
@@ -65,7 +65,7 @@ module.exports = class SelectMenuAction extends Action {
     /** 
      * @param {number} index
      * @param {number} deleteCount
-     * @param {MessageSelectOptionData[]} options
+     * @param {SelectMenuOptionBuilder[]} options
      * @returns {SelectMenuAction}
      */
     spliceOptions(index, deleteCount, ...options) {
