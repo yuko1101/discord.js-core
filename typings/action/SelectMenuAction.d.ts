@@ -6,7 +6,7 @@ declare class SelectMenuAction extends Action {
      * @param {Core} data.core
      * @param {number} [data.maxValues]
      * @param {number} [data.minValues]
-     * @param {MessageSelectOptionData[]} [data.options]
+     * @param {SelectMenuOptionBuilder[]} [data.options]
      * @param {boolean} [data.disabled]
      * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
      */
@@ -15,7 +15,7 @@ declare class SelectMenuAction extends Action {
         core: Core;
         maxValues?: number;
         minValues?: number;
-        options?: MessageSelectOptionData[];
+        options?: SelectMenuOptionBuilder[];
         disabled?: boolean;
         run: (interaction: SelectMenuInteraction) => Promise<void>;
     });
@@ -24,32 +24,34 @@ declare class SelectMenuAction extends Action {
     maxValues: number;
     /** @type {number} */
     minValues: number;
-    /** @readonly @type {MessageSelectOptionData[]} */
-    readonly options: MessageSelectOptionData[];
+    /** @readonly @type {SelectMenuOptionBuilder[]} */
+    readonly options: SelectMenuOptionBuilder[];
     /** @type {boolean} */
     disabled: boolean;
     /** @type {(interaction: SelectMenuInteraction) => Promise<void>} */
     run: (interaction: SelectMenuInteraction) => Promise<void>;
     /** @readonly @type {string} */
     readonly customId: string;
-    /** @returns {MessageSelectMenu} */
-    getSelectMenu(): MessageSelectMenu;
+    /** @returns {SelectMenuBuilder} */
+    getSelectMenu(): SelectMenuBuilder;
     /**
-     * @param {MessageSelectOptionData[]} options
+     * @param {SelectMenuOptionBuilder[]} options
      * @returns {SelectMenuAction}
      */
-    addOptions(...options: MessageSelectOptionData[]): SelectMenuAction;
+    addOptions(...options: SelectMenuOptionBuilder[]): SelectMenuAction;
     /**
      * @param {number} index
      * @param {number} deleteCount
-     * @param {MessageSelectOptionData[]} options
+     * @param {SelectMenuOptionBuilder[]} options
      * @returns {SelectMenuAction}
      */
-    spliceOptions(index: number, deleteCount: number, ...options: MessageSelectOptionData[]): SelectMenuAction;
+    spliceOptions(index: number, deleteCount: number, ...options: SelectMenuOptionBuilder[]): SelectMenuAction;
     /** @returns {SelectMenuAction}  */
     register(): SelectMenuAction;
     /** @returns {SelectMenuAction} */
     unregister(): SelectMenuAction;
 }
 import Action = require("./Action");
+import { SelectMenuOptionBuilder } from "discord.js";
 import { SelectMenuInteraction } from "discord.js";
+import { SelectMenuBuilder } from "discord.js";

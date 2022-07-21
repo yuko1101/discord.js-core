@@ -55,17 +55,19 @@ module.exports = class Core {
         if (callback) callback();
     }
 
-    /** @param {Command} command */
-    addCommand(command) {
-        this.commands.push(command);
+    /** @param {Command[]} commands */
+    addCommands(...commands) {
+        this.commands.push(...commands);
     }
 
     /** 
      * @param {string} dir
      * @param {boolean} recursive
+     * @returns {Command[]}
      */
     addCommandsInDir(dir, recursive) {
         const files = fs.readdirSync(`./${dir}`);
+        const commands = [];
         for (const file of files) {
             const loadedFile = fs.lstatSync(`./${dir}/${file}`);
             if (loadedFile.isDirectory()) {
@@ -74,9 +76,11 @@ module.exports = class Core {
             }
             else {
                 const command = require(path.resolve(require.main.path, dir, file));
-                this.addCommand(command);
+                commands.push(command);
             }
         }
+        this.addCommands(...commands);
+        return commands;
     }
 
     /** @param {Command} command */

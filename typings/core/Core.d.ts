@@ -29,8 +29,13 @@ declare class Core {
     readonly selectMenuActions: SelectMenuAction[];
     /** @param {() => *} [callback] */
     login(callback?: () => any): Promise<void>;
-    /** @param {Command} command */
-    addCommand(command: Command): void;
+    /** @param {Command[]} commands */
+    addCommands(...commands: Command[]): void;
+    /**
+     * @param {string} dir
+     * @param {boolean} recursive
+     */
+    addCommandsInDir(dir: string, recursive: boolean): any[];
     /** @param {Command} command */
     removeCommand(command: Command): void;
     applyCommands(): Promise<void>;

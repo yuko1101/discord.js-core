@@ -117,7 +117,7 @@ const command = new Command({
 
 core.login();
 
-core.addCommand(command);
+core.addCommands(command);
 
 core.client.on("ready", () => {
     core.applyCommands();
