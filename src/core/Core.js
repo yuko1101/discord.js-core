@@ -72,11 +72,12 @@ module.exports = class Core {
             const loadedFile = fs.lstatSync(`./${dir}/${file}`);
             if (loadedFile.isDirectory()) {
                 if (!recursive) continue;
-                this.addCommandsInDir(`${dir}/${file}`);
-            }
-            else {
+                this.addCommandsInDir(`${dir}/${file}`, true);
+            } else {
                 const command = require(path.resolve(require.main.path, dir, file));
+                console.log(1, file);
                 if (!(command instanceof Command)) continue;
+                console.log(2);
                 commands.push(command);
             }
         }
