@@ -1,6 +1,9 @@
 "use strict";
 
 const { Client } = require("discord.js");
+const fs = require("fs");
+const path = require("path");
+
 const Command = require("../command/Command");
 const commandManager = require("./commandManager");
 const handler = require("./handler");
@@ -56,6 +59,26 @@ module.exports = class Core {
     addCommand(command) {
         this.commands.push(command);
     }
+
+    /** 
+     * @param {string} dir
+     * @param {boolean} recursive
+     */
+    addCommandsInDir(dir, recursive) {
+        const files = fs.readdirSync(`./${dir}`);
+        for (const file of files) {
+            const loadedFile = fs.lstatSync(`./${dir}/${file}`);
+            if (loadedFile.isDirectory()) {
+                if (!recursive) continue;
+                this.addCommandsInDir(`${dir}/${file}`);
+            }
+            else {
+                const command = require(path.resolve(require.main.path, dir, file));
+                this.addCommand(command);
+            }
+        }
+    }
+
     /** @param {Command} command */
     removeCommand(command) {
         this.commands = this.commands.filter(c => c.name !== command.name);
