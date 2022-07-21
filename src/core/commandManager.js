@@ -20,10 +20,10 @@ async function applyCommands(core) {
     const applicationCommandManager = core.options.guildId
         ? await core.client.guilds.fetch(core.options.guildId).then(g => g.commands)
         : core.client.application.commands;
-    const oldCommands = await applicationCommandManager.fetch().then(c => [...c.values()]);
+    const oldCommands = await applicationCommandManager.fetch().then(c => [...c.values()].filter(c => (!core.options.debug && !c.name.endsWith("-debug")) || (core.options.debug && c.name.endsWith("-debug"))));
     const newCommands = commands.map(c => c.supports.filter(s => Object.keys(CommandType).includes(s)).map(s => {
         return {
-            name: c.name,
+            name: core.options.debug ? `${c.name}-debug` : c.name,
             description: s.endsWith("_CONTEXT_MENU") ? "" : c.description,
             type: CommandType[s],
             options: s.endsWith("_CONTEXT_MENU") ? [] : c.options,

@@ -28,7 +28,7 @@ module.exports = class ButtonAction extends Action {
         this.run = this.options.run;
 
         /** @readonly @type {string} */
-        this.customId = `BUTTON_ACTION:${this.id}`;
+        this.customId = `BUTTON_ACTION${this.core.options.debug ? "-debug" : ""}:${this.id}`;
 
         /** @readonly @type {boolean} */
         this.isButtonAction = true;

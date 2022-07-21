@@ -1,7 +1,7 @@
 "use strict";
 const InteractionCore = require("../command/InteractionCore");
 const Core = require("./Core");
-const { CommandInteractionOption, Interaction, Message, InteractionType } = require("discord.js");
+const { CommandInteractionOption, InteractionType } = require("discord.js");
 
 module.exports = {
     /** @param {Core} core */
@@ -9,7 +9,11 @@ module.exports = {
         // handle message command
         core.client.on("messageCreate", async (msg) => {
             if (!msg.content.startsWith(core.options.prefix)) return;
-            const [commandName, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
+
+            const [commandNameInput, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
+            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
+
+            const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.aliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
@@ -21,7 +25,10 @@ module.exports = {
         // handle slash command
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isChatInputCommand()) return;
-            const commandName = interaction.commandName.toLowerCase();
+            const commandNameInput = interaction.commandName.toLowerCase();
+            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
+
+            const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
@@ -35,7 +42,10 @@ module.exports = {
         // handle context menu
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isContextMenuCommand()) return;
-            const commandName = interaction.commandName.toLowerCase();
+            const commandNameInput = interaction.commandName.toLowerCase();
+            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
+
+            const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
@@ -83,7 +93,12 @@ module.exports = {
         core.client.on("interactionCreate", async (interaction) => {
             if (interaction.type !== InteractionType.ApplicationCommandAutocomplete) return;
 
-            const command = core.commands.find(c => c.name.toLowerCase() === interaction.commandName.toLowerCase());
+            const commandNameInput = interaction.commandName.toLowerCase();
+            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
+
+            const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
+
+            const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
             if (!command.supports.includes("SLASH_COMMAND")) return;
             if (!interaction.options?.data) return;

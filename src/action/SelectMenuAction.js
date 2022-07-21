@@ -38,7 +38,7 @@ module.exports = class SelectMenuAction extends Action {
         this.run = this.data.run;
 
         /** @readonly @type {string} */
-        this.customId = `SELECT_MENU_ACTION:${this.id}`;
+        this.customId = `SELECT_MENU_ACTION${this.core.options.debug ? "-debug" : ""}:${this.id}`;
 
     }
 

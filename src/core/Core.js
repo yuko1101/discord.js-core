@@ -28,6 +28,9 @@ module.exports = class Core {
         /** @readonly @type {{ debug: boolean, token: string, prefix: string, guildId?: string }} */
         this.options = bindOptions(defaultOptions, options);
 
+        if (this.options.debug && !this.options.guildId) {
+            throw Error("You should not use debug mode for global. Global application commands take too much time to apply their updates.")
+        }
 
         /** @readonly @type {Command[]} */
         this.commands = [];
