@@ -31,7 +31,7 @@ Run the index.js with `node .` or `node index.js` in the terminal,
 and you will find the bot is online.
 
 ## 3. Adding Commands (Optional)
-You can make a *SlashCommand*, *MessageCommand* and *ContextMenu* in single code.
+You can handle *SlashCommand*, *MessageCommand* and *ContextMenu* in single code.
 
 ### Import the Command class
 ```js
