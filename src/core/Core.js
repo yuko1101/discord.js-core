@@ -76,6 +76,7 @@ module.exports = class Core {
             }
             else {
                 const command = require(path.resolve(require.main.path, dir, file));
+                if (!(command instanceof Command)) continue;
                 commands.push(command);
             }
         }
