@@ -22,6 +22,8 @@ const core = new Core(
         prefix: "!",
         guildId: "Your Guild ID", // if not provided, your commands will be applied to global (to all guilds, DMs, and groups)
         token: "Your Token",
+        // debug mode, which enables you to develop your bot more easily. (e.g. All commands have "-debug" at the end of their name in debug mode)
+        debug: false, 
     }
 );
 
