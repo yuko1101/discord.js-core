@@ -64,5 +64,5 @@ core.addCommands(command);
 
 core.client.on("ready", () => {
     core.applyCommands();
-    emojis.forEach(emoji => emoji.fetch()); // or just use CustomEmoji.fetch() on send
+    emojis.forEach(emoji => emoji.resolve()); // or just use CustomEmoji.resolve() on send
 });

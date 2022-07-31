@@ -14,7 +14,7 @@ declare class CustomEmoji {
     /** @readonly @type {boolean} */
     readonly fetched: boolean;
     /** @returns {string} */
-    fetch(): string;
+    resolve(): string;
 }
 import { Client } from "discord.js";
 import Core = require("../core/Core");

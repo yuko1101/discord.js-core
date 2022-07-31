@@ -20,7 +20,7 @@ module.exports = class CustomEmoji {
     }
 
     /** @returns {string} */
-    fetch() {
+    resolve() {
         if (this.fetched) return this.emoji;
 
         const emoji = this.client.emojis.resolve(this.emojiId)
