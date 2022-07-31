@@ -8,7 +8,7 @@ const core = new Core(
         intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
         allowedMentions: { repliedUser: false }
     }),
-    { token: process.env.TOKEN, prefix: "pt!", debug: true, guildId: "736829048373903377" }
+    { token: process.env.TOKEN, prefix: "pt!", debug: false, guildId: "736829048373903377" }
 );
 
 const emojis = [
