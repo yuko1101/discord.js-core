@@ -32,6 +32,6 @@ const commands: Command[] = [
     pingCommand
 ]
 
-commands.forEach(command => core.addCommand(command));
+commands.forEach(command => core.addCommands(command));
 
 core.login(() => core.applyCommands());

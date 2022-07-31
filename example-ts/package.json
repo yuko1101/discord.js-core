@@ -10,7 +10,7 @@
   "author": "yuko1101 (https://github.com/yuko1101)",
   "license": "ISC",
   "dependencies": {
-    "discord-core": "file:..",
+    "discord-core": "github:yuko1101/discord-core",
     "discord.js": "^14.0.1"
   }
 }
