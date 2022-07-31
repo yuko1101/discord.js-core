@@ -48,7 +48,7 @@ const command = new Command({
                 label: "Reroll",
                 run: async (interaction) => {
                     await interaction.deferUpdate();
-                    pages.gotoPage(0);
+                    pages.goToPage(0);
                 }
             })
         );

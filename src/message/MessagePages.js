@@ -204,7 +204,7 @@ module.exports = class MessagePages {
     /**
      * @param {number} index 
      */
-    async gotoPage(index) {
+    async goToPage(index) {
         if (this.isDestroyed) throw new Error("This MessagePages has already been destroyed.");
         if (!this.isSent) throw new Error("This MessagePages hasn't been sent yet. Please send it first.");
         if (index < 0 || index >= this.messageCores.length) throw new Error("Index out of bounds");
@@ -439,13 +439,13 @@ module.exports = class MessagePages {
 
             reaction.users.remove(user);
             if (reaction.emoji.name === this.pageActions.first.label) {
-                await this.gotoPage(0);
+                await this.goToPage(0);
             } else if (reaction.emoji.name === this.pageActions.back.label) {
-                await this.gotoPage(Math.max(this.currentPageIndex - 1, 0));
+                await this.goToPage(Math.max(this.currentPageIndex - 1, 0));
             } else if (reaction.emoji.name === this.pageActions.next.label) {
-                await this.gotoPage(Math.min(this.currentPageIndex + 1, this.messageCores.length - 1));
+                await this.goToPage(Math.min(this.currentPageIndex + 1, this.messageCores.length - 1));
             } else if (reaction.emoji.name === this.pageActions.last.label) {
-                await this.gotoPage(this.messageCores.length - 1);
+                await this.goToPage(this.messageCores.length - 1);
             }
         });
 
@@ -490,7 +490,7 @@ module.exports = class MessagePages {
                         : id === "DISCORD_CORE_MESSAGE_PAGES_LAST" ? this.messageCores.length - 1 : -1;
             if (pageIndex === -1) return;
             await interaction.deferUpdate();
-            await this.gotoPage(pageIndex);
+            await this.goToPage(pageIndex);
         });
 
         collector.on("end", async (collected, reason) => {
