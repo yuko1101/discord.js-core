@@ -11,8 +11,6 @@ module.exports = {
             if (!msg.content.startsWith(core.options.prefix)) return;
 
             const [commandNameInput, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
-            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
-
             const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.aliases.map(a => a.toLowerCase()).includes(commandName));
@@ -26,8 +24,6 @@ module.exports = {
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isChatInputCommand()) return;
             const commandNameInput = interaction.commandName.toLowerCase();
-            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
-
             const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
@@ -43,8 +39,6 @@ module.exports = {
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isContextMenuCommand()) return;
             const commandNameInput = interaction.commandName.toLowerCase();
-            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
-
             const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
@@ -94,8 +88,6 @@ module.exports = {
             if (interaction.type !== InteractionType.ApplicationCommandAutocomplete) return;
 
             const commandNameInput = interaction.commandName.toLowerCase();
-            if (core.options.debug && !commandNameInput.endsWith("-debug")) return;
-
             const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
