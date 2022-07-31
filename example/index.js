@@ -1,5 +1,5 @@
 "use strict";
-const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction } = require("discord-core");
+const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction, Action } = require("discord-core");
 const { AutocompleteInteraction, Client, TextInputBuilder, ModalBuilder, ApplicationCommandOptionType, ActionRowBuilder, TextInputStyle, ButtonStyle } = require("discord.js");
 require("dotenv").config();
 
@@ -8,110 +8,53 @@ const core = new Core(
         intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
         allowedMentions: { repliedUser: false }
     }),
-    { token: process.env.TOKEN, prefix: "pt!", debug: false, guildId: "736829048373903377" }
+    { token: process.env.TOKEN, prefix: "!", debug: true, guildId: "736829048373903377" }
 );
 
 const emojis = [
     new CustomEmoji(core, "951644270312427570"),
-]
-
-core.client.on("messageCreate", msg => {
-    console.log(msg);
-})
+];
 
 const command = new Command({
-    name: "ping",
-    description: "pong",
-    args: ["test"],
+    name: "dice",
+    description: "roll a dice",
+    args: ["max-number"],
     options: [
         {
-            name: "a",
-            type: ApplicationCommandOptionType.Subcommand,
-            description: "sub command",
-            options: [
-                {
-                    name: "test",
-                    type: ApplicationCommandOptionType.String,
-                    description: "test",
-                    required: true,
-                    autocomplete: true,
-                    autocompleter: (_interaction, value) => {
-                        /** @type {AutocompleteInteraction} */
-                        const interaction = _interaction
-                        console.log(value);
-                        if (value) interaction.respond([{ name: value.toLowerCase(), value: value.toUpperCase() }])
-                    }
-                },
-                {
-                    name: "test2",
-                    type: ApplicationCommandOptionType.String,
-                    description: "test",
-                    required: true,
-                    autocomplete: true,
-                    autocompleter: (interaction, value) => {
-                        console.log(value + "2");
-                        if (value) interaction.respond([{ name: value, value: value }])
-                    }
-                }
-            ]
+            name: "max-number",
+            description: "max face number of the dice",
+            type: ApplicationCommandOptionType.Integer,
+            required: false,
         }
     ],
     supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
     run: async (ic, args, core) => {
-        if (ic.interaction.isUserContextMenuCommand)
-            console.log(args);
-        const modal = new ModalBuilder().setTitle("test").setCustomId("test_modal");
-        const textInput = new TextInputBuilder().setCustomId('favoriteColorInput').setLabel("What's your favorite color?").setStyle(TextInputStyle.Short);
-        modal.addComponents(new ActionRowBuilder().addComponents(textInput));
+
+        const max = Number(args["max-number"]) || 6;
+
         const messageCores = [
-            new MessageCore({ message: { content: "pong 1" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
-            new MessageCore({ message: { content: "pong 2" }, emojiActions: [new EmojiAction({ core: core, label: "❤", run: (messageReaction, user) => { console.log("reacted!") } })] }),
-            new MessageCore({
-                message: { content: "pong 3" }, buttonActions: [new ButtonAction({
-                    core: core, label: "Click!", run: async (interaction) => {
-                        interaction.showModal(modal);
-                        const modalInteraction = await interaction.awaitModalSubmit({ time: 100000 });
-                        if (modalInteraction) {
-                            await modalInteraction.deferUpdate();
-                            interaction.editReply(modalInteraction.fields.getTextInputValue("favoriteColorInput"));
-                        }
-                    }
-                }).register()]
-            }),];
+            async () => new MessageCore({
+                message: { content: `${Math.floor(Math.random() * max) + 1}` }
+            })
+        ];
 
         const pages = new MessagePages({
             messageCores: messageCores,
-            enabledActions: ["BACK", new EmojiAction({ core: core, label: "❌", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
-            type: "BUTTON",
-            timeout: 1000000,
-            pageActions: {
-                back: {
-                    buttonStyle: ButtonStyle.Danger
-                }
-            }
+            enabledActions: [],
         });
-
-        // pages.setSelectMenu(new SelectMenuAction({
-        //     core: core, label: "SELECT!", run: async (interaction) => {
-        //         await interaction.deferUpdate();
-        //         if (interaction.values.includes("a")) pages.gotoPage(1);
-        //         else pages.gotoPage(2);
-        //     }, options: [{ label: "a", value: "a" }, { label: "b", value: "b" }], disabled: false
-        // }));
+        pages.enabledActions.push(
+            new ButtonAction({
+                core: core,
+                label: "Reroll",
+                run: async (interaction) => {
+                    await interaction.deferUpdate();
+                    pages.gotoPage(0);
+                }
+            })
+        );
 
         await ic.deferReply();
         ic.followUp(pages);
-
-
-
-        setTimeout(() => {
-            ic.editReply(new MessagePages({
-                messageCores: [new MessageCore({ message: { content: "pong 4" } }), new MessageCore({
-                    message: { content: "pong 5" }, emojiActions: [new EmojiAction({ core: core, label: "✅", run: console.log })]
-                })],
-                enabledActions: ["BACK", new EmojiAction({ core: core, label: "❗", run: (reaction, user) => reaction.message.delete() }), "NEXT"],
-            }));
-        }, 10000);
     }
 });
 
