@@ -207,7 +207,6 @@ module.exports = class MessagePages {
     async gotoPage(index) {
         if (this.isDestroyed) throw new Error("This MessagePages has already been destroyed.");
         if (!this.isSent) throw new Error("This MessagePages hasn't been sent yet. Please send it first.");
-        if (index === this.currentPageIndex) return;
         if (index < 0 || index >= this.messageCores.length) throw new Error("Index out of bounds");
 
         const oldIndex = this.currentPageIndex;
