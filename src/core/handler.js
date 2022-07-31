@@ -22,16 +22,42 @@ module.exports = {
 
         // handle slash command
         core.client.on("interactionCreate", async (interaction) => {
-            if (!interaction.isChatInputCommand()) return;
+            if (core.options.debug) {
+                console.log(`Took ${Date.now() - interaction.createdTimestamp}ms to catch the interaction`);
+                console.time(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
+            }
+            if (!interaction.isChatInputCommand()) {
+                if (core.options.debug) {
+                    console.timeEnd(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
+                    console.log("Not a slash command");
+                }
+                return;
+            }
             const commandNameInput = interaction.commandName.toLowerCase();
             const commandName = core.options.debug ? commandNameInput.slice(0, -("-debug".length)) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
-            if (!command) return;
+            if (!command) {
+                if (core.options.debug) {
+                    console.timeEnd(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
+                    console.log("No commands matched");
+                }
+                return;
+            }
             if (command.supports.includes("SLASH_COMMAND")) {
                 const args = optionsToObject(interaction.options?.data);
 
                 await command.run(new InteractionCore({ interaction: interaction }), args, core);
+
+                if (core.options.debug) {
+                    console.timeEnd(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
+                    console.log("Slash command complete");
+                }
+            } else {
+                if (core.options.debug) {
+                    console.timeEnd(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
+                    console.log("Command does not support slash command");
+                }
             }
         });
 
