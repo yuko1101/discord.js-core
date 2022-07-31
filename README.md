@@ -71,7 +71,7 @@ const command = new Command({
 
 ### Add to core
 ```js
-core.addCommand(command);
+core.addCommands(command);
 ```
 
 ### Apply to Discord (Adding Slash-Command and Context-Menu against Discord)
