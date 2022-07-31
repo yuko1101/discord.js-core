@@ -54,7 +54,7 @@ const command = new Command({
         );
 
         await ic.deferReply();
-        ic.followUp(pages);
+        await ic.followUp(pages);
     }
 });
 
