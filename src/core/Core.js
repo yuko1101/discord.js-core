@@ -76,7 +76,10 @@ module.exports = class Core {
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
                 const command = import(`file:///${cwd}/${dir}/${file}`);
-                if (!(command instanceof Command)) continue;
+                if (!(command instanceof Command)) {
+                    if (this.options.debug) console.log(`Skipped importing ./${dir}/${file} because it is not a command file.`);
+                    continue;
+                }
                 commands.push(command);
             }
         }
