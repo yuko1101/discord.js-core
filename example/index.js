@@ -1,6 +1,6 @@
 "use strict";
-const { Core, Command, CustomEmoji, EmojiAction, ButtonAction, MessageCore, MessagePages, SelectMenuAction, Action } = require("discord-core");
-const { AutocompleteInteraction, Client, TextInputBuilder, ModalBuilder, ApplicationCommandOptionType, ActionRowBuilder, TextInputStyle, ButtonStyle } = require("discord.js");
+const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("discord-core");
+const { Client, ApplicationCommandOptionType } = require("discord.js");
 require("dotenv").config();
 
 const core = new Core(
@@ -14,6 +14,8 @@ const core = new Core(
 const emojis = [
     new CustomEmoji(core, "951644270312427570"),
 ];
+
+core.addCommandsInDir("commands");
 
 const command = new Command({
     name: "dice",
