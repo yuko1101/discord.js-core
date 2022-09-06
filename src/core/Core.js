@@ -75,7 +75,7 @@ module.exports = class Core {
                 if (!recursive) continue;
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
-                const command = await (import(`file:///${cwd}/${dir}/${file}`));
+                const command = (await import(`file:///${cwd}/${dir}/${file}`)).default;
                 if (!(command instanceof Command)) {
                     if (this.options.debug) console.log(`Skipped importing ./${dir}/${file} because it is not a command file.`);
                     continue;
