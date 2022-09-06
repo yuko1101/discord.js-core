@@ -3,7 +3,13 @@ A simple bot handler for [discord.js/v14](https://github.com/discordjs/discord.j
 
 ## 1. Installation
 Run `npm install yuko1101/discord-core` in the terminal.  
-If you didn't install discord.js, also run `npm install discord.js`.
+
+**DO NOT install discord.js.**
+discord-core has discord.js inside.
+
+Installing another discord.js can occur some class definition errors.
+
+If you installed discord.js, uninstall it by running `npm uninstall discord.js`
 
 ## 2. Set-up
 Create `index.js` file and edit it.
