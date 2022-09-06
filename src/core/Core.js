@@ -75,7 +75,6 @@ module.exports = class Core {
                 if (!recursive) continue;
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
-                console.log(`${cwd}/${dir}/${file}`);
                 const command = import(`file:///${cwd}/${dir}/${file}`);
                 if (!(command instanceof Command)) continue;
                 commands.push(command);
