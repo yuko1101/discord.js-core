@@ -12,16 +12,25 @@ const SelectMenuAction = require("./action/SelectMenuAction");
 const Action = require("./action/Action");
 const InteractionCore = require("./command/InteractionCore");
 
-module.exports = {
-    Core,
-    Command,
-    ConfigFile,
-    MessageCore,
-    MessagePages,
-    CustomEmoji,
-    EmojiAction,
-    ButtonAction,
-    SelectMenuAction,
-    Action,
-    InteractionCore
-}
+/** @module Core */
+module.exports.Core = Core;
+/** @module Command */
+module.exports.Command = Command;
+/** @module ConfigFile */
+module.exports.ConfigFile = ConfigFile;
+/** @module MessageCore */
+module.exports.MessageCore = MessageCore;
+/** @module MessagePages */
+module.exports.MessagePages = MessagePages;
+/** @module CustomEmoji */
+module.exports.CustomEmoji = CustomEmoji;
+/** @module EmojiAction */
+module.exports.EmojiAction = EmojiAction;
+/** @module ButtonAction */
+module.exports.ButtonAction = ButtonAction;
+/** @module SelectMenuAction */
+module.exports.SelectMenuAction = SelectMenuAction;
+/** @module Action */
+module.exports.Action = Action;
+/** @module InteractionCore */
+module.exports.InteractionCore = InteractionCore;

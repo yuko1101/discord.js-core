@@ -66,15 +66,17 @@ module.exports = class Core {
      * @returns {Command[]}
      */
     addCommandsInDir(dir, recursive) {
-        const files = fs.readdirSync(`./${dir}`);
+        const cwd = process.argv[1].replace(/\\/g, "/").replace(/\/[^\/]+\.[^\/]+$/, "");
+        const files = fs.readdirSync(`${cwd}/${dir}`);
         const commands = [];
         for (const file of files) {
-            const loadedFile = fs.lstatSync(`./${dir}/${file}`);
+            const loadedFile = fs.lstatSync(`${cwd}/${dir}/${file}`);
             if (loadedFile.isDirectory()) {
                 if (!recursive) continue;
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
-                const command = require(path.resolve(require.main.path, dir, file));
+                console.log(`${cwd}/${dir}/${file}`);
+                const command = import(`file:///${cwd}/${dir}/${file}`);
                 if (!(command instanceof Command)) continue;
                 commands.push(command);
             }
