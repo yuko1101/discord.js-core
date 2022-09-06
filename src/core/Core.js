@@ -63,9 +63,9 @@ module.exports = class Core {
     /** 
      * @param {string} dir
      * @param {boolean} recursive
-     * @returns {Command[]}
+     * @returns {Promise<Command[]>}
      */
-    addCommandsInDir(dir, recursive) {
+    async addCommandsInDir(dir, recursive) {
         const cwd = process.argv[1].replace(/\\/g, "/").replace(/\/[^\/]+\.[^\/]+$/, "");
         const files = fs.readdirSync(`${cwd}/${dir}`);
         const commands = [];
@@ -75,7 +75,7 @@ module.exports = class Core {
                 if (!recursive) continue;
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
-                const command = import(`file:///${cwd}/${dir}/${file}`);
+                const command = await (import(`file:///${cwd}/${dir}/${file}`));
                 if (!(command instanceof Command)) {
                     if (this.options.debug) console.log(`Skipped importing ./${dir}/${file} because it is not a command file.`);
                     continue;
