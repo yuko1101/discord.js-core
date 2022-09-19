@@ -1,6 +1,12 @@
 # discord-core
 A simple bot handler for [discord.js/v14](https://github.com/discordjs/discord.js)
 
+### Features
+ - Easy Application Commands (including easy AutoCompleters)
+ - Easy Customizable MessagePages
+ - Easy Actions (EmojiAction, ButtonAction, SelectMenuAction)
+ - Easy to combine Actions and a message (called MessageCore)
+
 ## 1. Installation
 Run `npm install yuko1101/discord-core` in the terminal.  
 
