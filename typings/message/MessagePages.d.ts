@@ -89,10 +89,10 @@ declare class MessagePages {
     readonly isDestroyed: boolean;
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {SelectMenuBuilder} selectMenu
+     * @param {SelectMenuAction} selectMenu
      * @returns {MessagePages}
      */
-    setSelectMenu(selectMenu: SelectMenuBuilder): MessagePages;
+    setSelectMenu(selectMenu: SelectMenuAction): MessagePages;
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel | Message} whereToSend
@@ -198,5 +198,4 @@ import Action = require("../action/Action");
 import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
 import { Interaction } from "discord.js";
-import { SelectMenuBuilder } from "discord.js";
 import { TextBasedChannel } from "discord.js";

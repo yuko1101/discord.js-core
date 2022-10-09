@@ -34,9 +34,9 @@ declare class Core {
     /**
      * @param {string} dir
      * @param {boolean} recursive
-     * @returns {Command[]}
+     * @returns {Promise<Command[]>}
      */
-    addCommandsInDir(dir: string, recursive: boolean): Command[];
+    addCommandsInDir(dir: string, recursive: boolean): Promise<Command[]>;
     /** @param {Command} command */
     removeCommand(command: Command): void;
     applyCommands(): Promise<void>;
