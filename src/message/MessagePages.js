@@ -1,4 +1,4 @@
-const { Message, TextBasedChannel, MessageOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction, SelectMenuBuilder } = require("discord.js");
+const { Message, TextBasedChannel, MessageOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
@@ -93,7 +93,7 @@ module.exports = class MessagePages {
 
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {SelectMenuBuilder} selectMenu 
+     * @param {SelectMenuAction} selectMenu 
      * @returns {MessagePages}
      */
     setSelectMenu(selectMenu) {
@@ -204,7 +204,7 @@ module.exports = class MessagePages {
     /**
      * @param {number} index 
      */
-    async goToPage(index) {
+    async gotoPage(index) {
         if (this.isDestroyed) throw new Error("This MessagePages has already been destroyed.");
         if (!this.isSent) throw new Error("This MessagePages hasn't been sent yet. Please send it first.");
         if (index < 0 || index >= this.messageCores.length) throw new Error("Index out of bounds");
@@ -439,13 +439,13 @@ module.exports = class MessagePages {
 
             reaction.users.remove(user);
             if (reaction.emoji.name === this.pageActions.first.label) {
-                await this.goToPage(0);
+                await this.gotoPage(0);
             } else if (reaction.emoji.name === this.pageActions.back.label) {
-                await this.goToPage(Math.max(this.currentPageIndex - 1, 0));
+                await this.gotoPage(Math.max(this.currentPageIndex - 1, 0));
             } else if (reaction.emoji.name === this.pageActions.next.label) {
-                await this.goToPage(Math.min(this.currentPageIndex + 1, this.messageCores.length - 1));
+                await this.gotoPage(Math.min(this.currentPageIndex + 1, this.messageCores.length - 1));
             } else if (reaction.emoji.name === this.pageActions.last.label) {
-                await this.goToPage(this.messageCores.length - 1);
+                await this.gotoPage(this.messageCores.length - 1);
             }
         });
 
@@ -490,7 +490,7 @@ module.exports = class MessagePages {
                         : id === "DISCORD_CORE_MESSAGE_PAGES_LAST" ? this.messageCores.length - 1 : -1;
             if (pageIndex === -1) return;
             await interaction.deferUpdate();
-            await this.goToPage(pageIndex);
+            await this.gotoPage(pageIndex);
         });
 
         collector.on("end", async (collected, reason) => {
