@@ -1,4 +1,4 @@
-import { Command, Core, MessageCore, MessagePages } from "discord-core";
+import { Command, Core, MessageCore, MessagePages } from "discord.js-core";
 import { Client, GatewayIntentBits } from "discord.js";
 import 'dotenv/config'
 

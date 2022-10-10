@@ -1,5 +1,5 @@
 "use strict";
-const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("discord-core");
+const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("discord.js-core");
 const { Client, ApplicationCommandOptionType } = require("discord.js");
 require("dotenv").config();
 

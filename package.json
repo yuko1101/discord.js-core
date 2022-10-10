@@ -1,5 +1,5 @@
 {
-  "name": "discord-core",
+  "name": "discord.js-core",
   "version": "1.0.0",
   "description": "discord.jsのBot用の多機能ライブラリ",
   "main": "src/index.js",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yuko1101/discord-core.git"
+    "url": "git+https://github.com/yuko1101/discord.js-core.git"
   },
   "keywords": [
     "discord.js",
@@ -24,9 +24,9 @@
   "author": "yuko1101 (https://github.com/yuko1101)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yuko1101/discord-core/issues"
+    "url": "https://github.com/yuko1101/discord.js-core/issues"
   },
-  "homepage": "https://github.com/yuko1101/discord-core#readme",
+  "homepage": "https://github.com/yuko1101/discord.js-core#readme",
   "devDependencies": {
     "typescript": "^4.6.2"
   },
