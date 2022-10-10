@@ -1,5 +1,5 @@
 "use strict";
-const { Message, MessageOptions, ApplicationCommandOptionData, AutocompleteInteraction } = require("discord.js");
+const { Message, MessageCreateOptions, ApplicationCommandOptionData, AutocompleteInteraction } = require("discord.js");
 const Core = require("../core/Core");
 const { bindOptions } = require("../utils/utils");
 const InteractionCore = require("./InteractionCore");

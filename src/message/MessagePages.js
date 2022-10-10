@@ -1,4 +1,4 @@
-const { Message, TextBasedChannel, MessageOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction } = require("discord.js");
+const { Message, TextBasedChannel, MessageCreateOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
@@ -119,13 +119,13 @@ module.exports = class MessagePages {
 
         if (options.edit && !whereToSend.reply) throw new Error("`whereToSend` must be a Message when editing.");
 
-        const sendFunction = async (messageOptions) => {
-            if (options.edit) return await whereToSend.edit(messageOptions);
-            return await (whereToSend.reply ? whereToSend.reply(messageOptions) : whereToSend.send(messageOptions));
+        const sendFunction = async (messageCreateOptions) => {
+            if (options.edit) return await whereToSend.edit(messageCreateOptions);
+            return await (whereToSend.reply ? whereToSend.reply(messageCreateOptions) : whereToSend.send(messageCreateOptions));
         }
 
         // send message
-        this.sentMessage = await sendFunction(await this._getMessageOptionsWithComponents(this.currentPageIndex));
+        this.sentMessage = await sendFunction(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
         this.isSent = true;
 
         // apply reactions
@@ -169,7 +169,7 @@ module.exports = class MessagePages {
             throw new Error("Interaction must have the followUp() function. Please check the interaction is followUpable.");
         }
 
-        const params = { ...(await this._getMessageOptionsWithComponents(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral };
+        const params = { ...(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex)), fetchReply: true, ephemeral: options.ephemeral };
         this.sentMessage = options.followUp ? await interaction.followUp(params)
             : options.edit ? await interaction.editReply(params)
                 : await interaction.reply(params);
@@ -214,9 +214,9 @@ module.exports = class MessagePages {
 
         if (this.interaction) {
             if (!this.interaction.isRepliable) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
-            await this.interaction.editReply(await this._getMessageOptionsWithComponents(this.currentPageIndex));
+            await this.interaction.editReply(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
         } else {
-            await this.sentMessage.edit(await this._getMessageOptionsWithComponents(this.currentPageIndex));
+            await this.sentMessage.edit(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
         }
         this._manageActions({ oldIndex: oldIndex, newIndex: this.currentPageIndex });
         this._updateReactions();
@@ -225,18 +225,18 @@ module.exports = class MessagePages {
     /** 
      * @private
      * @param {number} index
-     * @returns {Promise<MessageOptions>}
+     * @returns {Promise<MessageCreateOptions>}
      */
-    async _getMessageOptionsWithComponents(index) {
+    async _getMessageCreateOptionsWithComponents(index) {
         const buttons = this._getButtons();
-        const messageOptions = { ...(await this._getPage(index)).getMessage() }; // make immutable
+        const messageCreateOptions = { ...(await this._getPage(index)).getMessage() }; // make immutable
         if (buttons.length > 0) {
-            messageOptions.components = [...(messageOptions.components || []), new ActionRowBuilder().addComponents(...buttons)];
+            messageCreateOptions.components = [...(messageCreateOptions.components || []), new ActionRowBuilder().addComponents(...buttons)];
         }
         if (this.type === "SELECT_MENU") {
-            messageOptions.components.push(new ActionRowBuilder().addComponents(this.selectMenu.getSelectMenu()));
+            messageCreateOptions.components.push(new ActionRowBuilder().addComponents(this.selectMenu.getSelectMenu()));
         }
-        return messageOptions;
+        return messageCreateOptions;
     }
 
 
@@ -499,13 +499,13 @@ module.exports = class MessagePages {
             if (reason === "time") {
                 const currentPage = await this._getPage(this.currentPageIndex);
                 const message = currentPage.getMessage();
-                const messageOptions = { ...message, components: message.components ?? [] };
+                const messageCreateOptions = { ...message, components: message.components ?? [] };
                 if (this.interaction) {
                     if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
 
-                    await this.interaction.editReply(messageOptions);
+                    await this.interaction.editReply(messageCreateOptions);
                 } else {
-                    await this.sentMessage.edit(messageOptions);
+                    await this.sentMessage.edit(messageCreateOptions);
                 }
             }
         });

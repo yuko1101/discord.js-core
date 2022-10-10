@@ -132,9 +132,9 @@ declare class MessagePages {
     /**
      * @private
      * @param {number} index
-     * @returns {Promise<MessageOptions>}
+     * @returns {Promise<MessageCreateOptions>}
      */
-    private _getMessageOptionsWithComponents;
+    private _getMessageCreateOptionsWithComponents;
     /**
      * @private
      * @param {number} index

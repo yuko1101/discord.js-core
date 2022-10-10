@@ -2,17 +2,17 @@ export = MessageCore;
 declare class MessageCore {
     /**
      * @param {object} data
-     * @param {MessageOptions} data.message
+     * @param {MessageCreateOptions} data.message
      * @param {ButtonAction[] | null} [data.buttonActions=[]]
      * @param {EmojiAction[] | null} [data.emojiActions]
      */
     constructor(data: {
-        message: MessageOptions;
+        message: MessageCreateOptions;
         buttonActions?: ButtonAction[] | null;
         emojiActions?: EmojiAction[] | null;
     });
-    /** @type {MessageOptions} */
-    message: MessageOptions;
+    /** @type {MessageCreateOptions} */
+    message: MessageCreateOptions;
     /** @type {ButtonAction[][]} */
     buttonActions: ButtonAction[][];
     /** @type {EmojiAction[]} */
@@ -23,9 +23,9 @@ declare class MessageCore {
     addButtonsAsNewRow(buttonActions: ButtonAction[]): void;
     /**
      * Get the complete message object to send.
-     * @returns {MessageOptions}
+     * @returns {MessageCreateOptions}
      */
-    getMessage(): MessageOptions;
+    getMessage(): MessageCreateOptions;
     /** @returns {string[]} */
     getEmojis(): string[];
     /**
@@ -73,7 +73,7 @@ declare class MessageCore {
         fetchReply?: boolean;
     }): Promise<Message | null>;
 }
-import { MessageOptions } from "discord.js";
+import { MessageCreateOptions } from "discord.js";
 import ButtonAction = require("../action/ButtonAction");
 import EmojiAction = require("../action/EmojiAction");
 import { ActionRowBuilder } from "discord.js";

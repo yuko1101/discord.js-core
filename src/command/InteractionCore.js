@@ -17,7 +17,7 @@
 
  */
 
-const { Message, TextBasedChannel, Guild, GuildMember, User, MessageOptions, CommandInteraction } = require("discord.js");
+const { Message, TextBasedChannel, Guild, GuildMember, User, MessageCreateOptions, CommandInteraction } = require("discord.js");
 const MessageCore = require("../message/MessageCore");
 const MessagePages = require("../message/MessagePages");
 const { bindOptions } = require("../utils/utils");
@@ -53,13 +53,13 @@ module.exports = class InteractionCore {
         /** @readonly @type {Message | null} */
         this.replyMessage = null;
 
-        /** @private @type {MessageOptions | MessageCore | MessagePages} */
+        /** @private @type {MessageCreateOptions | MessageCore | MessagePages} */
         this.replyMessageData = null;
 
         /** @readonly @type {Message | null} */
         this.followUpMessage = null;
 
-        /** @private @type {MessageOptions | MessageCore | MessagePages} */
+        /** @private @type {MessageCreateOptions | MessageCore | MessagePages} */
         this.followUpMessageData = null;
 
         /** @readonly @type {boolean} */
@@ -101,7 +101,7 @@ module.exports = class InteractionCore {
     }
 
     /** 
-     * @param {MessageOptions | MessageCore | MessagePages} message 
+     * @param {MessageCreateOptions | MessageCore | MessagePages} message 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
@@ -150,12 +150,12 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {MessageOptions | MessageCore | MessagePages} messageOptions 
+     * @param {MessageCreateOptions | MessageCore | MessagePages} messageCreateOptions 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
      */
-    async editReply(messageOptions, options = {}) {
+    async editReply(messageCreateOptions, options = {}) {
         if (!this.replied || (this.deferred && !this.followedUp)) throw new Error("You can't edit a reply or follow-up before it has been sent");
         options = bindOptions({ fetchReply: true }, options);
 
@@ -182,7 +182,7 @@ module.exports = class InteractionCore {
         } else if (getRepliedData() instanceof MessagePages) {
             await getRepliedData().destroy();
         } else {
-            // do nothing with MessageOptions
+            // do nothing with MessageCreateOptions
         }
         if ((getReplied() === undefined || getReplied() === null) && this.hasInteraction) {
             setReplied(await this.interaction.fetchReply());
@@ -193,36 +193,36 @@ module.exports = class InteractionCore {
             if (!getReplied()) {
                 throw new Error("You must reply to a message before editing it");
             }
-            if (messageOptions instanceof MessageCore) {
-                messageOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
-                setReplied(await getReplied().edit(messageOptions.getMessage()));
-                messageOptions.apply(getReplied());
-            } else if (messageOptions instanceof MessagePages) {
-                setReplied(await messageOptions.sendTo(this.msg, { edit: true }));
+            if (messageCreateOptions instanceof MessageCore) {
+                messageCreateOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
+                setReplied(await getReplied().edit(messageCreateOptions.getMessage()));
+                messageCreateOptions.apply(getReplied());
+            } else if (messageCreateOptions instanceof MessagePages) {
+                setReplied(await messageCreateOptions.sendTo(this.msg, { edit: true }));
             } else {
-                setReplied(await getReplied().edit(messageOptions));
+                setReplied(await getReplied().edit(messageCreateOptions));
             }
         } else {
-            if (messageOptions instanceof MessageCore) {
-                messageOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
+            if (messageCreateOptions instanceof MessageCore) {
+                messageCreateOptions.buttonActions.forEach(array => array.forEach(action => action.register()));
                 /** @type {void | Message} */
-                const sent = await this.interaction.editReply({ ...messageOptions.getMessage(), fetchReply: options.fetchReply || messageOptions.emojiActions.length !== 0 });
+                const sent = await this.interaction.editReply({ ...messageCreateOptions.getMessage(), fetchReply: options.fetchReply || messageCreateOptions.emojiActions.length !== 0 });
                 if (sent) {
                     setReplied(sent);
-                    messageOptions.apply(sent);
+                    messageCreateOptions.apply(sent);
                 }
-            } else if (messageOptions instanceof MessagePages) {
+            } else if (messageCreateOptions instanceof MessagePages) {
                 /** @type {Message} */
-                const sent = await messageOptions.interactionReply(this.interaction, { edit: true });
+                const sent = await messageCreateOptions.interactionReply(this.interaction, { edit: true });
                 setReplied(sent);
             } else {
-                const message = await this.interaction.editReply({ ...messageOptions, fetchReply: options.fetchReply });
+                const message = await this.interaction.editReply({ ...messageCreateOptions, fetchReply: options.fetchReply });
                 if (options.fetchReply) {
                     setReplied(message);
                 }
             }
         }
-        setRepliedData(messageOptions);
+        setRepliedData(messageCreateOptions);
         return getReplied();
     }
 
@@ -264,7 +264,7 @@ module.exports = class InteractionCore {
     }
 
     /** 
-     * @param {MessageOptions | MessageCore | MessagePages} message
+     * @param {MessageCreateOptions | MessageCore | MessagePages} message
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
@@ -276,8 +276,8 @@ module.exports = class InteractionCore {
         options.reply = options.reply || this.deferred;
         if (!this.hasInteraction) {
             if (!this.replyMessage && !this.deferred) throw new Error("You must reply to a message before following up to it");
-            const sendFunction = async (messageOptions) => {
-                return await (options.reply ? this.msg.reply(messageOptions) : this.msg.channel.send(messageOptions));
+            const sendFunction = async (messageCreateOptions) => {
+                return await (options.reply ? this.msg.reply(messageCreateOptions) : this.msg.channel.send(messageCreateOptions));
             }
             if (message instanceof MessageCore) {
                 message.buttonActions.forEach(array => array.forEach(action => action.register()));

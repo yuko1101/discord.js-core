@@ -1,4 +1,4 @@
-const { ActionRowBuilder, MessageOptions, Message, TextBasedChannel, Interaction } = require("discord.js");
+const { ActionRowBuilder, MessageCreateOptions, Message, TextBasedChannel, Interaction } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const EmojiAction = require("../action/EmojiAction");
 const { bindOptions } = require("../utils/utils");
@@ -12,13 +12,13 @@ const defaultData = {
 module.exports = class MessageCore {
     /**
      * @param {object} data 
-     * @param {MessageOptions} data.message
+     * @param {MessageCreateOptions} data.message
      * @param {ButtonAction[] | null} [data.buttonActions=[]]
      * @param {EmojiAction[] | null} [data.emojiActions]
      */
     constructor(data) {
         data = bindOptions(defaultData, data);
-        /** @type {MessageOptions} */
+        /** @type {MessageCreateOptions} */
         this.message = data.message;
         /** @type {ButtonAction[][]} */
         this.buttonActions = data.buttonActions.length !== 0 ? [data.buttonActions] : [];
@@ -49,13 +49,13 @@ module.exports = class MessageCore {
 
     /** 
      * Get the complete message object to send.
-     * @returns {MessageOptions} 
+     * @returns {MessageCreateOptions} 
      */
     getMessage() {
-        const messageOptions = { ...this.message }; // make immutable
+        const messageCreateOptions = { ...this.message }; // make immutable
         const components = this.getComponents();
-        messageOptions.components = [...(messageOptions.components ?? []), ...components];
-        return messageOptions;
+        messageCreateOptions.components = [...(messageCreateOptions.components ?? []), ...components];
+        return messageCreateOptions;
     }
 
     /** @returns {string[]} */
@@ -137,8 +137,8 @@ module.exports = class MessageCore {
         if ((options.ephemeral || interaction.ephemeral) && this.emojiActions.length !== 0) {
             throw new Error("You cannot add reactons to ephemeral message.");
         }
-        const messageOptions = { ...this.getMessage(), fetchReply: options.fetchReply, ephemeral: options.ephemeral };
-        const message = options.followUp ? await interaction.followUp(messageOptions) : await interaction.reply(messageOptions);
+        const messageCreateOptions = { ...this.getMessage(), fetchReply: options.fetchReply, ephemeral: options.ephemeral };
+        const message = options.followUp ? await interaction.followUp(messageCreateOptions) : await interaction.reply(messageCreateOptions);
         this.buttonActions.forEach(array => array.forEach(action => action.register()));
         if (options.autoApplyEmojiActions) {
             await this.apply(message, { autoReact: true });
