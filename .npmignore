@@ -1,0 +1,9 @@
+out/
+node_modules/
+
+example/
+example-ts/
+
+.vscode/
+
+.env

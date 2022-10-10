@@ -1,7 +1,7 @@
 {
   "name": "discord.js-core",
   "version": "1.0.0",
-  "description": "discord.jsのBot用の多機能ライブラリ",
+  "description": "Multi-functional library for discord.js bot",
   "main": "src/index.js",
   "types": "typings/index.d.ts",
   "directories": {
