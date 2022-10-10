@@ -1,8 +1,8 @@
-# discord-core
+# discord.js-core
 A simple bot handler for [discord.js/v13](https://github.com/discordjs/discord.js)
 
 ## 1. Installation
-Run `npm install yuko1101/discord-core#v13` in the terminal.  
+Run `npm install yuko1101/discord.js-core#v13` in the terminal.  
 If you didn't install discord.js, also run `npm install discord.js`.
 
 ## 2. Set-up
@@ -10,7 +10,7 @@ Create `index.js` file and edit it.
 
 ```js
 const { Client } = require("discord.js");
-const { Core } = require("discord-core");
+const { Core } = require("discord.js-core");
 
 const core = new Core(
     new Client({
@@ -34,7 +34,7 @@ You can handle *SlashCommand*, *MessageCommand* and *ContextMenu* in single code
 
 ### Import the Command class
 ```js
-const { Command } = require("discord-core");
+const { Command } = require("discord.js-core");
 ```
 
 ### Code a command
