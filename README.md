@@ -52,7 +52,11 @@ You can handle *SlashCommand*, *MessageCommand* and *ContextMenu* in single code
 const { Command } = require("discord.js-core");
 ```
 
-### Code a command
+### [Case 1] Code a command in index.js
+Let's code your own command.
+
+Here is an example of commands.
+
 ```js
 const command = new Command({
     name: "mention",
@@ -81,9 +85,30 @@ const command = new Command({
 });
 ```
 
-### Add to core
+#### Add to core
+Don't forget to register your commands.
 ```js
 core.addCommands(command);
+```
+
+
+
+### [Case 2] Code more commands
+You can also add commands from command directory.
+
+Create "commands" folder, and a file for each command.
+
+The contents of the file are as follows.
+
+commands/test_command.js
+```js
+const { Command } = require("discord.js-core");
+module.exports = new Command(...);
+```
+
+#### Add the commands to core
+```js
+core.addCommandsInDir("commands");
 ```
 
 ### Apply to Discord (Adding Slash-Command and Context-Menu against Discord)
@@ -91,6 +116,7 @@ You can apply registered commands with `core.applyCommands()`.
 ```js
 core.login(() => core.applyCommands()); // login, and apply commands on ready
 ```
+
 
 ## More examples available in example folder
 See [example folder](example) for more examples!  
