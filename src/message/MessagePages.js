@@ -213,7 +213,7 @@ module.exports = class MessagePages {
         this.currentPageIndex = index;
 
         if (this.interaction) {
-            if (!this.interaction.isRepliable) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
+            if (!this.interaction.isRepliable()) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
             await this.interaction.editReply(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
         } else {
             await this.sentMessage.edit(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
