@@ -212,11 +212,11 @@ module.exports = class MessagePages {
         const oldIndex = this.currentPageIndex;
         this.currentPageIndex = index;
 
-        if (this.interaction) {
+        if (this.sentMessage) {
+            await this.sentMessage.edit(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
+        } else {
             if (!this.interaction.isRepliable()) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
             await this.interaction.editReply(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
-        } else {
-            await this.sentMessage.edit(await this._getMessageCreateOptionsWithComponents(this.currentPageIndex));
         }
         this._manageActions({ oldIndex: oldIndex, newIndex: this.currentPageIndex });
         this._updateReactions();
@@ -500,12 +500,11 @@ module.exports = class MessagePages {
                 const currentPage = await this._getPage(this.currentPageIndex);
                 const message = currentPage.getMessage();
                 const messageCreateOptions = { ...message, components: message.components ?? [] };
-                if (this.interaction) {
-                    if (!this.interaction.editReply) throw new Error("Interaction must have the editReply() function. Please check the reply of interaction is editable.");
-
-                    await this.interaction.editReply(messageCreateOptions);
-                } else {
+                if (this.sentMessage) {
                     await this.sentMessage.edit(messageCreateOptions);
+                } else {
+                    if (!this.interaction.isRepliable()) throw new Error("Interaction must be repliable. Please check the interaction is repliable interaction.");
+                    await this.interaction.editReply(messageCreateOptions);
                 }
             }
         });
