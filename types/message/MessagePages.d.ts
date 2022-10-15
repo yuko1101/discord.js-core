@@ -11,8 +11,9 @@ declare class MessagePages {
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
      *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
-     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
+     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} [options.type]
      * @param {number} [options.timeout]
+     * @param {boolean} [options.resetTimeoutTimerOnAction]
      * @param {(User) => Promise<boolean>} [options.userFilter]
      */
     constructor(options?: {
@@ -38,8 +39,9 @@ declare class MessagePages {
             selectMenu?: SelectMenuAction;
         };
         enabledActions?: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
-        type?: "REACTION" | "BUTTON" | "SELECT_MENU";
+        type?: "REACTION" | "BUTTON" | "SELECT_MENU" | "NONE";
         timeout?: number;
+        resetTimeoutTimerOnAction?: boolean;
         userFilter?: (User: any) => Promise<boolean>;
     });
     /** @readonly @type {object} */
@@ -71,10 +73,12 @@ declare class MessagePages {
     readonly enabledActions: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
     /** @readonly @type {SelectMenuAction | null} */
     readonly selectMenu: SelectMenuAction | null;
-    /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
-    readonly type: "REACTION" | "BUTTON" | "SELECT_MENU";
+    /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} */
+    readonly type: "REACTION" | "BUTTON" | "SELECT_MENU" | "NONE";
     /** @readonly @type {number | null} */
     readonly timeout: number | null;
+    /** @type {boolean} */
+    resetTimeoutTimerOnAction: boolean;
     /** @readonly @type {(User) => Promise<boolean>} */
     readonly userFilter: (User: any) => Promise<boolean>;
     /** @readonly @type {boolean} */
@@ -87,6 +91,10 @@ declare class MessagePages {
     readonly currentPageIndex: number;
     /** @readonly @type {boolean} */
     readonly isDestroyed: boolean;
+    /** @readonly @type {InteractionCollector || null} */
+    readonly interactionCollector: InteractionCollector<any>;
+    /** @readonly @type {ReactionCollector || null} */
+    readonly reactionCollector: ReactionCollector;
     /**
      * This function is available when the type is "SELECT_MENU"
      * @param {SelectMenuAction} selectMenu
@@ -198,4 +206,6 @@ import Action = require("../action/Action");
 import SelectMenuAction = require("../action/SelectMenuAction");
 import { Message } from "discord.js";
 import { Interaction } from "discord.js";
+import { InteractionCollector } from "discord.js";
+import { ReactionCollector } from "discord.js";
 import { TextBasedChannel } from "discord.js";
