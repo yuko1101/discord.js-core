@@ -1,4 +1,4 @@
-const { Message, TextBasedChannel, MessageCreateOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction } = require("discord.js");
+const { Message, TextBasedChannel, MessageCreateOptions, ButtonBuilder, ActionRowBuilder, ButtonStyle, MessageReaction, Interaction, InteractionCollector, ReactionCollector } = require("discord.js");
 const ButtonAction = require("../action/ButtonAction");
 const Action = require("../action/Action");
 const { bindOptions } = require("../utils/utils");
@@ -35,6 +35,7 @@ const defaultOptions = {
     enabledActions: ["BACK", "NEXT"],
     type: "BUTTON",
     timeout: null,
+    resetTimeoutTimerOnAction: false,
     userFilter: (user) => true
 };
 
@@ -52,6 +53,7 @@ module.exports = class MessagePages {
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
      * @param {number} [options.timeout]
+     * @param {boolean} [options.resetTimeoutTimerOnAction]
      * @param {(User) => Promise<boolean>} [options.userFilter]
      */
     constructor(options) {
@@ -74,6 +76,8 @@ module.exports = class MessagePages {
         this.type = this.options.type;
         /** @readonly @type {number | null} */
         this.timeout = this.options.timeout;
+        /** @type {boolean} */
+        this.resetTimeoutTimerOnAction = this.options.resetTimeoutTimerOnAction;
         /** @readonly @type {(User) => Promise<boolean>} */
         this.userFilter = this.options.userFilter;
 
@@ -89,6 +93,11 @@ module.exports = class MessagePages {
 
         /** @readonly @type {boolean} */
         this.isDestroyed = false;
+
+        /** @readonly @type {InteractionCollector || null} */
+        this.interactionCollector = null;
+        /** @readonly @type {ReactionCollector || null} */
+        this.reactionCollector = null;
     }
 
     /**
@@ -420,12 +429,12 @@ module.exports = class MessagePages {
      * @private
      */
     _activateReactionCollector() {
-        const collector = this.sentMessage.createReactionCollector({
+        this.reactionCollector = this.sentMessage.createReactionCollector({
             filter: (reaction, user) => this.userFilter(user),
             time: this.timeout
         });
 
-        collector.on("collect", async (reaction, user) => {
+        this.reactionCollector.on("collect", async (reaction, user) => {
             // handle system emojis, not EmojiAction(s) in enabledActions
 
             if (this.isDestroyed) return;
@@ -436,6 +445,8 @@ module.exports = class MessagePages {
 
             // if the reacted emoji is not the MessagePages' emojis, ignore it
             if (!this._getSystemEmojis().includes(reaction.emoji.name)) return;
+
+            if (this.resetTimeoutTimerOnAction) this.reactionCollector.resetTimer();
 
             reaction.users.remove(user);
             if (reaction.emoji.name === this.pageActions.first.label) {
@@ -449,7 +460,7 @@ module.exports = class MessagePages {
             }
         });
 
-        collector.on("end", (collected, reason) => {
+        this.reactionCollector.on("end", (collected, reason) => {
             if (this.isDestroyed) return;
 
             // remove MessagePages' reactions (system + extra), not the page's reactions.
@@ -474,12 +485,12 @@ module.exports = class MessagePages {
     _activateInteractionCollector() {
         if (!interactionActions.includes(this.type)) return;
 
-        const collector = this.sentMessage.createMessageComponentCollector({
+        this.interactionCollector = this.sentMessage.createMessageComponentCollector({
             filter: (interaction) => this.userFilter(interaction.user),
             time: this.timeout
         });
 
-        collector.on("collect", async (interaction) => {
+        this.interactionCollector.on("collect", async (interaction) => {
             if (this.isDestroyed) return;
             if (!interaction.isButton()) return;
             const id = interaction.customId;
@@ -489,11 +500,14 @@ module.exports = class MessagePages {
                     : id === "DISCORD_CORE_MESSAGE_PAGES_NEXT" ? Math.min(this.currentPageIndex + 1, this.messageCores.length - 1)
                         : id === "DISCORD_CORE_MESSAGE_PAGES_LAST" ? this.messageCores.length - 1 : -1;
             if (pageIndex === -1) return;
+
+            if (this.resetTimeoutTimerOnAction) this.interactionCollector.resetTimer();
+
             await interaction.deferUpdate();
             await this.gotoPage(pageIndex);
         });
 
-        collector.on("end", async (collected, reason) => {
+        this.interactionCollector.on("end", async (collected, reason) => {
             if (this.isDestroyed) return;
 
             if (reason === "time") {
