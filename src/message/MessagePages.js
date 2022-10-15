@@ -51,7 +51,7 @@ module.exports = class MessagePages {
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
      *  @param {SelectMenuAction} [options.pageActions.selectMenu]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
-     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"} [options.type]
+     * @param {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} [options.type]
      * @param {number} [options.timeout]
      * @param {boolean} [options.resetTimeoutTimerOnAction]
      * @param {(User) => Promise<boolean>} [options.userFilter]
@@ -72,7 +72,7 @@ module.exports = class MessagePages {
         this.enabledActions = this.options.enabledActions;
         /** @readonly @type {SelectMenuAction | null} */
         this.selectMenu = this.options.pageActions.selectMenu;
-        /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"} */
+        /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} */
         this.type = this.options.type;
         /** @readonly @type {number | null} */
         this.timeout = this.options.timeout;
