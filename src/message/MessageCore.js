@@ -83,6 +83,7 @@ module.exports = class MessageCore {
      * @param {boolean} [options.fastMode=false]
      */
     async removeApply(message, options = {}) {
+        if (this.emojiActions.length === 0) return;
         const fastMode = options.fastMode ?? false;
         delete options.fastMode;
         if (fastMode) {
@@ -93,8 +94,8 @@ module.exports = class MessageCore {
                         count++;
                         if (count === this.emojiActions.length) resolve();
                     });
-                })
-            })
+                });
+            });
         } else {
             for (const action of this.emojiActions) {
                 await action.removeApply(message, options);
