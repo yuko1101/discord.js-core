@@ -159,6 +159,8 @@ module.exports = class InteractionCore {
         if (!this.replied || (this.deferred && !this.followedUp)) throw new Error("You can't edit a reply or follow-up before it has been sent");
         options = bindOptions({ fetchReply: true }, options);
 
+        const isEditingMessageEphemeral = this.isFollowUpMessageSentAsEphemeral ?? this.isReplyMessageSentAsEphemeral;
+
         // Separate the cases into reply and follow-up.
         const setReplied = (message) => {
             if (this.deferred) {
@@ -187,7 +189,7 @@ module.exports = class InteractionCore {
         if ((getReplied() === undefined || getReplied() === null) && this.hasInteraction) {
             setReplied(await this.interaction.fetchReply());
         }
-        await getReplied().reactions.removeAll();
+        if (!isEditingMessageEphemeral) await getReplied().reactions.removeAll();
 
         if (!this.hasInteraction) {
             if (!getReplied()) {
