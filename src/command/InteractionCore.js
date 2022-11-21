@@ -1,4 +1,3 @@
-"use strict";
 
 /*
     This does not the same as the Interaction does.
@@ -17,7 +16,7 @@
 
  */
 
-const { Message, TextBasedChannel, Guild, GuildMember, User, MessageCreateOptions, CommandInteraction } = require("discord.js");
+const { Message, Guild, GuildMember, User, CommandInteraction } = require("discord.js");
 const MessageCore = require("../message/MessageCore");
 const MessagePages = require("../message/MessagePages");
 const { bindOptions } = require("../utils/utils");
@@ -37,47 +36,53 @@ module.exports = class InteractionCore {
         this.hasInteraction = !!data.interaction;
 
 
-        /** @readonly @type {TextBasedChannel} */
+        /** @readonly @type {import("discord.js").TextBasedChannel} */
         this.channel = this.hasInteraction ? this.interaction.channel : this.msg.channel;
         /** @readonly @type {Guild} */
         this.guild = this.hasInteraction ? this.interaction.guild : this.msg.guild;
-        /** @readonly @type {GuildMember} */
+        /** @readonly @type {GuildMember | import("discord.js").APIInteractionGuildMember} */
         this.member = this.hasInteraction ? this.interaction.member : this.msg.member;
         /** @readonly @type {User} */
         this.user = this.hasInteraction ? this.interaction.user : this.msg.author;
+        /** @readonly @type {Date} */
+        this.createdAt = this.hasInteraction ? this.interaction.createdAt : this.msg.createdAt;
+        /** @readonly @type {number} */
+        this.createdTimestamp = this.hasInteraction ? this.interaction.createdTimestamp : this.msg.createdTimestamp;
+        /** @readonly @type {string} */
+        this.id = this.hasInteraction ? this.interaction.id : this.msg.id;
 
 
 
         /* Data */
 
-        /** @readonly @type {Message | null} */
+        /** @type {Message | null} */
         this.replyMessage = null;
 
-        /** @private @type {MessageCreateOptions | MessageCore | MessagePages} */
+        /** @type {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} */
         this.replyMessageData = null;
 
-        /** @readonly @type {Message | null} */
+        /** @type {Message | null} */
         this.followUpMessage = null;
 
-        /** @private @type {MessageCreateOptions | MessageCore | MessagePages} */
+        /** @type {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} */
         this.followUpMessageData = null;
 
-        /** @readonly @type {boolean} */
+        /** @type {boolean} */
         this.deferred = false;
 
-        /** @readonly @type {boolean} */
+        /** @type {boolean} */
         this.replied = false;
 
-        /** @readonly @type {boolean} */
+        /** @type {boolean} */
         this.followedUp = false;
 
-        /** @readonly @type {boolean | null} */
+        /** @type {boolean | null} */
         this.isReplyMessageSentAsEphemeral = null;
 
-        /** @readonly @type {boolean | null} */
+        /** @type {boolean | null} */
         this.isFollowUpMessageSentAsEphemeral = null;
 
-        /** @readonly @type {boolean} */
+        /** @type {boolean} */
         this.isReplyMessageDeleted = false;
     }
 
@@ -101,7 +106,7 @@ module.exports = class InteractionCore {
     }
 
     /** 
-     * @param {MessageCreateOptions | MessageCore | MessagePages} message 
+     * @param {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} message 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
@@ -150,7 +155,7 @@ module.exports = class InteractionCore {
     }
 
     /**
-     * @param {MessageCreateOptions | MessageCore | MessagePages} messageCreateOptions 
+     * @param {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} messageCreateOptions 
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @returns {Promise<Message | null>} returns `null` if the option `fetchReply` is `false`
@@ -230,8 +235,8 @@ module.exports = class InteractionCore {
 
     /**
      * @param {object} [options={}]
-     * @param {boolean} [showError=false] Whether to show the error stack trace while deleting the reply
-     * @returns {boolean} Whether the reply message deleted successfully
+     * @param {boolean} [options.showError=false] Whether to show the error stack trace while deleting the reply
+     * @returns {Promise<boolean>} Whether the reply message deleted successfully
      */
     async deleteReply(options = {}) {
         options = bindOptions({ showError: false }, options);
@@ -266,7 +271,7 @@ module.exports = class InteractionCore {
     }
 
     /** 
-     * @param {MessageCreateOptions | MessageCore | MessagePages} message
+     * @param {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} message
      * @param {object} [options={}]
      * @param {boolean} [options.fetchReply=true] Whether to fetch the reply (Only for slash command. Message command returns its reply without this option)
      * @param {boolean} [options.ephemeral=false] Whether to send the message as ephemeral (Only for slash command)
