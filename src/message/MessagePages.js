@@ -30,7 +30,7 @@ const defaultOptions = {
             label: "⏩",
             buttonStyle: ButtonStyle.Primary,
         },
-        selectMenu: null
+        selectMenuAction: null
     },
     enabledActions: ["BACK", "NEXT"],
     type: "BUTTON",
@@ -49,7 +49,7 @@ module.exports = class MessagePages {
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.back]
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.next]
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
-     *  @param {SelectMenuAction} [options.pageActions.selectMenu]
+     *  @param {SelectMenuAction} [options.pageActions.selectMenuAction]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} [options.type]
      * @param {number} [options.timeout]
@@ -71,7 +71,7 @@ module.exports = class MessagePages {
         /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
         this.enabledActions = this.options.enabledActions;
         /** @readonly @type {SelectMenuAction | null} */
-        this.selectMenu = this.options.pageActions.selectMenu;
+        this.selectMenuAction = this.options.pageActions.selectMenuAction;
         /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} */
         this.type = this.options.type;
         /** @readonly @type {number | null} */
@@ -102,13 +102,13 @@ module.exports = class MessagePages {
 
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {SelectMenuAction} selectMenu 
+     * @param {SelectMenuAction} selectMenuAction
      * @returns {MessagePages}
      */
-    setSelectMenu(selectMenu) {
+    setSelectMenu(selectMenuAction) {
         if (this.type !== "SELECT_MENU") throw new Error("This function is only available when the type is \"SELECT_MENU\"");
-        this.options.selectMenu = selectMenu;
-        this.selectMenu = selectMenu;
+        this.options.selectMenuAction = selectMenuAction;
+        this.selectMenuAction = selectMenuAction;
         return this;
     }
 
@@ -122,7 +122,7 @@ module.exports = class MessagePages {
     async sendTo(whereToSend, options = {}) {
         if (this.isDestroyed) throw new Error("This MessagePages has been destroyed");
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
-        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
+        if (this.type === "SELECT_MENU" && !this.selectMenuAction) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenuAction to a SelectMenuAction before sending.");
 
         options = bindOptions({ edit: false }, options);
 
@@ -165,7 +165,7 @@ module.exports = class MessagePages {
         }, options);
 
         if (this.isSent) throw new Error("This MessagePages has already been sent.");
-        if (this.type === "SELECT_MENU" && !this.selectMenu) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
+        if (this.type === "SELECT_MENU" && !this.selectMenuAction) throw new Error("Select menu type requires a select menu to be specified in the pageActions. Set pageActions.selectMenu to a SelectMenuAction before sending.");
 
         if ((interaction.ephemeral || options.ephemeral) && (this.type === "REACTION" || this.enabledActions.some(action => typeof action === "object" && action instanceof EmojiAction))) {
             throw new Error("Ephemeral messages cannot have reactions.");
@@ -243,7 +243,7 @@ module.exports = class MessagePages {
             messageCreateOptions.components = [...(messageCreateOptions.components || []), new ActionRowBuilder().addComponents(...buttons)];
         }
         if (this.type === "SELECT_MENU") {
-            messageCreateOptions.components.push(new ActionRowBuilder().addComponents(this.selectMenu.getSelectMenu()));
+            messageCreateOptions.components.push(new ActionRowBuilder().addComponents(this.selectMenuAction.selectMenu));
         }
         return messageCreateOptions;
     }
@@ -323,7 +323,7 @@ module.exports = class MessagePages {
                 }
 
             }
-            if (this.type === "SELECT_MENU") this.selectMenu.register();
+            if (this.type === "SELECT_MENU") this.selectMenuAction.register();
         }
     }
 
