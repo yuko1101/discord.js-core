@@ -14,10 +14,13 @@ module.exports = class EmojiAction extends Action {
     constructor(options) {
         super(options);
 
+        if (!options.label) throw new Error("options.label is required.");
         if (!options.run) throw new Error("options.run is required.");
 
         /** @readonly @type {{label: string, core: Core, run: (messageReaction: MessageReaction, user: User, isReactionAdded: boolean) => Promise<void> }} */
-        this.options = options
+        this.options = options;
+        /** @type {string} */
+        this.label = this.options.label;
         /** @type {(messageReaction: MessageReaction, user: User, isReactionAdded: boolean) => Promise<void>} */
         this.run = this.options.run;
 

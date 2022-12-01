@@ -1,4 +1,4 @@
-const { SelectMenuOptionBuilder, SelectMenuBuilder, SelectMenuInteraction, BaseSelectMenuBuilder } = require("discord.js");
+const { SelectMenuInteraction, BaseSelectMenuBuilder } = require("discord.js");
 const Action = require("./Action");
 const { bindOptions } = require("../utils/utils");
 
@@ -6,7 +6,6 @@ const { bindOptions } = require("../utils/utils");
 module.exports = class SelectMenuAction extends Action {
     /** 
      * @param {object} data
-     * @param {string} data.label
      * @param {Core} data.core
      * @param {BaseSelectMenuBuilder} data.selectMenu customId will be changed by this library
      * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
@@ -15,7 +14,6 @@ module.exports = class SelectMenuAction extends Action {
         super(data);
         this.data = bindOptions({
             core: null,
-            label: "",
             selectMenu: null,
             run: async () => { }
         }, data);
