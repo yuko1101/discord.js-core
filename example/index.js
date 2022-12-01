@@ -1,5 +1,5 @@
 "use strict";
-const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("../types");
+const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("discord.js-core");
 const { Client, ApplicationCommandOptionType } = require("discord.js");
 require("dotenv").config();
 
@@ -50,7 +50,7 @@ const command = new Command({
                 label: "Reroll",
                 run: async (interaction) => {
                     await interaction.deferUpdate();
-                    pages.goToPage(0);
+                    pages.gotoPage(0);
                 }
             })
         );
