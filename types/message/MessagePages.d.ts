@@ -9,7 +9,7 @@ declare class MessagePages {
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.back]
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.next]
      *  @param {{label?: string, buttonStyle?: ButtonStyle}} [options.pageActions.last]
-     *  @param {SelectMenuAction} [options.pageActions.selectMenu]
+     *  @param {SelectMenuAction} [options.pageActions.selectMenuAction]
      * @param {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} [options.enabledActions]
      * @param {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} [options.type]
      * @param {number} [options.timeout]
@@ -36,7 +36,7 @@ declare class MessagePages {
                 label?: string;
                 buttonStyle?: ButtonStyle;
             };
-            selectMenu?: SelectMenuAction;
+            selectMenuAction?: SelectMenuAction;
         };
         enabledActions?: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
         type?: "REACTION" | "BUTTON" | "SELECT_MENU" | "NONE";
@@ -72,7 +72,7 @@ declare class MessagePages {
     /** @readonly @type {("FIRST"|"BACK"|"NEXT"|"LAST"|Action)[]} */
     readonly enabledActions: ("FIRST" | "BACK" | "NEXT" | "LAST" | Action)[];
     /** @readonly @type {SelectMenuAction | null} */
-    readonly selectMenu: SelectMenuAction | null;
+    readonly selectMenuAction: SelectMenuAction | null;
     /** @readonly @type {"REACTION"|"BUTTON"|"SELECT_MENU"|"NONE"} */
     readonly type: "REACTION" | "BUTTON" | "SELECT_MENU" | "NONE";
     /** @readonly @type {number | null} */
@@ -97,10 +97,10 @@ declare class MessagePages {
     readonly reactionCollector: ReactionCollector;
     /**
      * This function is available when the type is "SELECT_MENU"
-     * @param {SelectMenuAction} selectMenu
+     * @param {SelectMenuAction} selectMenuAction
      * @returns {MessagePages}
      */
-    setSelectMenu(selectMenu: SelectMenuAction): MessagePages;
+    setSelectMenu(selectMenuAction: SelectMenuAction): MessagePages;
     /**
      * Sends this MessagePages message to the channel
      * @param {TextBasedChannel | Message} whereToSend
