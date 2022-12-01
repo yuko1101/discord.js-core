@@ -2,13 +2,11 @@ export = SelectMenuAction;
 declare class SelectMenuAction extends Action {
     /**
      * @param {object} data
-     * @param {string} data.label
      * @param {Core} data.core
      * @param {BaseSelectMenuBuilder} data.selectMenu customId will be changed by this library
      * @param {(interaction: SelectMenuInteraction) => Promise<void>} data.run
      */
     constructor(data: {
-        label: string;
         core: Core;
         selectMenu: BaseSelectMenuBuilder<any>;
         run: (interaction: SelectMenuInteraction) => Promise<void>;

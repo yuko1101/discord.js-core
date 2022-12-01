@@ -17,6 +17,8 @@ declare class EmojiAction extends Action {
         core: Core;
         run: (messageReaction: MessageReaction, user: User, isReactionAdded: boolean) => Promise<void>;
     };
+    /** @type {string} */
+    label: string;
     /** @type {(messageReaction: MessageReaction, user: User, isReactionAdded: boolean) => Promise<void>} */
     run: (messageReaction: MessageReaction, user: User, isReactionAdded: boolean) => Promise<void>;
     /** @readonly @type {boolean} */

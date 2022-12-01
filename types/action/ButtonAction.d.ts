@@ -22,6 +22,8 @@ declare class ButtonAction extends Action {
         style: ButtonStyle;
         run: (interaction: ButtonInteraction) => Promise<void>;
     };
+    /** @type {string} */
+    label: string;
     /** @type {ButtonStyle} */
     style: ButtonStyle;
     /** @type {(interaction: ButtonInteraction) => Promise<void>} */
