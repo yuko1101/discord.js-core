@@ -1,4 +1,3 @@
-"use strict";
 const InteractionCore = require("../command/InteractionCore");
 const Core = require("./Core");
 const { CommandInteractionOption, InteractionType } = require("discord.js");
@@ -70,7 +69,7 @@ module.exports = {
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
             if (command.supports.includes("USER_CONTEXT_MENU") || command.supports.includes("MESSAGE_CONTEXT_MENU")) {
-                await command.run(new InteractionCore({ interaction: interaction }), { [interaction.targetType.toLowerCase()]: interaction.targetId }, core);
+                await command.run(new InteractionCore({ interaction: interaction }), { [interaction.isUserContextMenuCommand() ? "user" : "message"]: interaction.targetId }, core);
             }
         });
 
@@ -102,7 +101,7 @@ module.exports = {
 
         // handle select menu actions
         core.client.on("interactionCreate", async (interaction) => {
-            if (!interaction.isSelectMenu()) return;
+            if (!interaction.isAnySelectMenu()) return;
             const selectMenuAction = core.selectMenuActions.find(action => interaction.customId === action.customId);
             if (!selectMenuAction) return;
             await selectMenuAction.run(interaction);
