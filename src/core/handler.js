@@ -1,12 +1,15 @@
 const InteractionCore = require("../command/InteractionCore");
 const Core = require("./Core");
-const { CommandInteractionOption, InteractionType } = require("discord.js");
+const { CommandInteractionOption, InteractionType, Message } = require("discord.js");
 
 module.exports = {
     /** @param {Core} core */
     init: (core) => {
         // handle message command
-        core.client.on("messageCreate", async (msg) => {
+        /**
+         * @param {Message} msg 
+         */
+        async function runMessageCommand(msg) {
             if (!msg.content.startsWith(core.options.prefix)) return;
 
             const [commandNameInput, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
@@ -17,6 +20,13 @@ module.exports = {
             if (command.supports.includes("MESSAGE_COMMAND")) {
                 await command.run(new InteractionCore({ msg: msg }), argsToObject(args, command.args), core);
             }
+        }
+
+        core.client.on("messageCreate", async (msg) => {
+            await runMessageCommand(msg);
+        });
+        core.client.on("messageUpdate", async (_, newMsg) => {
+            await runMessageCommand(newMsg);
         });
 
         // handle slash command
