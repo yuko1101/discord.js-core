@@ -1,6 +1,6 @@
 {
   "name": "discord.js-core",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Multi-functional library for discord.js bot",
   "main": "src/index.js",
   "types": "types/index.d.ts",
