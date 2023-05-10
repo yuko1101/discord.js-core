@@ -5,7 +5,7 @@
     To do that, you need to use deleteFollowUp() instead of deleteReply().
     There is more examples below.
 
-    ======[Editing Follow-Ups That Sent After Deffered]======
+    ======[Editing Follow-Ups That Sent After Deferred]======
     deferReply() -> followUp() -> editReply()
     This will try to edit defer-reply.
     To edit the follow-up message, you need to do as the following:

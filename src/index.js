@@ -2,7 +2,6 @@
 
 const Core = require("./core/Core");
 const Command = require("./command/Command");
-const ConfigFile = require("./utils/ConfigFile");
 const MessageCore = require("./message/MessageCore");
 const MessagePages = require("./message/MessagePages");
 const CustomEmoji = require("./utils/CustomEmoji");
@@ -16,8 +15,6 @@ const InteractionCore = require("./command/InteractionCore");
 module.exports.Core = Core;
 /** @module Command */
 module.exports.Command = Command;
-/** @module ConfigFile */
-module.exports.ConfigFile = ConfigFile;
 /** @module MessageCore */
 module.exports.MessageCore = MessageCore;
 /** @module MessagePages */
