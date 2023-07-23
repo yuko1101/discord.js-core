@@ -8,7 +8,7 @@ const core = new Core(
         intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
         allowedMentions: { repliedUser: false }
     }),
-    { token: process.env.TOKEN, prefix: "!", debug: true, guildId: "736829048373903377" }
+    { token: process.env.TOKEN, prefix: "!", devMode: true, guildId: "736829048373903377" }
 );
 
 const emojis = [
@@ -42,17 +42,18 @@ const command = new Command({
 
         const pages = new MessagePages({
             messageCores: messageCores,
-            enabledActions: [],
         });
-        pages.enabledActions.push(
-            new ButtonAction({
-                core: core,
-                label: "Reroll",
-                run: async (interaction) => {
-                    await interaction.deferUpdate();
-                    pages.gotoPage(0);
-                }
-            })
+        pages.pageActions.push(
+            [
+                new ButtonAction({
+                    core: core,
+                    label: "Reroll",
+                    run: async (interaction) => {
+                        await interaction.deferUpdate();
+                        pages.gotoPage(0);
+                    }
+                })
+            ]
         );
 
         await ic.deferReply();

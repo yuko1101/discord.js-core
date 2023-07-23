@@ -1,5 +1,6 @@
-# JSDoc
-out/
+# Examples
+example/package.json
+example/package-lock.json
 
 # Logs
 logs

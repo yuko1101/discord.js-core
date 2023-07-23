@@ -2,13 +2,16 @@
   "name": "discord.js-core",
   "version": "1.0.9",
   "description": "Multi-functional library for discord.js bot",
-  "main": "src/index.js",
-  "types": "types/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "directories": {
     "example": "example"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "npx eslint . --config .eslintrc.json --ext .js,.jsx,.cjs,.mjs,.ts,.tsx --ignore-path .eslintignore",
+    "lint:fix": "npx eslint . --config .eslintrc.json --ext .js,.jsx,.cjs,.mjs,.ts,.tsx --ignore-path .eslintignore --fix",
+    "build": "node -e \"const fs = require('fs'); if (fs.existsSync('./dist')) fs.rmSync('./dist', {recursive: true});\" && npx tsc",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -28,9 +31,14 @@
   },
   "homepage": "https://github.com/yuko1101/discord.js-core#readme",
   "devDependencies": {
-    "typescript": "^4.6.2"
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.37.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
   },
   "dependencies": {
+    "config_file.js": "^1.2.2",
     "discord.js": "^14.11.0"
   }
 }
