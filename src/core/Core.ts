@@ -16,7 +16,7 @@ export interface CoreOptions {
     readonly guildId?: Snowflake;
 }
 
-export default class Core<IsReady extends boolean = false> {
+export default class Core<IsReady extends boolean = boolean> {
     /**  */
     readonly client: Client<IsReady>;
     /**  */
@@ -39,7 +39,7 @@ export default class Core<IsReady extends boolean = false> {
         this.client = client;
         this.options = options;
 
-        if (this.options.devMode && !this.options.devGuildId) {
+        if (this.options.devMode && (!this.options.devGuildId && !this.options.guildId)) {
             throw Error("You should not use debug mode for global. Global application commands take too much time to apply their updates.");
         }
 
@@ -50,6 +50,12 @@ export default class Core<IsReady extends boolean = false> {
 
         this.waitReady().then(core => handler.init(core));
     }
+
+
+    public get guildId(): Snowflake | null {
+        return (this.options.devMode ? this.options.devGuildId : null) ?? this.options.guildId ?? null;
+    }
+
 
     async waitReady(): Promise<Core<true>> {
         if (this.isReady()) return this;
@@ -67,7 +73,7 @@ export default class Core<IsReady extends boolean = false> {
     /**
      * @param callback
     */
-    async login(callback: (client: Client<true>) => void) {
+    async login(callback?: (client: Client<true>) => void) {
         this.client.login(this.options.token);
         const core = await this.waitReady();
         console.log(`Logged in as ${(core.client).user.tag}!`);
@@ -85,7 +91,7 @@ export default class Core<IsReady extends boolean = false> {
      * @param dir
      * @param recursive
      */
-    async addCommandsInDir(dir: string, recursive: true): Promise<Command[]> {
+    async addCommandsInDir(dir: string, recursive = true): Promise<Command[]> {
         const cwd = process.argv[1].replace(/\\/g, "/").replace(/\/[^/]+\.[^/]+$/, "");
         const files = fs.readdirSync(`${cwd}/${dir}`);
         const commands = [];

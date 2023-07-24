@@ -17,7 +17,6 @@ export default class Action {
      * @param options
      */
     constructor(options: { core: Core }) {
-        /** @type {Core} */
         this.core = options.core;
 
         this.id = generateUuid();

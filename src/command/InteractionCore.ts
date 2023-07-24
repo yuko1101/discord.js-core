@@ -258,9 +258,8 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
     }
 
     /**
-     * @param {import("discord.js").MessageCreateOptions | MessageCore | MessagePages} msgSrc
+     * @param msgSrc
      * @param options
-     * @returns {Promise<Message>}
      */
     async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean, reply?: boolean } = {}): Promise<Message> {
         options = bindOptions({ ephemeral: false, reply: true }, options);

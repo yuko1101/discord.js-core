@@ -227,7 +227,8 @@ export default class MessagePages {
         const messageCreateOptions = { ...(await this._getPage(index)).getMessage() }; // make immutable
         messageCreateOptions.components ??= [];
 
-        for (const row of this.pageActions) {
+        for (let row of this.pageActions) {
+            row = row.filter(a => !(a instanceof EmojiAction));
             if (row.every((a): a is ButtonAction => a instanceof ButtonAction)) {
                 messageCreateOptions.components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...row.map(b => b.getButton())));
             } else if (row.length === 1 && row[0] instanceof SelectMenuAction) {

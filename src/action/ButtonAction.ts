@@ -23,10 +23,7 @@ export default class ButtonAction extends Action {
     readonly customId: string;
 
     /**
-     * @param {object} options
-     * @param {ButtonStyle} [options.style]
-     * @param {boolean} [options.disabled]
-     * @param {(interaction: ButtonInteraction) => Promise<void>} options.run
+     * @param options
      */
     constructor(options: ButtonActionOptions) {
         super(options);

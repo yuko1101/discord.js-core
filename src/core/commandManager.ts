@@ -15,8 +15,8 @@ export const devModeCommandPrefix = "dev-";
 export async function applyCommands(core: Core<true>) {
     const commands = core.commands.filter(c => c.supports.includes("SLASH_COMMAND"));
 
-    const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = core.options.guildId
-        ? await core.client.guilds.fetch(core.options.guildId).then(g => g.commands)
+    const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = core.guildId
+        ? await core.client.guilds.fetch(core.guildId).then(g => g.commands)
         : core.client.application.commands;
     const oldCommands = await applicationCommandManager.fetch({}).then(commandCollection => commandCollection.filter(c => (!core.options.devMode && !c.name.startsWith(devModeCommandPrefix)) || (core.options.devMode && c.name.startsWith(devModeCommandPrefix))));
     const newCommands = commands.map(c => c.supports.filter(s => Object.keys(commandTypeMap).includes(s)).map(s => {
