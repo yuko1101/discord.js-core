@@ -1,7 +1,7 @@
 import { Client, Snowflake } from "discord.js";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
-import SelectMenuAction from "../action/SelectMenuAction";
+import { AnySelectMenuAction } from "../action/SelectMenuAction";
 import fs from "fs";
 import Command from "../command/Command";
 import { applyCommands } from "./commandManager";
@@ -29,7 +29,7 @@ export default class Core<IsReady extends boolean = boolean> {
     /**  */
     readonly buttonActions: ButtonAction[];
     /**  */
-    readonly selectMenuActions: SelectMenuAction[];
+    readonly selectMenuActions: AnySelectMenuAction[];
 
     /**
      * @param client

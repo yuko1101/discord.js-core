@@ -2,21 +2,17 @@ import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction,
 import MessageCore from "./MessageCore";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
-import SelectMenuAction from "../action/SelectMenuAction";
+import SelectMenuAction, { AnySelectMenuAction } from "../action/SelectMenuAction";
 import { bindOptions } from "config_file.js";
+import { PageButtonAction, PageEmojiAction } from "../action/PageActions";
 
-const actionsList = ["FIRST", "BACK", "NEXT", "LAST"] as const;
-
-/**  */
-export type PageEmojiAction = EmojiAction & { pageActionType?: typeof actionsList[number] };
-/**  */
-export type PageButtonAction = ButtonAction & { pageActionType?: typeof actionsList[number] };
+export const actionsList = ["FIRST", "BACK", "NEXT", "LAST"] as const;
 
 /** @typedef */
 export interface MessagePagesOptions {
     readonly messageCores: (MessageCore | (() => Promise<MessageCore>))[];
     readonly startPageIndex?: number;
-    readonly pageActions?: (PageEmojiAction | PageButtonAction | SelectMenuAction)[][];
+    readonly pageActions?: (EmojiAction | ButtonAction | AnySelectMenuAction)[][];
     readonly timeout?: number;
     readonly resetTimeoutTimerOnAction?: boolean;
     readonly userFilter?: (user: User | PartialUser) => Promise<boolean>;
@@ -37,7 +33,7 @@ export default class MessagePages {
     /**  */
     readonly startPageIndex: number;
     /**  */
-    readonly pageActions: (PageEmojiAction | PageButtonAction | SelectMenuAction)[][];
+    readonly pageActions: (EmojiAction | ButtonAction | AnySelectMenuAction)[][];
     /**  */
     readonly timeout: number | null;
     /**  */
@@ -69,13 +65,13 @@ export default class MessagePages {
         this.pageActions = this.options.pageActions ?? [];
         const actions = this.pageActions.flat();
         for (const action of actions) {
-            if (action instanceof EmojiAction && action.pageActionType) {
+            if (action instanceof PageEmojiAction) {
                 const actionType = action.pageActionType;
                 action.run = async (messageReaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, isReactionAdded: boolean) => {
                     if (!isReactionAdded || !(await this.userFilter(user))) return;
                     await this.takeAction(actionType);
                 };
-            } else if (action instanceof ButtonAction && action.pageActionType) {
+            } else if (action instanceof PageButtonAction) {
                 const actionType = action.pageActionType;
                 action.run = async (interaction: ButtonInteraction) => {
                     if (!(await this.userFilter(interaction.user))) return;

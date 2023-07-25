@@ -3,6 +3,7 @@ import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreApplicationCommandOptionData } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
+import SelectMenuAction from "../action/SelectMenuAction";
 
 export default {
     /**
@@ -114,7 +115,7 @@ export default {
             if (!interaction.isAnySelectMenu()) return;
             const selectMenuAction = core.selectMenuActions.find(action => interaction.customId === action.customId);
             if (!selectMenuAction) return;
-            await selectMenuAction.run(interaction);
+            await (selectMenuAction as SelectMenuAction<typeof interaction>).run(interaction);
         });
 
 

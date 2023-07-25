@@ -22,6 +22,15 @@ export type SelectMenuBuilderType<Interaction extends SelectMenuInteractions> =
     ? MentionableSelectMenuBuilder
     : ChannelSelectMenuBuilder;
 
+// TODO: better typedef
+/** @typedef */
+export type AnySelectMenuAction =
+    | SelectMenuAction<StringSelectMenuInteraction>
+    | SelectMenuAction<UserSelectMenuInteraction>
+    | SelectMenuAction<RoleSelectMenuInteraction>
+    | SelectMenuAction<MentionableSelectMenuInteraction>
+    | SelectMenuAction<ChannelSelectMenuInteraction>;
+
 /** @typedef */
 export interface SelectMenuActionOptions<Interaction extends SelectMenuInteractions> extends ActionOptions {
     /** customId will be changed by this library  */
@@ -61,7 +70,7 @@ export default class SelectMenuAction<Interaction extends SelectMenuInteractions
     register(): this {
         if (!this.core.selectMenuActions.some(action => action.id === this.id)) {
             // TODO: better way to avoid casting errors
-            this.core.selectMenuActions.push(this as unknown as SelectMenuAction<SelectMenuInteractions>);
+            this.core.selectMenuActions.push(this as unknown as AnySelectMenuAction);
         }
         return this;
     }
