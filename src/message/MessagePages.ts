@@ -55,7 +55,6 @@ export default class MessagePages {
      */
     constructor(options: MessagePagesOptions) {
         this.options = options;
-        /** @readonly @type {(MessageCore | () => Promise<MessageCore>)[]} */
         this.messageCores = this.options.messageCores;
         if (this.messageCores.length === 0) {
             throw new Error("MessageCores cannot be empty");
@@ -282,7 +281,6 @@ export default class MessagePages {
         const emojis = await this._getEmojis(this.currentPageIndex);
 
         // get all emojis that the client bot added to the sent message
-        /** @type {MessageReaction[]} */
         const reactions = [...sentMessage.reactions.cache.filter(reaction => reaction.users.resolve(sentMessage.author.id)).values()];
 
         // remove reactions that are not in the emojis list (if all reactions aren't in the emojis list, remove all reactions)

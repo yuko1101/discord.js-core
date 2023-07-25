@@ -22,7 +22,6 @@ export default class CustomEmoji {
 
         this.emoji = this.client.emojis.resolve(this.emojiId) ?? null;
 
-        /** @readonly @type {boolean} */
         this.fetched = this.emoji !== null;
     }
 
