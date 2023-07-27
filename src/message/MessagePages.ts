@@ -1,4 +1,4 @@
-import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction, ButtonStyle, Message, MessageReaction, PartialMessageReaction, PartialUser, RepliableInteraction, TextBasedChannel, User } from "discord.js";
+import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction, ButtonStyle, Message, MessageComponentInteraction, MessageReaction, PartialMessageReaction, PartialUser, RepliableInteraction, TextBasedChannel, User } from "discord.js";
 import MessageCore from "./MessageCore";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
@@ -68,13 +68,14 @@ export default class MessagePages {
                 const actionType = action.pageActionType;
                 action.run = async (messageReaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, isReactionAdded: boolean) => {
                     if (!isReactionAdded || !(await this.userFilter(user))) return;
-                    await this.takeAction(actionType);
+                    messageReaction.users.remove(user.id);
+                    await this.takeAction(null, actionType);
                 };
             } else if (action instanceof PageButtonAction) {
                 const actionType = action.pageActionType;
                 action.run = async (interaction: ButtonInteraction) => {
                     if (!(await this.userFilter(interaction.user))) return;
-                    await this.takeAction(actionType);
+                    await this.takeAction(interaction, actionType);
                 };
             }
         }
@@ -171,9 +172,11 @@ export default class MessagePages {
 
         options = bindOptions({ autoRemoveReaction: false }, options);
 
-        (await this._getPage(this.currentPageIndex)).removeApply(msg, options);
+        (await this._getPage(this.currentPageIndex)).removeApply(msg, { autoRemoveReaction: false });
         const emojiActions = this.pageActions.flatMap(row => row.filter((a): a is EmojiAction => a instanceof EmojiAction));
-        emojiActions.forEach(action => action.removeApply(msg));
+        emojiActions.forEach(action => action.removeApply(msg, { autoRemoveReaction: false }));
+
+        if (options.autoRemoveReaction) await msg.reactions.removeAll();
     }
 
     /**
@@ -185,6 +188,7 @@ export default class MessagePages {
         if (index < 0 || index >= this.messageCores.length) throw new Error(`Index out of bounds: Receive ${index} as index. Expected index 0-${this.messageCores.length - 1}.`);
 
         const oldIndex = this.currentPageIndex;
+        if (oldIndex === index && typeof this.messageCores[index] !== "function") return;
         this.currentPageIndex = index;
 
         if (this.sentMessage) {
@@ -199,16 +203,17 @@ export default class MessagePages {
     /**
      * @param actionType
      */
-    async takeAction(actionType: typeof actionsList[number]) {
+    async takeAction(interaction: MessageComponentInteraction | null, actionType: typeof actionsList[number]) {
+        if (interaction) await interaction.deferUpdate();
         switch (actionType) {
             case "FIRST":
                 await this.gotoPage(0);
                 break;
             case "BACK":
-                await this.gotoPage(this.currentPageIndex - 1);
+                await this.gotoPage(Math.max(this.currentPageIndex - 1, 0));
                 break;
             case "NEXT":
-                await this.gotoPage(this.currentPageIndex + 1);
+                await this.gotoPage(Math.min(this.currentPageIndex + 1, this.messageCores.length - 1));
                 break;
             case "LAST":
                 await this.gotoPage(this.messageCores.length - 1);
@@ -225,7 +230,13 @@ export default class MessagePages {
         for (let row of this.pageActions) {
             row = row.filter(a => !(a instanceof EmojiAction));
             if (row.every((a): a is ButtonAction => a instanceof ButtonAction)) {
-                messageCreateOptions.components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...row.map(b => b.getButton())));
+                messageCreateOptions.components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...row.map(b => {
+                    if (b instanceof PageButtonAction) {
+                        const isDisabled = ((b.pageActionType === "BACK" || b.pageActionType === "FIRST") && index === 0) || ((b.pageActionType === "NEXT" || b.pageActionType === "LAST") && index === this.messageCores.length - 1);
+                        return b.getButton().setDisabled(isDisabled);
+                    }
+                    return b.getButton();
+                })));
             } else if (row.length === 1 && row[0] instanceof SelectMenuAction) {
                 const selectMenu = row[0] as SelectMenuAction;
                 messageCreateOptions.components.push(new ActionRowBuilder<typeof selectMenu["selectMenu"]>().addComponents(selectMenu.selectMenu));
@@ -280,24 +291,39 @@ export default class MessagePages {
 
         const emojis = await this._getEmojis(this.currentPageIndex);
 
-        // get all emojis that the client bot added to the sent message
-        const reactions = [...sentMessage.reactions.cache.filter(reaction => reaction.users.resolve(sentMessage.author.id)).values()];
+        // get all reactions that the client bot added to the sent message
+        const currentReactions = [...sentMessage.reactions.cache.filter(reaction => reaction.users.resolve(sentMessage.author.id)).values()];
 
-        // remove reactions that are not in the emojis list (if all reactions aren't in the emojis list, remove all reactions)
-        if (reactions.length > 0) {
-            const currentEmojis = reactions.map(reaction => reaction.emoji.name);
-            // same emojis, no need to update
-            if (emojis.length === currentEmojis.length && currentEmojis.every((emoji, i) => emoji === emojis[i])) return;
-            // remove all reactions
+        let matchedCount = 0;
+        for (let i = 0; i < emojis.length; i++) {
+            if (emojis[i] !== currentReactions[i]?.emoji.name) {
+                matchedCount = i;
+                break;
+            }
+        }
+        const stepCountWithoutRemoveAll = (currentReactions.length - matchedCount) + (currentReactions.length - matchedCount);
+
+        const stepCountWithRemoveAll = 1 + emojis.length;
+
+        // if the number of steps is the same, update reactions without remove-all.
+        // since remove-all removes all reactions including ones not from the bot.
+        const useRemoveAll = stepCountWithRemoveAll < stepCountWithoutRemoveAll;
+
+        if (useRemoveAll) {
             await sentMessage.reactions.removeAll();
+            for (const emoji of emojis) {
+                await sentMessage.react(emoji);
+            }
+        } else {
+            const reactionsToRemove: MessageReaction[] = currentReactions.slice(matchedCount);
+            const emojisToAdd: string[] = emojis.slice(matchedCount);
+            for (const reaction of reactionsToRemove) {
+                await reaction.remove();
+            }
+            for (const emoji of emojisToAdd) {
+                await sentMessage.react(emoji);
+            }
         }
-
-
-        // add reactions that are not reacted yet
-        for (const emoji of emojis) {
-            await sentMessage.react(emoji);
-        }
-
     }
 
     /**
@@ -307,8 +333,8 @@ export default class MessagePages {
     async _getEmojis(index: number): Promise<string[]> {
         const emojis = [];
         const messageCore = await this._getPage(index);
-        emojis.push(...messageCore.getEmojis());
         emojis.push(...this.pageActions.flatMap(row => row.filter((a): a is EmojiAction => a instanceof EmojiAction).map(e => e.emoji)));
+        emojis.push(...messageCore.getEmojis());
         return emojis;
     }
 }
