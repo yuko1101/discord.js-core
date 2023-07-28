@@ -1,4 +1,4 @@
-import { ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, AutocompleteInteraction } from "discord.js";
+import { ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, AutocompleteInteraction } from "discord.js";
 import { Overwrite } from "../utils/ts_utils";
 import Core from "../core/Core";
 import { SimpleObject } from "../core/handler";
@@ -6,19 +6,28 @@ import InteractionCore from "./InteractionCore";
 
 /**
  * @typedef
+ */
+export type CoreCommandOptionData<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> = ApplicationCommandOptionDataWithAutoCompleter<T> & { messageCommand?: boolean };
+
+/**
+ * @typedef
  * Adds autoCompleter property to ApplicationCommandOptionData recursively.
  */
-export type CoreApplicationCommandOptionData<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
+export type ApplicationCommandOptionDataWithAutoCompleter<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
     T extends ApplicationCommandSubGroupData
-    ? Overwrite<ApplicationCommandSubGroupData, { options?: CoreApplicationCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>[] }>
+    ? Overwrite<ApplicationCommandSubGroupData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>[] }>
     : T extends ApplicationCommandSubCommandData
-    ? Overwrite<ApplicationCommandSubCommandData, { options?: CoreApplicationCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>[] }>
+    ? Overwrite<ApplicationCommandSubCommandData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>[] }>
     : T extends ApplicationCommandAutoCompleterContainer
     ? T & { autoCompleter: (interaction: AutocompleteInteraction, value: string | number | null) => Promise<void> }
     : T;
 
 /** @typedef */
 export type ApplicationCommandOptionsContainer = ApplicationCommandSubGroupData | ApplicationCommandSubCommandData;
+export function isApplicationCommandOptionsContainer(commandOptionData?: ApplicationCommandOptionData | CoreCommandOptionData): commandOptionData is ApplicationCommandOptionsContainer {
+    if (!commandOptionData) return false;
+    return commandOptionData.type === ApplicationCommandOptionType.SubcommandGroup || commandOptionData.type === ApplicationCommandOptionType.Subcommand;
+}
 /** @typedef */
 export type ApplicationCommandValueContainer = Exclude<ApplicationCommandOptionData, ApplicationCommandOptionsContainer>;
 /** @typedef */
@@ -32,10 +41,9 @@ export interface CommandData {
     readonly name: string;
     readonly description?: string;
     readonly messageCommandAliases?: string[];
-    readonly messageCommandArgs?: string[];
-    readonly slashCommandOptions?: CoreApplicationCommandOptionData[];
+    readonly args?: CoreCommandOptionData[];
     readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean | undefined>, core: Core<true>) => Promise<void>;
 }
 
 export default class Command {
@@ -48,13 +56,11 @@ export default class Command {
     /**  */
     readonly messageCommandAliases: string[];
     /**  */
-    readonly messageCommandArgs: string[];
-    /**  */
-    readonly slashCommandOptions: CoreApplicationCommandOptionData[];
+    readonly args: CoreCommandOptionData[];
     /**  */
     readonly supports: CommandType[];
     /**  */
-    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean | undefined>, core: Core<true>) => Promise<void>;
 
     /**
      * @param data
@@ -63,8 +69,7 @@ export default class Command {
         this.data = data;
         this.name = this.data.name;
         this.description = this.data.description ?? null;
-        this.messageCommandArgs = this.data.messageCommandArgs ?? [];
-        this.slashCommandOptions = this.data.slashCommandOptions ?? [];
+        this.args = this.data.args ?? [];
         this.messageCommandAliases = this.data.messageCommandAliases ?? [];
         this.supports = this.data.supports;
         this.run = this.data.run;

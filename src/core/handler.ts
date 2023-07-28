@@ -1,7 +1,7 @@
-import { CommandInteractionOption, Message } from "discord.js";
+import { ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, CommandInteractionOption, Message } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
-import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreApplicationCommandOptionData } from "../command/Command";
+import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
 import SelectMenuAction from "../action/SelectMenuAction";
 
@@ -21,7 +21,7 @@ export default {
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.messageCommandAliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
             if (command.supports.includes("MESSAGE_COMMAND")) {
-                await command.run(new InteractionCore(msg), argsToObject(args, command.messageCommandArgs), core);
+                await command.run(new InteractionCore(msg), argsToObject(args, command.args), core);
             }
         }
 
@@ -133,9 +133,9 @@ export default {
             const options = getAllAutoCompleteOptions(autoCompleteOptionsToObject([...interaction.options.data]));
             const focused = options.find(option => option.option.focused);
             if (!focused) return;
-            const focusedInAutocompleteInteraction = getOptionWithPath(command.slashCommandOptions, focused.path);
+            const focusedInAutocompleteInteraction = getOptionWithPath(command.args, focused.path);
             if (!focusedInAutocompleteInteraction) return;
-            const autoCompleter = (focusedInAutocompleteInteraction as CoreApplicationCommandOptionData<ApplicationCommandAutoCompleterContainer>).autoCompleter;
+            const autoCompleter = (focusedInAutocompleteInteraction as CoreCommandOptionData<ApplicationCommandAutoCompleterContainer>).autoCompleter;
             await autoCompleter(interaction, (focused.option.value ?? null) as string | number | null);
         });
     },
@@ -146,23 +146,28 @@ type _SimpleObject<T> = SimpleObject<T>;
 
 /**
  * @param args
- * @param msgArgsOption
+ * @param commandOptions
  */
-function argsToObject(args: string[], msgArgsOption: string[]): SimpleObject<string> {
-    const argObj: SimpleObject<string> = {};
-    if (args.length <= msgArgsOption.length) {
-        args.forEach((arg, i) => argObj[msgArgsOption[i]] = arg);
-        return argObj;
-    } else if (args.length > msgArgsOption.length) {
-        for (let i = 0; i < msgArgsOption.length; i++) {
-            if (i === msgArgsOption.length - 1) {
-                argObj[msgArgsOption[i]] = args.join(" ");
-                break;
-            }
-            argObj[msgArgsOption[i]] = args.shift() as string;
+function argsToObject(args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<string | undefined> {
+    commandOptions = commandOptions.filter(option => option.messageCommand);
+
+    const argObj: SimpleObject<string | undefined> = {};
+    if (commandOptions.length === 0) return argObj;
+
+    // if 1 command option is options-container, then all are options-container.
+    // So, only check the first command option.
+    const isDeep = isApplicationCommandOptionsContainer(commandOptions[0]);
+    if (isDeep) {
+        const selectedSubCommand = commandOptions.find(option => option.name === args[0]) as CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>;
+        if (!selectedSubCommand) return argObj;
+        argObj[selectedSubCommand.name] = argsToObject(args.slice(1), selectedSubCommand.options ?? []);
+    } else {
+        for (let i = 0; i < commandOptions.length; i++) {
+            const commandOption = commandOptions[i];
+            argObj[commandOption.name] = args[i] as string | undefined;
         }
-        return argObj;
     }
+
     return argObj;
 }
 
@@ -222,15 +227,15 @@ function autoCompleteOptionsToObject(options: CommandInteractionOption[]): Simpl
  * @param options
  * @param path
  */
-function getOptionWithPath(options: CoreApplicationCommandOptionData[], path: string[]): CoreApplicationCommandOptionData<ApplicationCommandValueContainer> | null {
+function getOptionWithPath(options: CoreCommandOptionData[], path: string[]): CoreCommandOptionData<ApplicationCommandValueContainer> | null {
     if (!options) return null;
     if (path.length === 0) return null;
     const option = options.find(o => o.name == path[0]);
     if (!option) return null;
-    if ((option as CoreApplicationCommandOptionData<ApplicationCommandOptionsContainer>).options) {
+    if ((option as CoreCommandOptionData<ApplicationCommandOptionsContainer>).options) {
         // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
-        return getOptionWithPath((option as CoreApplicationCommandOptionData<ApplicationCommandOptionsContainer>).options ?? [], path.slice(1));
+        return getOptionWithPath((option as CoreCommandOptionData<ApplicationCommandOptionsContainer>).options ?? [], path.slice(1));
     } else {
-        return option as CoreApplicationCommandOptionData<ApplicationCommandValueContainer>;
+        return option as CoreCommandOptionData<ApplicationCommandValueContainer>;
     }
 }

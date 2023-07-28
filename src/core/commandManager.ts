@@ -24,7 +24,7 @@ export async function applyCommands(core: Core<true>) {
             name: core.options.devMode ? `${devModeCommandPrefix}${c.name}` : c.name,
             description: s.endsWith("_CONTEXT_MENU") ? "" : c.description,
             type: commandTypeMap[s as keyof typeof commandTypeMap],
-            options: s.endsWith("_CONTEXT_MENU") ? [] : c.slashCommandOptions,
+            options: s.endsWith("_CONTEXT_MENU") ? [] : c.args,
             // defaultPermission: c.defaultPermission,
         };
     })) as unknown as ApplicationCommandData[];
