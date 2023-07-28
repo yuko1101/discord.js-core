@@ -1,4 +1,4 @@
-import { ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, CommandInteractionOption, Message } from "discord.js";
+import { APIInteractionDataResolvedChannel, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, GuildBasedChannel, Message, Role, User } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
@@ -21,7 +21,7 @@ export default {
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.messageCommandAliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
             if (command.supports.includes("MESSAGE_COMMAND")) {
-                await command.run(new InteractionCore(msg), argsToObject(args, command.args), core);
+                await command.run(new InteractionCore(msg), stringsToArgs(args, command.args), core);
             }
         }
 
@@ -57,7 +57,7 @@ export default {
                 return;
             }
             if (command.supports.includes("SLASH_COMMAND")) {
-                const args = optionsToObject([...(interaction.options?.data ?? [])]);
+                const args = optionsToArgs([...(interaction.options?.data ?? [])]);
 
                 await command.run(new InteractionCore(interaction), args, core);
 
@@ -144,11 +144,12 @@ export default {
 export type SimpleObject<T> = { [key: string]: T | _SimpleObject<T> };
 type _SimpleObject<T> = SimpleObject<T>;
 
+// TODO: convert string into appropriate class instance
 /**
  * @param args
  * @param commandOptions
  */
-function argsToObject(args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<string | undefined> {
+function stringsToArgs(args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<string | undefined> {
     commandOptions = commandOptions.filter(option => option.messageCommand);
 
     const argObj: SimpleObject<string | undefined> = {};
@@ -160,7 +161,7 @@ function argsToObject(args: string[], commandOptions: CoreCommandOptionData[]): 
     if (isDeep) {
         const selectedSubCommand = commandOptions.find(option => option.name === args[0]) as CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>;
         if (!selectedSubCommand) return argObj;
-        argObj[selectedSubCommand.name] = argsToObject(args.slice(1), selectedSubCommand.options ?? []);
+        argObj[selectedSubCommand.name] = stringsToArgs(args.slice(1), selectedSubCommand.options ?? []);
     } else {
         for (let i = 0; i < commandOptions.length; i++) {
             const commandOption = commandOptions[i];
@@ -174,18 +175,48 @@ function argsToObject(args: string[], commandOptions: CoreCommandOptionData[]): 
 /**
  * @param options
  */
-function optionsToObject(options: CommandInteractionOption[]): SimpleObject<string | number | boolean> {
+function optionsToArgs(options: CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
     if (!options) return {};
-    const obj: SimpleObject<string | number | boolean> = {};
+    const obj: SimpleObject<CommandOptionValue> = {};
     for (const option of options) {
         if (option.options) {
             // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
-            obj[option.name] = optionsToObject(option.options);
+            obj[option.name] = optionsToArgs(option.options);
         } else {
-            obj[option.name] = option.value as string | number | boolean;
+            obj[option.name] = getCommandOptionValue(option);
         }
     }
     return obj;
+}
+
+// TODO: simplify the type by removing APIInteractionDataResolvedChannel, API Role, and null if possible.
+/** @typedef */
+export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedChannel | GuildBasedChannel | Role | APIRole | Attachment | null;
+
+/**
+ * @param commandOption
+ */
+function getCommandOptionValue(commandOption: CommandInteractionOption): CommandOptionValue {
+    switch (commandOption.type) {
+        case ApplicationCommandOptionType.String:
+        case ApplicationCommandOptionType.Number:
+        case ApplicationCommandOptionType.Integer:
+        case ApplicationCommandOptionType.Boolean:
+            return commandOption.value as string | number | boolean;
+        case ApplicationCommandOptionType.Channel:
+            return commandOption.channel as APIInteractionDataResolvedChannel | GuildBasedChannel | null;
+        case ApplicationCommandOptionType.User:
+            return commandOption.user as User;
+        case ApplicationCommandOptionType.Role:
+            return commandOption.role as Role | APIRole | null;
+        case ApplicationCommandOptionType.Mentionable:
+            return (commandOption.user ?? commandOption.role) as User | Role | APIRole | null;
+        case ApplicationCommandOptionType.Attachment:
+            return commandOption.attachment as Attachment;
+        case ApplicationCommandOptionType.Subcommand:
+        case ApplicationCommandOptionType.SubcommandGroup:
+            throw new Error("Option-container cannot have a value");
+    }
 }
 
 /**

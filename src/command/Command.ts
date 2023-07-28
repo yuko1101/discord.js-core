@@ -1,13 +1,13 @@
 import { ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, AutocompleteInteraction } from "discord.js";
 import { Overwrite } from "../utils/ts_utils";
 import Core from "../core/Core";
-import { SimpleObject } from "../core/handler";
+import { CommandOptionValue, SimpleObject } from "../core/handler";
 import InteractionCore from "./InteractionCore";
 
 /**
  * @typedef
  */
-export type CoreCommandOptionData<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> = ApplicationCommandOptionDataWithAutoCompleter<T> & { messageCommand?: boolean };
+export type CoreCommandOptionData<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> = ApplicationCommandOptionDataWithAutoCompleter<T> & { messageCommand: boolean };
 
 /**
  * @typedef
@@ -43,7 +43,7 @@ export interface CommandData {
     readonly messageCommandAliases?: string[];
     readonly args?: CoreCommandOptionData[];
     readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean | undefined>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: SimpleObject<CommandOptionValue | undefined>, core: Core<true>) => Promise<void>;
 }
 
 export default class Command {
@@ -60,7 +60,7 @@ export default class Command {
     /**  */
     readonly supports: CommandType[];
     /**  */
-    readonly run: (ic: InteractionCore, args: SimpleObject<string | number | boolean | undefined>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: SimpleObject<CommandOptionValue | undefined>, core: Core<true>) => Promise<void>;
 
     /**
      * @param data
