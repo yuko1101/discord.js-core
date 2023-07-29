@@ -30,7 +30,7 @@ export default {
         });
         core.client.on("messageUpdate", async (_, newMsg) => {
             // if newMsg is Message<boolean>
-            if (newMsg["system"]) {
+            if (newMsg["system"] !== null) {
                 await runMessageCommand(newMsg);
             } else {
                 // TODO: support PartialMessage
