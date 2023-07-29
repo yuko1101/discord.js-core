@@ -17,6 +17,7 @@ import { BaseMessageOptions, Message, RepliableInteraction, User } from "discord
 import MessagePages from "../message/MessagePages";
 import MessageCore from "../message/MessageCore";
 import { bindOptions } from "config_file.js";
+import { removeAllReactions } from "../utils/permission_utils";
 
 /** @typedef */
 export type MessageSource = BaseMessageOptions | MessageCore | MessagePages;
@@ -202,7 +203,9 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         } else {
             // do nothing with MessageCreateOptions
         }
-        if (!isEditingMessageEphemeral) await this.firstReplyMessage.reactions.removeAll();
+        if (!isEditingMessageEphemeral) {
+            await removeAllReactions(this.firstReplyMessage);
+        }
 
         await this.run({
             async withMessage(ic) {

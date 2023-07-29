@@ -5,6 +5,7 @@ import ButtonAction from "../action/ButtonAction";
 import SelectMenuAction, { AnySelectMenuAction } from "../action/SelectMenuAction";
 import { bindOptions } from "config_file.js";
 import { PageButtonAction, PageEmojiAction } from "../action/PageActions";
+import { canManageMessage, removeAllReactions } from "../utils/permission_utils";
 
 export const actionsList = ["FIRST", "BACK", "NEXT", "LAST"] as const;
 
@@ -176,7 +177,7 @@ export default class MessagePages {
         const emojiActions = this.pageActions.flatMap(row => row.filter((a): a is EmojiAction => a instanceof EmojiAction));
         emojiActions.forEach(action => action.removeApply(msg, { autoRemoveReaction: false }));
 
-        if (options.autoRemoveReaction) await msg.reactions.removeAll();
+        if (options.autoRemoveReaction) await removeAllReactions(msg);
     }
 
     /**
@@ -292,7 +293,7 @@ export default class MessagePages {
         const emojis = await this._getEmojis(this.currentPageIndex);
 
         // get all reactions that the client bot added to the sent message
-        const currentReactions = [...sentMessage.reactions.cache.filter(reaction => reaction.users.resolve(sentMessage.author.id)).values()];
+        const currentReactions = [...sentMessage.reactions.cache.filter(reaction => reaction.me).values()];
 
         let matchedCount = 0;
         for (let i = 0; i < emojis.length; i++) {
@@ -307,7 +308,7 @@ export default class MessagePages {
 
         // if the number of steps is the same, update reactions without remove-all.
         // since remove-all removes all reactions including ones not from the bot.
-        const useRemoveAll = stepCountWithRemoveAll < stepCountWithoutRemoveAll;
+        const useRemoveAll = stepCountWithRemoveAll < stepCountWithoutRemoveAll && await canManageMessage(sentMessage);
 
         if (useRemoveAll) {
             await sentMessage.reactions.removeAll();
@@ -318,7 +319,7 @@ export default class MessagePages {
             const reactionsToRemove: MessageReaction[] = currentReactions.slice(matchedCount);
             const emojisToAdd: string[] = emojis.slice(matchedCount);
             for (const reaction of reactionsToRemove) {
-                await reaction.remove();
+                await reaction.users.remove();
             }
             for (const emoji of emojisToAdd) {
                 await sentMessage.react(emoji);
