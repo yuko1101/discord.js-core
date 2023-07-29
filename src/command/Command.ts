@@ -11,13 +11,13 @@ export type CoreCommandOptionData<T extends ApplicationCommandOptionData = Appli
 
 /**
  * @typedef
- * Adds autoCompleter property to ApplicationCommandOptionData recursively.
+ * Adds autoCompleter property to ApplicationCommandOptionData and messageAliases to ApplicationCommandOptionContainer recursively.
  */
 export type ApplicationCommandOptionDataWithAutoCompleter<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
     T extends ApplicationCommandSubGroupData
-    ? Overwrite<ApplicationCommandSubGroupData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>[] }>
+    ? Overwrite<ApplicationCommandSubGroupData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>[], messageAliases?: string[] }>
     : T extends ApplicationCommandSubCommandData
-    ? Overwrite<ApplicationCommandSubCommandData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>[] }>
+    ? Overwrite<ApplicationCommandSubCommandData, { options?: CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>[], messageAliases?: string[] }>
     : T extends ApplicationCommandAutoCompleterContainer
     ? T & { autoCompleter: (interaction: AutocompleteInteraction, value: string | number | null) => Promise<void> }
     : T;
@@ -32,6 +32,7 @@ export function isApplicationCommandOptionsContainer(commandOptionData?: Applica
 export type ApplicationCommandValueContainer = Exclude<ApplicationCommandOptionData, ApplicationCommandOptionsContainer>;
 /** @typedef */
 export type ApplicationCommandAutoCompleterContainer = ApplicationCommandAutocompleteStringOptionData | ApplicationCommandAutocompleteNumericOptionData;
+
 
 /** @typedef */
 export type CommandType = "SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU";

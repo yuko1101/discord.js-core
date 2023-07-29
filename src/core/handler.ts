@@ -159,7 +159,8 @@ function stringsToArgs(args: string[], commandOptions: CoreCommandOptionData[]):
     // So, only check the first command option.
     const isDeep = isApplicationCommandOptionsContainer(commandOptions[0]);
     if (isDeep) {
-        const selectedSubCommand = commandOptions.find(option => option.name === args[0]) as CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>;
+        const selectedSubCommand = (commandOptions as (CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>)[])
+            .find(option => option.name === args[0] || option.messageAliases?.includes(args[0]));
         if (!selectedSubCommand) return argObj;
         argObj[selectedSubCommand.name] = stringsToArgs(args.slice(1), selectedSubCommand.options ?? []);
     } else {
