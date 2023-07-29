@@ -1,4 +1,4 @@
-import { APIInteractionDataResolvedChannel, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, GuildBasedChannel, Message, Role, User } from "discord.js";
+import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, GuildBasedChannel, GuildMember, Message, Role, User } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
@@ -57,7 +57,7 @@ export default {
                 return;
             }
             if (command.supports.includes("SLASH_COMMAND")) {
-                const args = optionsToArgs([...(interaction.options?.data ?? [])]);
+                const args = optionsToArgs(interaction.options, [...(interaction.options?.data ?? [])]);
 
                 await command.run(new InteractionCore(interaction), args, core);
 
@@ -175,44 +175,47 @@ function stringsToArgs(args: string[], commandOptions: CoreCommandOptionData[]):
 /**
  * @param options
  */
-function optionsToArgs(options: CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
+function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, options: CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
     if (!options) return {};
     const obj: SimpleObject<CommandOptionValue> = {};
     for (const option of options) {
         if (option.options) {
             // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
-            obj[option.name] = optionsToArgs(option.options);
+            obj[option.name] = optionsToArgs(commandOptionResolver, option.options);
         } else {
-            obj[option.name] = getCommandOptionValue(option);
+            obj[option.name] = getCommandOptionValue(commandOptionResolver, option);
         }
     }
     return obj;
 }
 
-// TODO: simplify the type by removing APIInteractionDataResolvedChannel, API Role, and null if possible.
+// TODO: simplify the type by removing APIInteractionDataResolvedGuildMember if possible.
 /** @typedef */
-export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedChannel | GuildBasedChannel | Role | APIRole | Attachment | null;
+export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedGuildMember | GuildBasedChannel | Role | APIRole | GuildMember | Attachment | null;
 
 /**
  * @param commandOption
  */
-function getCommandOptionValue(commandOption: CommandInteractionOption): CommandOptionValue {
+function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, commandOption: CommandInteractionOption): CommandOptionValue {
     switch (commandOption.type) {
         case ApplicationCommandOptionType.String:
+            return commandOptionResolver.getString(commandOption.name);
         case ApplicationCommandOptionType.Number:
+            return commandOptionResolver.getNumber(commandOption.name);
         case ApplicationCommandOptionType.Integer:
+            return commandOptionResolver.getInteger(commandOption.name);
         case ApplicationCommandOptionType.Boolean:
-            return commandOption.value as string | number | boolean;
+            return commandOptionResolver.getBoolean(commandOption.name);
         case ApplicationCommandOptionType.Channel:
-            return commandOption.channel as APIInteractionDataResolvedChannel | GuildBasedChannel | null;
+            return commandOptionResolver.getChannel(commandOption.name);
         case ApplicationCommandOptionType.User:
-            return commandOption.user as User;
+            return commandOptionResolver.getMember(commandOption.name) ?? commandOptionResolver.getUser(commandOption.name);
         case ApplicationCommandOptionType.Role:
-            return commandOption.role as Role | APIRole | null;
+            return commandOptionResolver.getRole(commandOption.name);
         case ApplicationCommandOptionType.Mentionable:
-            return (commandOption.user ?? commandOption.role) as User | Role | APIRole | null;
+            return commandOptionResolver.getMember(commandOption.name) ?? commandOptionResolver.getUser(commandOption.name) ?? commandOptionResolver.getRole(commandOption.name);
         case ApplicationCommandOptionType.Attachment:
-            return commandOption.attachment as Attachment;
+            return commandOptionResolver.getAttachment(commandOption.name);
         case ApplicationCommandOptionType.Subcommand:
         case ApplicationCommandOptionType.SubcommandGroup:
             throw new Error("Option-container cannot have a value");
