@@ -1,4 +1,4 @@
-import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, GuildBasedChannel, GuildMember, Message, Role, User } from "discord.js";
+import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, Guild, GuildBasedChannel, GuildMember, Message, Role, User } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
@@ -15,13 +15,13 @@ export default {
             if (!msg.content) return;
             if (!core.options.prefix || !msg.content.startsWith(core.options.prefix)) return;
 
-            const [commandNameInput, ...args] = msg.content.slice(core.options.prefix.length).split(/(?:"([^"]+)"|([^ ]+)) ?/).filter(e => e);
+            const [commandNameInput, args] = parseMessageCommand(msg.content.slice(core.options.prefix.length));
             const commandName = core.options.devMode ? commandNameInput.slice(devModeCommandPrefix.length) : commandNameInput;
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.messageCommandAliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
             if (command.supports.includes("MESSAGE_COMMAND")) {
-                await command.run(new InteractionCore(msg), stringsToArgs(args, command.args), core);
+                await command.run(new InteractionCore(msg), stringsToArgs(core, msg.guild, args, command.args), core);
             }
         }
 
@@ -144,15 +144,53 @@ export default {
 export type SimpleObject<T> = { [key: string]: T | _SimpleObject<T> };
 type _SimpleObject<T> = SimpleObject<T>;
 
-// TODO: convert string into appropriate class instance
+/** @param str */
+function parseMessageCommand(str: string): [string, string[]] {
+    str = str.trim();
+    const commandName = str.trim().split(" ")[0];
+    const argsString = str.slice(commandName.length).trim();
+
+    const args: string[] = [];
+    let isInQuote = false;
+    let isEscaped = false;
+    let currentArgText = "";
+    for (let i = 0; i < argsString.length; i++) {
+        if (argsString[i] === "\"" && !isEscaped) {
+            isInQuote = !isInQuote;
+            continue;
+        }
+        if (argsString[i] === "\\" && !isEscaped) {
+            isEscaped = true;
+            currentArgText += argsString[i];
+            continue;
+        }
+        if (argsString[i] === " " && !isInQuote) {
+            if (currentArgText === "") continue;
+            args.push(currentArgText);
+            currentArgText = "";
+            continue;
+        }
+        if (argsString[i] === "\"" && isEscaped) {
+            currentArgText = currentArgText.slice(0, -1);
+        }
+        currentArgText += argsString[i];
+        isEscaped = false;
+        if (i === argsString.length - 1) {
+            args.push(currentArgText);
+        }
+    }
+
+    return [commandName, args];
+}
+
 /**
  * @param args
  * @param commandOptions
  */
-function stringsToArgs(args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<string | undefined> {
+function stringsToArgs(core: Core<true>, guild: Guild | null, args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<CommandOptionValue | undefined> {
     commandOptions = commandOptions.filter(option => option.messageCommand);
 
-    const argObj: SimpleObject<string | undefined> = {};
+    const argObj: SimpleObject<CommandOptionValue | undefined> = {};
     if (commandOptions.length === 0) return argObj;
 
     // if 1 command option is options-container, then all are options-container.
@@ -162,11 +200,12 @@ function stringsToArgs(args: string[], commandOptions: CoreCommandOptionData[]):
         const selectedSubCommand = (commandOptions as (CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>)[])
             .find(option => option.name === args[0] || option.messageAliases?.includes(args[0]));
         if (!selectedSubCommand) return argObj;
-        argObj[selectedSubCommand.name] = stringsToArgs(args.slice(1), selectedSubCommand.options ?? []);
+        argObj[selectedSubCommand.name] = stringsToArgs(core, guild, args.slice(1), selectedSubCommand.options ?? []);
     } else {
         for (let i = 0; i < commandOptions.length; i++) {
+            const arg = args[i];
             const commandOption = commandOptions[i];
-            argObj[commandOption.name] = args[i] as string | undefined;
+            argObj[commandOption.name] = arg !== undefined ? getCommandOptionValueFromString(core, guild, commandOption, arg) : undefined;
         }
     }
 
@@ -220,6 +259,54 @@ function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOpt
         case ApplicationCommandOptionType.Subcommand:
         case ApplicationCommandOptionType.SubcommandGroup:
             throw new Error("Option-container cannot have a value");
+    }
+}
+
+/**
+ * @param commandOption
+ * @param str
+ */
+function getCommandOptionValueFromString(core: Core<true>, guild: Guild | null, commandOption: CoreCommandOptionData, str: string): CommandOptionValue {
+    switch (commandOption.type) {
+        case ApplicationCommandOptionType.String:
+            return str;
+        case ApplicationCommandOptionType.Number:
+            return Number(str);
+        case ApplicationCommandOptionType.Integer:
+            return parseInt(str);
+        case ApplicationCommandOptionType.Boolean:
+            return str === "true";
+        case ApplicationCommandOptionType.User: {
+            const id = str.startsWith("<@") ? str.slice(2, -1) : str;
+            return core.client.users.resolve(id);
+        }
+        case ApplicationCommandOptionType.Channel: {
+            const id = str.startsWith("<#") ? str.slice(2, -1) : str;
+            const channel = core.client.channels.resolve(id);
+            if (!channel) return null;
+            if (channel.isDMBased()) throw new Error("Cannot use DM-based channel ");
+            return channel;
+        }
+        case ApplicationCommandOptionType.Role: {
+            if (guild === null) return null;
+            const id = str.startsWith("<@&") ? str.slice(3, -1) : str;
+            return guild.roles.resolve(id);
+        }
+        case ApplicationCommandOptionType.Mentionable:
+            if (guild === null) return null;
+            if (str.startsWith("<@&")) {
+                return guild.roles.resolve(str.slice(3, -1));
+            } else if (str.startsWith("<@")) {
+                return core.client.users.resolve(str.slice(2, -1));
+            } else {
+                return guild.client.users.resolve(str) ?? guild.roles.resolve(str);
+            }
+        case ApplicationCommandOptionType.Attachment:
+            // TODO: get attachment from message
+            return str;
+        case ApplicationCommandOptionType.Subcommand:
+        case ApplicationCommandOptionType.SubcommandGroup:
+            return str;
     }
 }
 
