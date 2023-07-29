@@ -1,4 +1,4 @@
-import { Client, Snowflake } from "discord.js";
+import { Client, ClientOptions, Snowflake } from "discord.js";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
 import { AnySelectMenuAction } from "../action/SelectMenuAction";
@@ -8,7 +8,7 @@ import { applyCommands } from "./commandManager";
 import handler from "./handler";
 
 /** @typedef */
-export interface CoreOptions {
+export interface CoreOptions extends ClientOptions {
     readonly devMode: boolean;
     readonly devGuildId?: Snowflake;
     readonly token: string;
@@ -35,8 +35,8 @@ export default class Core<IsReady extends boolean = boolean> {
      * @param client
      * @param options
      */
-    constructor(client: Client<boolean>, options: CoreOptions) {
-        this.client = client;
+    constructor(options: CoreOptions) {
+        this.client = new Client(options);
         this.options = options;
 
         if (this.options.devMode && (!this.options.devGuildId && !this.options.guildId)) {
