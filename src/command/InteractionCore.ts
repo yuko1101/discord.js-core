@@ -93,14 +93,37 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         this.isReplyMessageDeleted = false;
     }
 
+    /** target user of UserContextMenu */
+    public get contextMenuUser(): User | null {
+        if (this.hasInteraction()) {
+            if (this.source.isUserContextMenuCommand()) {
+                return this.source.targetUser;
+            }
+        }
+        return null;
+    }
+
+    /** target message of MessageContextMenu */
+    public get contextMenuMessage(): Message | null {
+        if (this.hasInteraction()) {
+            if (this.source.isMessageContextMenuCommand()) {
+                return this.source.targetMessage;
+            }
+        }
+        return null;
+    }
+
+    /**  */
     hasInteraction(): this is InteractionCore<"INTERACTION"> {
         return !this.hasMessage();
     }
 
+    /**  */
     hasMessage(): this is InteractionCore<"MESSAGE"> {
         return this.source instanceof Message;
     }
 
+    /**  */
     run<U>(data: { withInteraction: (ic: InteractionCore<"INTERACTION">) => U, withMessage: (ic: InteractionCore<"MESSAGE">) => U }): U {
         return this.hasInteraction() ? data.withInteraction(this) : data.withMessage(this as InteractionCore<"MESSAGE">);
     }
