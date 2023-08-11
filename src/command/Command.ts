@@ -64,7 +64,7 @@ export interface CommandData<SupportsMessageCommand extends boolean, Args extend
     readonly args?: Args;
     readonly supportsMessageCommand: SupportsMessageCommand;
     readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<unknown>;
 }
 
 export default class Command<SupportsMessageCommand extends boolean = boolean, Args extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> {
@@ -83,7 +83,7 @@ export default class Command<SupportsMessageCommand extends boolean = boolean, A
     /**  */
     readonly supports: CommandType[];
     /**  */
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<unknown>;
 
     /**
      * @param data
