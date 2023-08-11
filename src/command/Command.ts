@@ -1,4 +1,4 @@
-import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, AutocompleteInteraction, Awaitable, GuildBasedChannel, GuildMember, Role, User } from "discord.js";
+import { APIRole, ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, AutocompleteInteraction, Awaitable, GuildBasedChannel, Role, User } from "discord.js";
 import { Overwrite } from "../utils/ts_utils";
 import Core from "../core/Core";
 import InteractionCore from "./InteractionCore";
@@ -28,17 +28,17 @@ export type ApplicationCommandValueContainer = Exclude<ApplicationCommandOptionD
 /** @typedef */
 export type ApplicationCommandAutoCompleterContainer = ApplicationCommandAutocompleteStringOptionData | ApplicationCommandAutocompleteNumericOptionData;
 
-// TODO: simplify the type by removing APIInteractionDataResolvedGuildMember if possible.
+// TODO: simplify the type by removing APIRole if possible.
 /** @typedef */
 export type GetValueType<T extends ApplicationCommandOptionType> =
     T extends ApplicationCommandOptionType.String ? string
     : T extends ApplicationCommandOptionType.Number ? number
     : T extends ApplicationCommandOptionType.Integer ? number // TODO: restrict to integer
     : T extends ApplicationCommandOptionType.Boolean ? boolean
-    : T extends ApplicationCommandOptionType.User ? APIInteractionDataResolvedGuildMember | User | GuildMember
+    : T extends ApplicationCommandOptionType.User ? User
     : T extends ApplicationCommandOptionType.Channel ? GuildBasedChannel
     : T extends ApplicationCommandOptionType.Role ? Role | APIRole
-    : T extends ApplicationCommandOptionType.Mentionable ? APIInteractionDataResolvedGuildMember | User | GuildMember | Role | APIRole
+    : T extends ApplicationCommandOptionType.Mentionable ? User | Role | APIRole
     : T extends ApplicationCommandOptionType.Attachment ? Attachment
     : never;
 

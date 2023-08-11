@@ -1,4 +1,4 @@
-import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, Guild, GuildBasedChannel, GuildMember, Message, Role, User } from "discord.js";
+import { APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, Guild, GuildBasedChannel, Message, Role, User } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
@@ -229,9 +229,9 @@ function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResol
     return obj;
 }
 
-// TODO: simplify the type by removing APIInteractionDataResolvedGuildMember if possible.
+// TODO: simplify the type by removing APIRole if possible.
 /** @typedef */
-export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedGuildMember | GuildMember | GuildBasedChannel | Role | APIRole | Attachment | null;
+export type CommandOptionValue = string | number | boolean | User | GuildBasedChannel | Role | APIRole | Attachment | null;
 
 /**
  * @param commandOption
@@ -249,11 +249,11 @@ function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOpt
         case ApplicationCommandOptionType.Channel:
             return commandOptionResolver.getChannel(commandOption.name);
         case ApplicationCommandOptionType.User:
-            return commandOptionResolver.getMember(commandOption.name) ?? commandOptionResolver.getUser(commandOption.name);
+            return commandOptionResolver.getUser(commandOption.name);
         case ApplicationCommandOptionType.Role:
             return commandOptionResolver.getRole(commandOption.name);
         case ApplicationCommandOptionType.Mentionable:
-            return commandOptionResolver.getMember(commandOption.name) ?? commandOptionResolver.getUser(commandOption.name) ?? commandOptionResolver.getRole(commandOption.name);
+            return commandOptionResolver.getUser(commandOption.name) ?? commandOptionResolver.getRole(commandOption.name);
         case ApplicationCommandOptionType.Attachment:
             return commandOptionResolver.getAttachment(commandOption.name);
         case ApplicationCommandOptionType.Subcommand:
