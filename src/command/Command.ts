@@ -6,17 +6,17 @@ import InteractionCore from "./InteractionCore";
 /**
  * @typedef
  */
-export type CoreCommandOptionData<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> = ApplicationCommandOptionDataWithAutoCompleter<T> & { messageCommand: boolean };
+export type CoreCommandOptionData<IsMessageCommand extends boolean = boolean, T extends ApplicationCommandOptionData = ApplicationCommandOptionData> = IsMessageCommand extends true ? ApplicationCommandOptionDataWithAutoCompleter<IsMessageCommand, T> & { messageCommand: boolean } : ApplicationCommandOptionDataWithAutoCompleter<IsMessageCommand, T>;
 
 /**
  * @typedef
  * Adds autoCompleter property to ApplicationCommandOptionData and messageAliases to ApplicationCommandOptionContainer recursively.
  */
-export type ApplicationCommandOptionDataWithAutoCompleter<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
+export type ApplicationCommandOptionDataWithAutoCompleter<IsMessageCommand extends boolean, T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
     T extends ApplicationCommandSubGroupData
-    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>>, messageAliases?: string[] }>
     : T extends ApplicationCommandSubCommandData
-    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>>, messageAliases?: string[] }>
     : T extends ApplicationCommandAutoCompleterContainer
     ? Omit<T, "name"> & { autoCompleter: (interaction: AutocompleteInteraction, value: string | number | null) => Promise<void> }
     : Omit<T, "name">;
@@ -43,32 +43,33 @@ export type GetValueType<T extends ApplicationCommandOptionType> =
     : never;
 
 /** @typedef */
-export type CoreCommandArgs<T extends CoreCommandOptionData = CoreCommandOptionData> = { [name: string]: T };
+export type CoreCommandArgs<IsMessageCommand extends boolean, T extends CoreCommandOptionData<IsMessageCommand> = CoreCommandOptionData<IsMessageCommand>> = { [name: string]: T };
 
 /** @typedef */
-export type ConvertArgsType<T extends CoreCommandArgs | undefined> = T extends undefined ? undefined : {
+export type ConvertArgsType<IsMessageCommand extends boolean, T extends CoreCommandArgs<IsMessageCommand> | undefined> = T extends undefined ? undefined : {
     [K in keyof T]:
-    T[K] extends CoreCommandOptionData<ApplicationCommandOptionsContainer> ? ConvertArgsType<T[K]["options"]>
-    : T[K] extends CoreCommandOptionData<ApplicationCommandValueContainer> ? T[K]["required"] extends true ? GetValueType<T[K]["type"]> : GetValueType<T[K]["type"]> | undefined
+    T[K] extends CoreCommandOptionData<IsMessageCommand, ApplicationCommandOptionsContainer> ? ConvertArgsType<IsMessageCommand, Extract<T[K]["options"], CoreCommandArgs<IsMessageCommand>>>
+    : T[K] extends CoreCommandOptionData<IsMessageCommand, ApplicationCommandValueContainer> ? IsMessageCommand extends true ? GetValueType<T[K]["type"]> | undefined : T[K]["required"] extends true ? GetValueType<T[K]["type"]> : GetValueType<T[K]["type"]> | undefined
     : never
 };
 
 /** @typedef */
-export type CommandType = "SLASH_COMMAND" | "MESSAGE_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU";
+export type CommandType = "SLASH_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU";
 
 /** @typedef */
-export interface CommandData<Args extends CoreCommandArgs> {
+export interface CommandData<SupportsMessageCommand extends boolean, Args extends CoreCommandArgs<SupportsMessageCommand>> {
     readonly name: string;
     readonly description?: string;
     readonly messageCommandAliases?: string[];
     readonly args?: Args;
+    readonly supportsMessageCommand: SupportsMessageCommand;
     readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Awaitable<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<void>;
 }
 
-export default class Command<Args extends CoreCommandArgs = CoreCommandArgs> {
+export default class Command<SupportsMessageCommand extends boolean = boolean, Args extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> {
     /**  */
-    readonly data: CommandData<Args>;
+    readonly data: CommandData<SupportsMessageCommand, Args>;
     /**  */
     readonly name: string;
     /**  */
@@ -78,19 +79,22 @@ export default class Command<Args extends CoreCommandArgs = CoreCommandArgs> {
     /**  */
     readonly args: Args;
     /**  */
+    readonly supportsMessageCommand: SupportsMessageCommand;
+    /**  */
     readonly supports: CommandType[];
     /**  */
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Awaitable<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<void>;
 
     /**
      * @param data
     */
-    constructor(data: CommandData<Args>) {
+    constructor(data: CommandData<SupportsMessageCommand, Args>) {
         this.data = data;
         this.name = this.data.name;
         this.description = this.data.description ?? null;
         this.args = this.data.args ?? {} as Args;
         this.messageCommandAliases = this.data.messageCommandAliases ?? [];
+        this.supportsMessageCommand = this.data.supportsMessageCommand;
         this.supports = this.data.supports;
         this.run = this.data.run;
     }

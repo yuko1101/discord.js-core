@@ -116,7 +116,7 @@ function isSameCommand(newCommand: ApplicationCommandData, oldCommand: Applicati
 /**
  * @param coreCommandArgs
  */
-function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = ApplicationCommandOptionData>(args: CoreCommandArgs): T[] {
+function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = ApplicationCommandOptionData>(args: CoreCommandArgs<boolean>): T[] {
     const options: T[] = [];
 
     const entries = Object.entries(args);
