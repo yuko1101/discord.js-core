@@ -1,5 +1,6 @@
-import { ApplicationCommand, ApplicationCommandData, ApplicationCommandManager, ApplicationCommandType, GuildApplicationCommandManager } from "discord.js";
+import { ApplicationCommand, ApplicationCommandData, ApplicationCommandManager, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, ApplicationCommandType, GuildApplicationCommandManager } from "discord.js";
 import Core from "./Core";
+import { CoreCommandArgs } from "../command/Command";
 
 const commandTypeMap = {
     "SLASH_COMMAND": ApplicationCommandType.ChatInput,
@@ -24,7 +25,7 @@ export async function applyCommands(core: Core<true>) {
             name: core.options.devMode ? `${devModeCommandPrefix}${c.name}` : c.name,
             description: s.endsWith("_CONTEXT_MENU") ? "" : c.description,
             type: commandTypeMap[s as keyof typeof commandTypeMap],
-            options: s.endsWith("_CONTEXT_MENU") ? [] : c.args,
+            options: s.endsWith("_CONTEXT_MENU") ? [] : convertToDiscordJsArgs(c.args),
             // defaultPermission: c.defaultPermission,
         };
     })) as unknown as ApplicationCommandData[];
@@ -109,4 +110,32 @@ async function applyContextMenus(type: "USER" | "MESSAGE", applicationCommandMan
  */
 function isSameCommand(newCommand: ApplicationCommandData, oldCommand: ApplicationCommand): boolean {
     return oldCommand.equals(newCommand);
+}
+
+
+/**
+ * @param coreCommandArgs
+ */
+function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = ApplicationCommandOptionData>(args: CoreCommandArgs): T[] {
+    const options: T[] = [];
+
+    const entries = Object.entries(args);
+    for (const entry of entries) {
+        if ("options" in entry[1]) {
+            options.push({
+                ...entry[1],
+                name: entry[0],
+                options: entry[1].type === ApplicationCommandOptionType.Subcommand
+                    ? convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>(entry[1].options)
+                    : convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>(entry[1].options),
+            } as unknown as T);
+        } else {
+            options.push({
+                ...entry[1],
+                name: entry[0],
+            } as unknown as T);
+        }
+    }
+
+    return options;
 }

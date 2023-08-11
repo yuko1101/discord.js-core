@@ -1,7 +1,7 @@
 import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, Guild, GuildBasedChannel, GuildMember, Message, Role, User } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
-import { ApplicationCommandAutoCompleterContainer, ApplicationCommandOptionsContainer, ApplicationCommandValueContainer, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
+import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
 import SelectMenuAction from "../action/SelectMenuAction";
 
@@ -21,7 +21,7 @@ export default {
             const command = core.commands.find(c => c.name.toLowerCase() === commandName || c.messageCommandAliases.map(a => a.toLowerCase()).includes(commandName));
             if (!command) return;
             if (command.supports.includes("MESSAGE_COMMAND")) {
-                await command.run(new InteractionCore(msg), stringsToArgs(core, msg.guild, args, command.args), core);
+                await command.run(new InteractionCore(msg), stringsToArgs(core, msg.guild, args, command.args) as ConvertArgsType<typeof command.args>, core);
             }
         }
 
@@ -59,7 +59,7 @@ export default {
             if (command.supports.includes("SLASH_COMMAND")) {
                 const args = optionsToArgs(interaction.options, [...(interaction.options?.data ?? [])]);
 
-                await command.run(new InteractionCore(interaction), args, core);
+                await command.run(new InteractionCore(interaction), args as ConvertArgsType<typeof command.args>, core);
 
                 if (core.options.devMode) {
                     console.timeEnd(`SLASH_COMMAND:${interaction.commandName}:${interaction.id}`);
@@ -80,7 +80,7 @@ export default {
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
             if (command.supports.includes("USER_CONTEXT_MENU") || command.supports.includes("MESSAGE_CONTEXT_MENU")) {
-                await command.run(new InteractionCore(interaction), { [interaction.isUserContextMenuCommand() ? "user" : "message"]: interaction.targetId }, core);
+                await command.run(new InteractionCore(interaction), {}, core);
             }
         });
 
@@ -184,28 +184,28 @@ function parseMessageCommand(str: string): [string, string[]] {
 }
 
 /**
- * @param args
+ * @param messageArgs
  * @param commandOptions
  */
-function stringsToArgs(core: Core<true>, guild: Guild | null, args: string[], commandOptions: CoreCommandOptionData[]): SimpleObject<CommandOptionValue | undefined> {
-    commandOptions = commandOptions.filter(option => option.messageCommand);
+function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: string[], coreCommandArgs: CoreCommandArgs): SimpleObject<CommandOptionValue | undefined> {
+    const coreArgsEntries = Object.entries(coreCommandArgs).filter(([, value]) => value.messageCommand);
 
     const argObj: SimpleObject<CommandOptionValue | undefined> = {};
-    if (commandOptions.length === 0) return argObj;
+    if (coreArgsEntries.length === 0) return argObj;
 
     // if 1 command option is options-container, then all are options-container.
     // So, only check the first command option.
-    const isDeep = isApplicationCommandOptionsContainer(commandOptions[0]);
+    const isDeep = isApplicationCommandOptionsContainer(coreArgsEntries[0][1]);
     if (isDeep) {
-        const selectedSubCommand = (commandOptions as (CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>)[])
-            .find(option => option.name === args[0] || option.messageAliases?.includes(args[0]));
+        const selectedSubCommand = (coreArgsEntries as [string, CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>][])
+            .find(arg => arg[0] === messageArgs[0] || arg[1].messageAliases?.includes(messageArgs[0]));
         if (!selectedSubCommand) return argObj;
-        argObj[selectedSubCommand.name] = stringsToArgs(core, guild, args.slice(1), selectedSubCommand.options ?? []);
+        argObj[selectedSubCommand[0]] = stringsToArgs(core, guild, messageArgs.slice(1), selectedSubCommand[1].options);
     } else {
-        for (let i = 0; i < commandOptions.length; i++) {
-            const arg = args[i];
-            const commandOption = commandOptions[i];
-            argObj[commandOption.name] = arg !== undefined ? getCommandOptionValueFromString(core, guild, commandOption, arg) : undefined;
+        for (let i = 0; i < coreArgsEntries.length; i++) {
+            const messageArg = messageArgs[i];
+            const coreCommandArg = coreArgsEntries[i];
+            argObj[coreCommandArg[0]] = messageArg !== undefined ? getCommandOptionValueFromString(core, guild, coreCommandArg[1], messageArg) : undefined;
         }
     }
 
@@ -231,7 +231,7 @@ function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResol
 
 // TODO: simplify the type by removing APIInteractionDataResolvedGuildMember if possible.
 /** @typedef */
-export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedGuildMember | GuildBasedChannel | Role | APIRole | GuildMember | Attachment | null;
+export type CommandOptionValue = string | number | boolean | User | APIInteractionDataResolvedGuildMember | GuildMember | GuildBasedChannel | Role | APIRole | Attachment | null;
 
 /**
  * @param commandOption
@@ -346,18 +346,18 @@ function autoCompleteOptionsToObject(options: CommandInteractionOption[]): Simpl
 
 
 /**
- * @param options
+ * @param args
  * @param path
  */
-function getOptionWithPath(options: CoreCommandOptionData[], path: string[]): CoreCommandOptionData<ApplicationCommandValueContainer> | null {
-    if (!options) return null;
+function getOptionWithPath(args: CoreCommandArgs, path: string[]): CoreCommandOptionData<ApplicationCommandValueContainer> | null {
+    if (!args) return null;
     if (path.length === 0) return null;
-    const option = options.find(o => o.name == path[0]);
+    const option = args[path[0]];
     if (!option) return null;
-    if ((option as CoreCommandOptionData<ApplicationCommandOptionsContainer>).options) {
+    if ("options" in option) {
         // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
-        return getOptionWithPath((option as CoreCommandOptionData<ApplicationCommandOptionsContainer>).options ?? [], path.slice(1));
+        return getOptionWithPath(option.options ?? [], path.slice(1));
     } else {
-        return option as CoreCommandOptionData<ApplicationCommandValueContainer>;
+        return option;
     }
 }
