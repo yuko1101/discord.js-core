@@ -24,7 +24,7 @@ export default class Core<IsReady extends boolean = boolean> {
 
     /**  */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly commands: Command<any>[];
+    readonly commands: Command<any, any>[];
     /**  */
     readonly emojiActions: EmojiAction[];
     /**  */
@@ -85,7 +85,7 @@ export default class Core<IsReady extends boolean = boolean> {
      * @param commands
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    addCommands(...commands: Command<any>[]) {
+    addCommands(...commands: Command<any, any>[]) {
         this.commands.push(...commands);
     }
 
@@ -94,7 +94,7 @@ export default class Core<IsReady extends boolean = boolean> {
      * @param recursive
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async addCommandsInDir(dir: string, recursive = true): Promise<Command<any>[]> {
+    async addCommandsInDir(dir: string, recursive = true): Promise<Command<any, any>[]> {
         const cwd = process.argv[1].replace(/\\/g, "/").replace(/\/[^/]+\.[^/]+$/, "");
         const files = fs.readdirSync(`${cwd}/${dir}`);
         const commands = [];
