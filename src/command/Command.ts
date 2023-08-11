@@ -14,9 +14,9 @@ export type CoreCommandOptionData<IsMessageCommand extends boolean = boolean, T 
  */
 export type ApplicationCommandOptionDataWithAutoCompleter<IsMessageCommand extends boolean, T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
     T extends ApplicationCommandSubGroupData
-    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>> } & (IsMessageCommand extends true ? { messageAliases?: string[] } : object)>
     : T extends ApplicationCommandSubCommandData
-    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<IsMessageCommand, CoreCommandOptionData<IsMessageCommand, Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>> } & (IsMessageCommand extends true ? { messageAliases?: string[] } : object)>
     : T extends ApplicationCommandAutoCompleterContainer
     ? Omit<T, "name"> & { autoCompleter: (interaction: AutocompleteInteraction, value: string | number | null) => Promise<void> }
     : Omit<T, "name">;
