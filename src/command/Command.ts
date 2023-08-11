@@ -1,4 +1,4 @@
-import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, AutocompleteInteraction, GuildBasedChannel, GuildMember, Role, User } from "discord.js";
+import { APIInteractionDataResolvedGuildMember, APIRole, ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, AutocompleteInteraction, Awaitable, GuildBasedChannel, GuildMember, Role, User } from "discord.js";
 import { Overwrite } from "../utils/ts_utils";
 import Core from "../core/Core";
 import InteractionCore from "./InteractionCore";
@@ -63,7 +63,7 @@ export interface CommandData<Args extends CoreCommandArgs> {
     readonly messageCommandAliases?: string[];
     readonly args?: Args;
     readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Awaitable<void>;
 }
 
 export default class Command<Args extends CoreCommandArgs = CoreCommandArgs> {
@@ -80,7 +80,7 @@ export default class Command<Args extends CoreCommandArgs = CoreCommandArgs> {
     /**  */
     readonly supports: CommandType[];
     /**  */
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Promise<void>;
+    readonly run: (ic: InteractionCore, args: ConvertArgsType<Args>, core: Core<true>) => Awaitable<void>;
 
     /**
      * @param data
