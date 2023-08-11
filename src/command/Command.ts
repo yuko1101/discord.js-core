@@ -14,9 +14,9 @@ export type CoreCommandOptionData<T extends ApplicationCommandOptionData = Appli
  */
 export type ApplicationCommandOptionDataWithAutoCompleter<T extends ApplicationCommandOptionData = ApplicationCommandOptionData> =
     T extends ApplicationCommandSubGroupData
-    ? Overwrite<Omit<T, "name">, { options: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>>, messageAliases?: string[] }>
     : T extends ApplicationCommandSubCommandData
-    ? Overwrite<Omit<T, "name">, { options: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>>, messageAliases?: string[] }>
+    ? Overwrite<Omit<T, "name">, { options?: CoreCommandArgs<CoreCommandOptionData<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>>, messageAliases?: string[] }>
     : T extends ApplicationCommandAutoCompleterContainer
     ? Omit<T, "name"> & { autoCompleter: (interaction: AutocompleteInteraction, value: string | number | null) => Promise<void> }
     : Omit<T, "name">;
@@ -49,7 +49,7 @@ export type CoreCommandArgs<T extends CoreCommandOptionData = CoreCommandOptionD
 export type ConvertArgsType<T extends CoreCommandArgs | undefined> = T extends undefined ? undefined : {
     [K in keyof T]:
     T[K] extends CoreCommandOptionData<ApplicationCommandOptionsContainer> ? ConvertArgsType<T[K]["options"]>
-    : T[K] extends CoreCommandOptionData<ApplicationCommandValueContainer> ? GetValueType<T[K]["type"]>
+    : T[K] extends CoreCommandOptionData<ApplicationCommandValueContainer> ? T[K]["required"] extends true ? GetValueType<T[K]["type"]> : GetValueType<T[K]["type"]> | undefined
     : never
 };
 

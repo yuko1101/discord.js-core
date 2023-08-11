@@ -191,7 +191,7 @@ function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: strin
     const coreArgsEntries = Object.entries(coreCommandArgs).filter(([, value]) => value.messageCommand);
 
     const argObj: SimpleObject<CommandOptionValue | undefined> = {};
-    if (coreArgsEntries.length === 0) return argObj;
+    if (coreArgsEntries.length === 0) return {};
 
     // if 1 command option is options-container, then all are options-container.
     // So, only check the first command option.
@@ -199,8 +199,8 @@ function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: strin
     if (isDeep) {
         const selectedSubCommand = (coreArgsEntries as [string, CoreCommandOptionData<ApplicationCommandSubGroupData> | CoreCommandOptionData<ApplicationCommandSubCommandData>][])
             .find(arg => arg[0] === messageArgs[0] || arg[1].messageAliases?.includes(messageArgs[0]));
-        if (!selectedSubCommand) return argObj;
-        argObj[selectedSubCommand[0]] = stringsToArgs(core, guild, messageArgs.slice(1), selectedSubCommand[1].options);
+        if (!selectedSubCommand) return {};
+        argObj[selectedSubCommand[0]] = stringsToArgs(core, guild, messageArgs.slice(1), selectedSubCommand[1].options ?? {});
     } else {
         for (let i = 0; i < coreArgsEntries.length; i++) {
             const messageArg = messageArgs[i];
@@ -354,9 +354,9 @@ function getOptionWithPath(args: CoreCommandArgs, path: string[]): CoreCommandOp
     if (path.length === 0) return null;
     const option = args[path[0]];
     if (!option) return null;
-    if ("options" in option) {
+    if (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup) {
         // check options recursively ("SUB_COMMAND" or "SUB_COMMAND_GROUP")
-        return getOptionWithPath(option.options ?? [], path.slice(1));
+        return getOptionWithPath(option.options ?? {}, path.slice(1));
     } else {
         return option;
     }

@@ -126,8 +126,8 @@ function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = Applica
                 ...entry[1],
                 name: entry[0],
                 options: entry[1].type === ApplicationCommandOptionType.Subcommand
-                    ? convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>(entry[1].options)
-                    : convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>(entry[1].options),
+                    ? convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData | ApplicationCommandSubCommandData>>(entry[1].options ?? {})
+                    : convertToDiscordJsArgs<Exclude<ApplicationCommandOptionData, ApplicationCommandSubGroupData>>(entry[1].options ?? {}),
             } as unknown as T);
         } else {
             options.push({
