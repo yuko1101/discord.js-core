@@ -3,7 +3,7 @@ import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
 import { AnySelectMenuAction } from "../action/SelectMenuAction";
 import fs from "fs";
-import Command from "../command/Command";
+import Command, { CoreCommandArgs } from "../command/Command";
 import { applyCommands } from "./commandManager";
 import handler from "./handler";
 
@@ -23,8 +23,7 @@ export default class Core<IsReady extends boolean = boolean> {
     readonly options: CoreOptions;
 
     /**  */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly commands: Command<any, any>[];
+    readonly commands: (Command<true, CoreCommandArgs<true>> | Command<false, CoreCommandArgs<false>>)[];
     /**  */
     readonly emojiActions: EmojiAction[];
     /**  */
@@ -81,20 +80,19 @@ export default class Core<IsReady extends boolean = boolean> {
         if (callback) callback(core.client);
     }
 
+    // TODO: fix type error unless using typescript
     /**
      * @param commands
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    addCommands(...commands: Command<any, any>[]) {
-        this.commands.push(...commands);
+    addCommands<IsMessageCommand extends boolean>(...commands: Command<IsMessageCommand, CoreCommandArgs<IsMessageCommand>>[]) {
+        this.commands.push(...commands as (Command<true, CoreCommandArgs<true>> | Command<false, CoreCommandArgs<false>>)[]);
     }
 
     /**
      * @param dir
      * @param recursive
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async addCommandsInDir(dir: string, recursive = true): Promise<Command<any, any>[]> {
+    async addCommandsInDir(dir: string, recursive = true): Promise<(Command<true, CoreCommandArgs<true>> | Command<false, CoreCommandArgs<false>>)[]> {
         const cwd = process.argv[1].replace(/\\/g, "/").replace(/\/[^/]+\.[^/]+$/, "");
         const files = fs.readdirSync(`${cwd}/${dir}`);
         const commands = [];
