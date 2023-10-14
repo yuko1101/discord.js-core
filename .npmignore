@@ -7,3 +7,5 @@ example-ts/
 .vscode/
 
 .env
+
+tsconfig.json

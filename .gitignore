@@ -1,6 +1,8 @@
 # Examples
 example/package.json
 example/package-lock.json
+example-ts/package.json
+example-ts/package-lock.json
 
 # Logs
 logs

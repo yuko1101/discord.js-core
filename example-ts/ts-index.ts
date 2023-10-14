@@ -44,7 +44,6 @@ const mentionCommand = new Command({
             type: ApplicationCommandOptionType.User,
             description: "The user to mention",
             required: true,
-            messageCommand: false,
         },
     },
     supportsMessageCommand: false,

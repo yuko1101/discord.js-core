@@ -10,13 +10,6 @@ A simple bot handler for [discord.js/v14](https://github.com/discordjs/discord.j
 ## Installation
 Run `npm install discord.js-core` in the terminal.  
 
-**DO NOT install discord.js.**
-discord.js-core has discord.js inside.
-
-Installing another discord.js can occur some class definition errors.
-
-If you installed discord.js, uninstall it by running `npm uninstall discord.js`
-
 ## Set-up
 Create `index.js` file and edit it.
 
