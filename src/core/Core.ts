@@ -80,11 +80,12 @@ export default class Core<IsReady extends boolean = boolean> {
         if (callback) callback(core.client);
     }
 
-    // TODO: fix type error unless using typescript
     /**
      * @param commands
-     */
-    addCommands<IsMessageCommand extends boolean>(...commands: Command<IsMessageCommand, CoreCommandArgs<IsMessageCommand>>[]) {
+    */
+    // TODO: not to use any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    addCommands(...commands: Command<any, any>[]) {
         this.commands.push(...commands as (Command<true, CoreCommandArgs<true>> | Command<false, CoreCommandArgs<false>>)[]);
     }
 

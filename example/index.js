@@ -1,67 +1,58 @@
-"use strict";
-const { Core, Command, CustomEmoji, ButtonAction, MessageCore, MessagePages } = require("discord.js-core");
-const { Client, ApplicationCommandOptionType } = require("discord.js");
+// @ts-check
+
+const { Core, Command, CustomEmoji } = require("..");
+const { ApplicationCommandOptionType } = require("discord.js");
 require("dotenv").config();
 
+const token = process.env.TOKEN;
+if (!token) throw new Error("Invalid bot token");
+
 const core = new Core(
-    new Client({
+    {
         intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
-        allowedMentions: { repliedUser: false }
-    }),
-    { token: process.env.TOKEN, prefix: "!", devMode: true, guildId: "736829048373903377" }
+        allowedMentions: { repliedUser: false },
+        token,
+        prefix: "!",
+        devMode: true,
+        guildId: "736829048373903377",
+    }
 );
 
-const emojis = [
-    new CustomEmoji(core, "951644270312427570"),
-];
+const emojis = [];
 
 core.addCommandsInDir("commands");
 
 const command = new Command({
-    name: "dice",
-    description: "roll a dice",
-    args: ["max-number"],
-    options: [
-        {
-            name: "max-number",
-            description: "max face number of the dice",
-            type: ApplicationCommandOptionType.Integer,
-            required: false,
-        }
-    ],
-    supports: ["MESSAGE_CONTEXT_MENU", "SLASH_COMMAND", "MESSAGE_COMMAND"],
-    run: async (ic, args, core) => {
+    name: "mention",
+    description: "Mentions a user",
+    messageCommandAliases: ["m"], // aliases for MessageCommand
+    args: {
+        "target": {
+            type: ApplicationCommandOptionType.User,
+            description: "The user to mention",
+            required: true,
+            messageCommand: false, // if this option is also for MessageCommand, set this to true
+        },
+    },
+    supportsMessageCommand: true,
+    supports: ["USER_CONTEXT_MENU", "SLASH_COMMAND"], // Types of commands which this command supports
+    run: async (ic, args) => {
+        // Type of ic is InteractionCore, which can combine Message and Interaction.
+        // You can reply to Message or Interaction in the same method with InteractionCore.
 
-        const max = Number(args["max-number"]) || 6;
+        // If the interaction is from UserContextMenu, target id is in ic.contextMenuUser (If from MessageContextMenu, in ic.contextMenuMessage)
+        const target = ic.contextMenuUser ?? args["target"];
+        if (!target) return ic.reply({ content: "Target user not found" }); // Send reply message
 
-        const messageCores = [
-            async () => new MessageCore({
-                message: { content: `${Math.floor(Math.random() * max) + 1}` }
-            })
-        ];
-
-        const pages = new MessagePages({
-            messageCores: messageCores,
-        });
-        pages.pageActions.push(
-            [
-                new ButtonAction({
-                    core: core,
-                    label: "Reroll",
-                    run: async (interaction) => {
-                        await interaction.deferUpdate();
-                        pages.gotoPage(0);
-                    }
-                })
-            ]
-        );
-
-        await ic.deferReply();
-        await ic.followUp(pages);
-    }
+        const mention = `<@${target.id}>`;
+        await ic.reply({ content: mention }); // Send reply message
+    },
 });
 
-core.login();
+
+core.login((core) => {
+    emojis.push(new CustomEmoji(core, "951644270312427570"));
+});
 
 core.addCommands(command);
 
