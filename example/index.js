@@ -1,6 +1,6 @@
 // @ts-check
 
-const { Core, Command, CustomEmoji } = require("..");
+const { Core, Command, CustomEmoji } = require("discord.js-core");
 const { ApplicationCommandOptionType } = require("discord.js");
 require("dotenv").config();
 
