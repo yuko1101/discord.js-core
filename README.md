@@ -22,7 +22,7 @@ const core = new Core({
 
     // MessageContent requires to be enabled on the application developer portal (https://discord.com/developers/applications/)
     intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
-    allowedMentions: { repliedUser: false } // Disable mention on reply (Recommended)
+    allowedMentions: { repliedUser: false }, // Disable mention on reply (Recommended)
 
 
     /* discord.js-core core options */
