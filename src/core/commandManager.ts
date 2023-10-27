@@ -13,11 +13,11 @@ export const devModeCommandPrefix = "dev-";
 /**
  * @param core
  */
-export async function applyCommands(core: Core<true>) {
+export async function applyCommands(core: Core<true>, guildId: string | null) {
     const commands = core.commands.filter(c => c.supports.includes("SLASH_COMMAND"));
 
-    const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = core.guildId
-        ? await core.client.guilds.fetch(core.guildId).then(g => g.commands)
+    const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = guildId
+        ? await core.client.guilds.fetch(guildId).then(g => g.commands)
         : core.client.application.commands;
     const oldCommands = await applicationCommandManager.fetch({}).then(commandCollection => commandCollection.filter(c => (!core.options.devMode && !c.name.startsWith(devModeCommandPrefix)) || (core.options.devMode && c.name.startsWith(devModeCommandPrefix))));
     const newCommands = commands.map(c => c.supports.filter(s => Object.keys(commandTypeMap).includes(s)).map(s => {
@@ -69,7 +69,7 @@ async function applySlashCommands(applicationCommandManager: ApplicationCommandM
             await applicationCommandManager.edit(oldCommands.find(o => o.name === command.name) as ApplicationCommand, command);
         }
     }
-    console.log(`[DiscordCore] Applied ${toAdd.length} new commands, ${toRemove.length} removed commands, ${toUpdate.length} updated commands.`);
+    console.log(`[Core - ${getApplicationCommandManagerLabel(applicationCommandManager)}] Applied ${toAdd.length} new commands, ${toRemove.length} removed commands, ${toUpdate.length} updated commands.`);
     // console.log(oldCommands, newCommands);
 }
 
@@ -100,7 +100,7 @@ async function applyContextMenus(type: "USER" | "MESSAGE", applicationCommandMan
             await applicationCommandManager.edit(oldCommands.find(o => o.name === command.name) as ApplicationCommand, command);
         }
     }
-    console.log(`[DiscordCore] Applied ${toAdd.length} new ${type.toLowerCase()} context menus, ${toRemove.length} removed ${type.toLowerCase()} context menus, ${toUpdate.length} updated ${type.toLowerCase()} context menus.`);
+    console.log(`[Core - ${getApplicationCommandManagerLabel(applicationCommandManager)}] Applied ${toAdd.length} new ${type.toLowerCase()} context menus, ${toRemove.length} removed ${type.toLowerCase()} context menus, ${toUpdate.length} updated ${type.toLowerCase()} context menus.`);
     // console.log(oldCommands, newCommands);
 }
 
@@ -138,4 +138,12 @@ function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = Applica
     }
 
     return options;
+}
+
+
+/**
+ * @param applicationCommandManager
+ */
+function getApplicationCommandManagerLabel(applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager): string {
+    return "guild" in applicationCommandManager ? applicationCommandManager.guild.id : "Global";
 }

@@ -13,7 +13,7 @@ export interface CoreOptions extends ClientOptions {
     readonly devGuildId?: Snowflake;
     readonly token: string;
     readonly prefix?: string;
-    readonly guildId?: Snowflake;
+    readonly guildIds: Snowflake[];
 }
 
 export default class Core<IsReady extends boolean = boolean> {
@@ -39,7 +39,7 @@ export default class Core<IsReady extends boolean = boolean> {
         this.client = new Client(options);
         this.options = options;
 
-        if (this.options.devMode && (!this.options.devGuildId && !this.options.guildId)) {
+        if (this.options.devMode && (!this.options.devGuildId && this.options.guildIds.length === 0)) {
             throw Error("You should not use debug mode for global. Global application commands take too much time to apply their updates.");
         }
 
@@ -52,10 +52,9 @@ export default class Core<IsReady extends boolean = boolean> {
     }
 
 
-    public get guildId(): Snowflake | null {
-        return (this.options.devMode ? this.options.devGuildId : null) ?? this.options.guildId ?? null;
+    public get guildIds(): Snowflake[] {
+        return this.options.devMode && this.options.devGuildId ? [this.options.devGuildId] : this.options.guildIds ?? [];
     }
-
 
     async waitReady(): Promise<Core<true>> {
         if (this.isReady()) return this;
@@ -124,6 +123,14 @@ export default class Core<IsReady extends boolean = boolean> {
 
     async applyCommands() {
         const core = await this.waitReady();
-        await applyCommands(core);
+        if (this.guildIds.length === 0) {
+            // apply for global
+            await applyCommands(core, null);
+        } else {
+            // apply for specified guilds
+            for (const guildId of core.guildIds) {
+                await applyCommands(core, guildId);
+            }
+        }
     }
 }

@@ -14,7 +14,7 @@ const core = new Core(
         token,
         prefix: "!",
         devMode: true,
-        guildId: "736829048373903377",
+        guildIds: ["736829048373903377"],
     }
 );
 
