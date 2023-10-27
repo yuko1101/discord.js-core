@@ -31,7 +31,7 @@ const command = new Command({
             type: ApplicationCommandOptionType.User,
             description: "The user to mention",
             required: true,
-            messageCommand: false, // if this option is also for MessageCommand, set this to true
+            messageCommand: true, // if this option is also for MessageCommand, set this to true; otherwise, set this to false
         },
     },
     supportsMessageCommand: true,
