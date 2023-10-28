@@ -1,7 +1,7 @@
 // @ts-check
 
 const { Core, Command, CustomEmoji } = require("discord.js-core");
-const { ApplicationCommandOptionType } = require("discord.js");
+const { ApplicationCommandOptionType, Partials } = require("discord.js");
 require("dotenv").config();
 
 const token = process.env.TOKEN;
@@ -9,7 +9,8 @@ if (!token) throw new Error("Invalid bot token");
 
 const core = new Core(
     {
-        intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent"],
+        intents: ["Guilds", "GuildMessages", "GuildMessageReactions", "MessageContent", "DirectMessages"],
+        partials: [Partials.Channel], // this is required for MessageCommand in DMs
         allowedMentions: { repliedUser: false },
         token,
         prefix: "!",
