@@ -106,7 +106,7 @@ export default class Core<IsReady extends boolean = boolean> {
                 if (!recursive) continue;
                 this.addCommandsInDir(`${dir}/${file}`, true);
             } else {
-                const command = (await import(`file:///${cwd}/${dir}/${file}`)).default;
+                const command = (await import(`${cwd}/${dir}/${file}`)).default;
                 if (!(command instanceof Command)) {
                     if (this.options.devMode) console.log(`Skipped importing ./${dir}/${file} because it is not a command file.`);
                     continue;
