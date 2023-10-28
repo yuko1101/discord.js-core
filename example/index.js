@@ -1,6 +1,6 @@
 // @ts-check
 
-const { Core, Command, CustomEmoji } = require("discord.js-core");
+const { Core, Command, CustomEmoji } = require("..");
 const { ApplicationCommandOptionType, Partials } = require("discord.js");
 require("dotenv").config();
 
@@ -31,18 +31,20 @@ const command = new Command({
         "target": {
             type: ApplicationCommandOptionType.User,
             description: "The user to mention",
-            required: true,
+            required: false,
             messageCommand: true, // if this option is also for MessageCommand, set this to true; otherwise, set this to false
         },
     },
     supportsMessageCommand: true,
-    supports: ["USER_CONTEXT_MENU", "SLASH_COMMAND"], // Types of commands which this command supports
+    supportedContextMenus: ["USER"],
+    supportsContextMenu: true,
+    supportsSlashCommand: true,
     run: async (ic, args) => {
         // Type of ic is InteractionCore, which can combine Message and Interaction.
         // You can reply to Message or Interaction in the same method with InteractionCore.
 
         // If the interaction is from UserContextMenu, target id is in ic.contextMenuUser (If from MessageContextMenu, in ic.contextMenuMessage)
-        const target = ic.contextMenuUser ?? args["target"];
+        const target = ic.contextMenuUser ?? args?.["target"];
         if (!target) return ic.reply({ content: "Target user not found" }); // Send reply message
 
         const mention = `<@${target.id}>`;

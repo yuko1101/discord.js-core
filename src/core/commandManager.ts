@@ -1,6 +1,6 @@
 import { ApplicationCommand, ApplicationCommandData, ApplicationCommandManager, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, ApplicationCommandType, GuildApplicationCommandManager } from "discord.js";
 import Core from "./Core";
-import { CoreCommandArgs } from "../command/Command";
+import Command, { CoreCommandArgs } from "../command/Command";
 
 const commandTypeMap = {
     "SLASH_COMMAND": ApplicationCommandType.ChatInput,
@@ -14,13 +14,13 @@ export const devModeCommandPrefix = "dev-";
  * @param core
  */
 export async function applyCommands(core: Core<true>, guildId: string | null) {
-    const commands = core.commands.filter(c => c.supports.includes("SLASH_COMMAND"));
+    const commands = core.commands.filter(c => c.supportsSlashCommand);
 
     const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = guildId
         ? await core.client.guilds.fetch(guildId).then(g => g.commands)
         : core.client.application.commands;
     const oldCommands = await applicationCommandManager.fetch({}).then(commandCollection => commandCollection.filter(c => (!core.options.devMode && !c.name.startsWith(devModeCommandPrefix)) || (core.options.devMode && c.name.startsWith(devModeCommandPrefix))));
-    const newCommands = commands.map(c => c.supports.filter(s => Object.keys(commandTypeMap).includes(s)).map(s => {
+    const newCommands = commands.map(c => getSupportedCommandTypes(c).map(s => {
         return {
             name: core.options.devMode ? `${devModeCommandPrefix}${c.name}` : c.name,
             description: s.endsWith("_CONTEXT_MENU") ? "" : c.description,
@@ -30,6 +30,19 @@ export async function applyCommands(core: Core<true>, guildId: string | null) {
         };
     })) as unknown as ApplicationCommandData[];
     await apply(applicationCommandManager, [...oldCommands.values()], newCommands.flat());
+}
+
+/**
+ * @param command
+ */
+function getSupportedCommandTypes(command: Command): (keyof typeof commandTypeMap)[] {
+    const supported: (keyof typeof commandTypeMap)[] = [];
+    if (command.supportsMessageCommand) supported.push("SLASH_COMMAND");
+    if (command.supportsContextMenu) {
+        if (command.supportedContextMenus.some(s => s === "USER")) supported.push("USER_CONTEXT_MENU");
+        if (command.supportedContextMenus.some(s => s === "MESSAGE")) supported.push("MESSAGE_CONTEXT_MENU");
+    }
+    return supported;
 }
 
 /**

@@ -56,7 +56,7 @@ export default {
                 }
                 return;
             }
-            if (command.supports.includes("SLASH_COMMAND")) {
+            if (command.supportsSlashCommand) {
                 const args = optionsToArgs(interaction.options, [...(interaction.options?.data ?? [])]);
 
                 await command.run(new InteractionCore(interaction), args as ConvertArgsType<false, Extract<typeof command.args, CoreCommandArgs<false>>>, core);
@@ -79,9 +79,11 @@ export default {
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
-            if (command.supports.includes("USER_CONTEXT_MENU") || command.supports.includes("MESSAGE_CONTEXT_MENU")) {
-                await command.run(new InteractionCore(interaction), {}, core);
-            }
+
+            const supported = command.supportsContextMenu && command.supportedContextMenus.some(s => s === (interaction.isUserContextMenuCommand() ? "USER" : "MESSAGE"));
+            if (!supported) return;
+
+            await command.run(new InteractionCore(interaction), {}, core);
         });
 
         // handle emoji actions
@@ -128,7 +130,7 @@ export default {
 
             const command = core.commands.find(c => c.name.toLowerCase() === commandName);
             if (!command) return;
-            if (!command.supports.includes("SLASH_COMMAND")) return;
+            if (!command.supportsSlashCommand) return;
             if (!interaction.options?.data) return;
             const options = getAllAutoCompleteOptions(autoCompleteOptionsToObject([...interaction.options.data]));
             const focused = options.find(option => option.option.focused);

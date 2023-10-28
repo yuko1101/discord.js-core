@@ -1,4 +1,4 @@
-import { Command, Core, MessageCore, MessagePages } from "discord.js-core";
+import { Command, Core, MessageCore, MessagePages } from "..";
 import { ApplicationCommandOptionType, GatewayIntentBits } from "discord.js";
 import "dotenv/config";
 
@@ -9,14 +9,16 @@ const core: Core = new Core(
         devMode: true,
         prefix: "pt!",
         token: process.env.TOKEN as string,
-        guildId: "736829048373903377",
+        guildIds: ["736829048373903377"],
     },
 );
 
 const pingCommand: Command = new Command({
     name: "ping",
     description: "Pong!",
-    supports: ["SLASH_COMMAND", "USER_CONTEXT_MENU", "MESSAGE_CONTEXT_MENU"],
+    supportsSlashCommand: true,
+    supportsContextMenu: true,
+    supportedContextMenus: ["MESSAGE", "USER"],
     supportsMessageCommand: true,
     run: async (ic) => {
         const messageCores = [
@@ -47,13 +49,17 @@ const mentionCommand = new Command({
         },
     },
     supportsMessageCommand: false,
-    supports: ["USER_CONTEXT_MENU", "SLASH_COMMAND"], // Types of commands which this command supports
+    supportsContextMenu: true,
+    supportedContextMenus: ["USER"], // Types of context menus which this command supports
+    supportsSlashCommand: true,
     run: async (ic, args) => {
         // Type of ic is InteractionCore, which can combine Message and Interaction.
         // You can reply to Message or Interaction in the same method with InteractionCore.
 
         // If the interaction is from UserContextMenu, target id is in args["user"] (If from MessageContextMenu, in args["message"])
-        const target = ic.contextMenuUser ?? args["target"];
+        const target = ic.contextMenuUser ?? args?.["target"];
+        if (!target) return;
+
         const mention = `<@${target.id}>`;
         await ic.reply({ content: mention }); // Send reply message
     },

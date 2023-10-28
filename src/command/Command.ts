@@ -54,22 +54,24 @@ export type ConvertArgsType<IsMessageCommand extends boolean, T extends CoreComm
 };
 
 /** @typedef */
-export type CommandType = "SLASH_COMMAND" | "USER_CONTEXT_MENU" | "MESSAGE_CONTEXT_MENU";
+export type Args<IsMessageCommand extends boolean, IsContextMenuCommand extends boolean, T extends CoreCommandArgs<IsMessageCommand> | undefined> = IsContextMenuCommand extends true ? ConvertArgsType<IsMessageCommand, T> | null : ConvertArgsType<IsMessageCommand, T>;
 
 /** @typedef */
-export interface CommandData<SupportsMessageCommand extends boolean, Args extends CoreCommandArgs<SupportsMessageCommand>> {
+export interface CommandData<SupportsMessageCommand extends boolean, SupportsContextMenu extends boolean, ArgsData extends CoreCommandArgs<SupportsMessageCommand>> {
     readonly name: string;
     readonly description?: string;
     readonly messageCommandAliases?: string[];
-    readonly args?: Args;
+    readonly args?: ArgsData;
     readonly supportsMessageCommand: SupportsMessageCommand;
-    readonly supports: CommandType[];
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<unknown>;
+    readonly supportsContextMenu: SupportsContextMenu;
+    readonly supportedContextMenus?: SupportedContextMenus<SupportsContextMenu>;
+    readonly supportsSlashCommand: boolean;
+    readonly run: (ic: InteractionCore, args: Args<SupportsMessageCommand, SupportsContextMenu, ArgsData>, core: Core<true>) => Awaitable<unknown>;
 }
 
-export default class Command<SupportsMessageCommand extends boolean = boolean, Args extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> {
+export default class Command<SupportsMessageCommand extends boolean = boolean, SupportsContextMenu extends boolean = boolean, ArgsData extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> {
     /**  */
-    readonly data: CommandData<SupportsMessageCommand, Args>;
+    readonly data: CommandData<SupportsMessageCommand, SupportsContextMenu, ArgsData>;
     /**  */
     readonly name: string;
     /**  */
@@ -77,28 +79,37 @@ export default class Command<SupportsMessageCommand extends boolean = boolean, A
     /**  */
     readonly messageCommandAliases: string[];
     /**  */
-    readonly args: Args;
+    readonly args: ArgsData;
     /**  */
     readonly supportsMessageCommand: SupportsMessageCommand;
     /**  */
-    readonly supports: CommandType[];
+    readonly supportsContextMenu: SupportsContextMenu;
     /**  */
-    readonly run: (ic: InteractionCore, args: ConvertArgsType<SupportsMessageCommand, Args>, core: Core<true>) => Awaitable<unknown>;
+    readonly supportedContextMenus: SupportedContextMenus<SupportsContextMenu>;
+    /**  */
+    readonly supportsSlashCommand: boolean;
+    /**  */
+    readonly run: (ic: InteractionCore, args: Args<SupportsMessageCommand, SupportsContextMenu, ArgsData>, core: Core<true>) => Awaitable<unknown>;
 
     /**
      * @param data
     */
-    constructor(data: CommandData<SupportsMessageCommand, Args>) {
+    constructor(data: CommandData<SupportsMessageCommand, SupportsContextMenu, ArgsData>) {
         this.data = data;
         this.name = this.data.name;
         this.description = this.data.description ?? null;
-        this.args = this.data.args ?? {} as Args;
+        this.args = this.data.args ?? {} as ArgsData;
         this.messageCommandAliases = this.data.messageCommandAliases ?? [];
         this.supportsMessageCommand = this.data.supportsMessageCommand;
-        this.supports = this.data.supports;
+        this.supportsContextMenu = this.data.supportsContextMenu;
+        this.supportedContextMenus = this.data.supportedContextMenus ?? ([] as SupportedContextMenus<SupportsContextMenu>);
+        this.supportsSlashCommand = this.data.supportsSlashCommand;
         this.run = this.data.run;
     }
 }
+
+
+export type SupportedContextMenus<SupportsContextMenu extends boolean> = SupportsContextMenu extends true ? ["USER" | "MESSAGE"] | ["USER", "MESSAGE"] | ["MESSAGE", "USER"] : [];
 
 
 export function isApplicationCommandOptionsContainer(commandOptionData?: ApplicationCommandOptionData | CoreCommandOptionData): commandOptionData is ApplicationCommandOptionsContainer {
