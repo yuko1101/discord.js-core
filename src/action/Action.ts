@@ -1,4 +1,3 @@
-import { generateUuid } from "config_file.js";
 import Core from "../core/Core";
 
 /** @typedef */
@@ -10,15 +9,11 @@ export interface ActionOptions {
 export default class Action {
     /**  */
     readonly core: Core;
-    /** UUID */
-    readonly id: string;
 
     /**
      * @param options
      */
     constructor(options: { core: Core }) {
         this.core = options.core;
-
-        this.id = generateUuid();
     }
 }

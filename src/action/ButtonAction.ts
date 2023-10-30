@@ -5,6 +5,7 @@ import { devModeCommandPrefix } from "../core/commandManager";
 /** @typedef */
 export interface ButtonActionOptions extends ActionOptions {
     readonly label: string;
+    readonly customId: string;
     readonly run: (interaction: ButtonInteraction) => Promise<void>;
     readonly style?: ButtonStyle;
 }
@@ -34,7 +35,7 @@ export default class ButtonAction extends Action {
 
         this.run = this.options.run;
 
-        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}BUTTON_ACTION:${this.id}`;
+        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}${this.options.customId}`;
     }
 
     /** @returns {ButtonBuilder} */
@@ -44,7 +45,7 @@ export default class ButtonAction extends Action {
 
     /** @returns {ButtonAction} */
     register() {
-        if (!this.core.buttonActions.some(action => action.id === this.id)) {
+        if (!this.core.buttonActions.includes(this)) {
             this.core.buttonActions.push(this);
         }
         return this;
@@ -52,7 +53,7 @@ export default class ButtonAction extends Action {
 
     /** @returns {ButtonAction} */
     unregister() {
-        const index = this.core.buttonActions.findIndex(action => action.id === this.id);
+        const index = this.core.buttonActions.indexOf(this);
         if (index !== -1) {
             this.core.buttonActions.splice(index, 1);
         }

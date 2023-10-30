@@ -33,7 +33,6 @@ export type AnySelectMenuAction =
 
 /** @typedef */
 export interface SelectMenuActionOptions<Interaction extends SelectMenuInteractions> extends ActionOptions {
-    /** customId will be changed by this library  */
     readonly selectMenu: SelectMenuBuilderType<Interaction>;
     readonly run: (interaction: Interaction) => Promise<void>;
 }
@@ -60,7 +59,8 @@ export default class SelectMenuAction<Interaction extends SelectMenuInteractions
 
         this.run = this.options.run;
 
-        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}SELECT_MENU_ACTION:${this.id}`;
+        if (this.selectMenu.data.custom_id === undefined) throw new Error("custom_id of selectMenu is required.");
+        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}${this.selectMenu.data.custom_id}`;
 
         this.selectMenu.setCustomId(this.customId);
 
@@ -68,7 +68,7 @@ export default class SelectMenuAction<Interaction extends SelectMenuInteractions
 
     /**  */
     register(): this {
-        if (!this.core.selectMenuActions.some(action => action.id === this.id)) {
+        if (!this.core.selectMenuActions.includes(this as unknown as AnySelectMenuAction)) {
             // TODO: better way to avoid casting errors
             this.core.selectMenuActions.push(this as unknown as AnySelectMenuAction);
         }
@@ -77,7 +77,7 @@ export default class SelectMenuAction<Interaction extends SelectMenuInteractions
 
     /**  */
     unregister(): this {
-        const index = this.core.selectMenuActions.findIndex(action => action.id === this.id);
+        const index = this.core.selectMenuActions.indexOf(this as unknown as AnySelectMenuAction);
         if (index !== -1) {
             this.core.selectMenuActions.splice(index, 1);
         }

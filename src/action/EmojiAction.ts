@@ -48,7 +48,7 @@ export default class EmojiAction extends Action {
         if (this.deleted) throw new Error("This emoji action has been deleted.");
 
         // if this action hasn't been registered to the core, register this
-        if (!this.core.emojiActions.some(action => action.id === this.id)) {
+        if (!this.core.emojiActions.includes(this)) {
             this.core.emojiActions.push(this);
         }
 
@@ -98,7 +98,7 @@ export default class EmojiAction extends Action {
     }
 
     delete() {
-        const index = this.core.emojiActions.findIndex(action => action.id === this.id);
+        const index = this.core.emojiActions.indexOf(this);
         if (index !== -1) {
             this.core.emojiActions.splice(index, 1);
         }
