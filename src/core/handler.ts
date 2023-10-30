@@ -4,6 +4,8 @@ import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
 import SelectMenuAction from "../action/SelectMenuAction";
+import { actionDataSeparator } from "../action/Action";
+import { JsonElement } from "config_file.js";
 
 export default {
     /**
@@ -106,18 +108,30 @@ export default {
         // handle button actions
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isButton()) return;
-            const buttonAction = core.buttonActions.find(action => interaction.customId === action.customId);
+
+            const actionDataSeparatorIndex = interaction.customId.lastIndexOf(actionDataSeparator);
+            const customId = actionDataSeparatorIndex !== -1 ? interaction.customId.slice(0, actionDataSeparatorIndex) : interaction.customId;
+
+            const buttonAction = core.buttonActions.find(action => action.customId === customId);
             if (!buttonAction) return;
-            await buttonAction.run(interaction);
+
+            const data = actionDataSeparatorIndex !== -1 ? JSON.parse(Buffer.from(interaction.customId.slice(actionDataSeparatorIndex + 1), "base64").toString()) as JsonElement : undefined;
+            await buttonAction.run(interaction, data);
         });
 
 
         // handle select menu actions
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isAnySelectMenu()) return;
-            const selectMenuAction = core.selectMenuActions.find(action => interaction.customId === action.customId);
+
+            const actionDataSeparatorIndex = interaction.customId.lastIndexOf(actionDataSeparator);
+            const customId = actionDataSeparatorIndex !== -1 ? interaction.customId.slice(0, actionDataSeparatorIndex) : interaction.customId;
+
+            const selectMenuAction = core.selectMenuActions.find(action => action.customId === customId);
             if (!selectMenuAction) return;
-            await (selectMenuAction as SelectMenuAction<typeof interaction>).run(interaction);
+
+            const data = actionDataSeparatorIndex !== -1 ? JSON.parse(Buffer.from(interaction.customId.slice(actionDataSeparatorIndex + 1), "base64").toString()) as JsonElement : undefined;
+            await (selectMenuAction as SelectMenuAction<typeof interaction>).run(interaction, data);
         });
 
 

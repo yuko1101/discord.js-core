@@ -1,6 +1,6 @@
-import { ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, MentionableSelectMenuBuilder, MentionableSelectMenuInteraction, RoleSelectMenuBuilder, RoleSelectMenuInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
-import Action, { ActionOptions } from "./Action";
-import { devModeCommandPrefix } from "../core/commandManager";
+import { APIChannelSelectComponent, APIMentionableSelectComponent, APIRoleSelectComponent, APIUserSelectComponent, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, MentionableSelectMenuBuilder, MentionableSelectMenuInteraction, RoleSelectMenuBuilder, RoleSelectMenuInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
+import { InteractionAction, InteractionActionOptions } from "./Action";
+import { JsonElement } from "config_file.js";
 
 /** @typedef */
 export type SelectMenuInteractions =
@@ -32,21 +32,19 @@ export type AnySelectMenuAction =
     | SelectMenuAction<ChannelSelectMenuInteraction>;
 
 /** @typedef */
-export interface SelectMenuActionOptions<Interaction extends SelectMenuInteractions> extends ActionOptions {
+export interface SelectMenuActionOptions<Interaction extends SelectMenuInteractions> extends InteractionActionOptions {
     readonly selectMenu: SelectMenuBuilderType<Interaction>;
-    readonly run: (interaction: Interaction) => Promise<void>;
+    readonly run: (interaction: Interaction, data: JsonElement | undefined) => Promise<void>;
 }
 
-/** @extends {Action} */
-export default class SelectMenuAction<Interaction extends SelectMenuInteractions = SelectMenuInteractions> extends Action {
+/** @extends {InteractionAction} */
+export default class SelectMenuAction<Interaction extends SelectMenuInteractions = SelectMenuInteractions> extends InteractionAction {
     /**  */
     readonly options: SelectMenuActionOptions<Interaction>;
     /**  */
-    readonly selectMenu: SelectMenuBuilderType<Interaction>;
+    readonly _selectMenu: SelectMenuBuilderType<Interaction>;
     /**  */
-    run: (interaction: Interaction) => Promise<void>;
-    /**  */
-    readonly customId: string;
+    run: (interaction: Interaction, data: JsonElement | undefined) => Promise<void>;
 
     /**
      * @param options
@@ -55,15 +53,17 @@ export default class SelectMenuAction<Interaction extends SelectMenuInteractions
         super(options);
         this.options = options;
 
-        this.selectMenu = this.options.selectMenu;
+        this._selectMenu = this.options.selectMenu;
+        this._selectMenu.setCustomId(this.customId);
 
         this.run = this.options.run;
+    }
 
-        if (this.selectMenu.data.custom_id === undefined) throw new Error("custom_id of selectMenu is required.");
-        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}${this.selectMenu.data.custom_id}`;
-
-        this.selectMenu.setCustomId(this.customId);
-
+    getComponent(data: JsonElement | undefined = undefined): SelectMenuBuilderType<Interaction> {
+        const constructor = this._selectMenu.constructor as unknown as new (selectMenu: APIUserSelectComponent | APIRoleSelectComponent | APIMentionableSelectComponent | APIChannelSelectComponent) => SelectMenuBuilderType<Interaction>;
+        const component = new constructor(this._selectMenu.toJSON()) as SelectMenuBuilderType<Interaction>;
+        component.setCustomId(this.getCustomIdWithData(data));
+        return component;
     }
 
     /**  */

@@ -234,13 +234,13 @@ export default class MessagePages {
                 messageCreateOptions.components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...row.map(b => {
                     if (b instanceof PageButtonAction) {
                         const isDisabled = ((b.pageActionType === "BACK" || b.pageActionType === "FIRST") && index === 0) || ((b.pageActionType === "NEXT" || b.pageActionType === "LAST") && index === this.messageCores.length - 1);
-                        return b.getButton().setDisabled(isDisabled);
+                        return b.getComponent().setDisabled(isDisabled);
                     }
-                    return b.getButton();
+                    return b.getComponent();
                 })));
             } else if (row.length === 1 && row[0] instanceof SelectMenuAction) {
                 const selectMenu = row[0] as SelectMenuAction;
-                messageCreateOptions.components.push(new ActionRowBuilder<typeof selectMenu["selectMenu"]>().addComponents(selectMenu.selectMenu));
+                messageCreateOptions.components.push(new ActionRowBuilder<typeof selectMenu["_selectMenu"]>().addComponents(selectMenu.getComponent()));
             } else {
                 throw new Error("Each row in pageActions must be only buttons or just a select menu.");
             }

@@ -35,7 +35,7 @@ export default class MessageCore {
         const buttonComponents = this.buttonActions.map(actions => {
             const row = new ActionRowBuilder<ButtonBuilder>();
             for (const action of actions) {
-                row.addComponents(action.getButton());
+                row.addComponents(action.getComponent());
             }
             return row;
         });

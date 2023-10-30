@@ -1,17 +1,16 @@
 import { ButtonInteraction, ButtonStyle, ButtonBuilder } from "discord.js";
-import Action, { ActionOptions } from "./Action";
-import { devModeCommandPrefix } from "../core/commandManager";
+import { InteractionAction, InteractionActionOptions } from "./Action";
+import { JsonElement } from "config_file.js";
 
 /** @typedef */
-export interface ButtonActionOptions extends ActionOptions {
+export interface ButtonActionOptions extends InteractionActionOptions {
     readonly label: string;
-    readonly customId: string;
-    readonly run: (interaction: ButtonInteraction) => Promise<void>;
+    readonly run: (interaction: ButtonInteraction, data: JsonElement | undefined) => Promise<void>;
     readonly style?: ButtonStyle;
 }
 
-/** @extends {Action} */
-export default class ButtonAction extends Action {
+/** @extends {InteractionAction} */
+export default class ButtonAction extends InteractionAction {
     /**  */
     readonly options: ButtonActionOptions;
     /**  */
@@ -19,9 +18,7 @@ export default class ButtonAction extends Action {
     /**  */
     readonly style: ButtonStyle;
     /**  */
-    run: (interaction: ButtonInteraction) => Promise<void>;
-    /**  */
-    readonly customId: string;
+    run: (interaction: ButtonInteraction, data: JsonElement | undefined) => Promise<void>;
 
     /**
      * @param options
@@ -34,13 +31,12 @@ export default class ButtonAction extends Action {
         this.style = this.options.style ?? ButtonStyle.Primary;
 
         this.run = this.options.run;
-
-        this.customId = `${this.core.options.devMode ? devModeCommandPrefix : ""}${this.options.customId}`;
     }
 
     /** @returns {ButtonBuilder} */
-    getButton() {
-        return new ButtonBuilder().setCustomId(this.customId).setStyle(this.style).setLabel(this.label);
+    getComponent(data: JsonElement | undefined = undefined): ButtonBuilder {
+        const customId = this.getCustomIdWithData(data);
+        return new ButtonBuilder().setCustomId(customId).setStyle(this.style).setLabel(this.label);
     }
 
     /** @returns {ButtonAction} */
