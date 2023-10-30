@@ -31,14 +31,14 @@ const command = new Command({
         "target": {
             type: ApplicationCommandOptionType.User,
             description: "The user to mention",
-            required: false,
+            required: true,
             messageCommand: true, // if this option is also for MessageCommand, set this to true; otherwise, set this to false
         },
     },
     supportsMessageCommand: true,
-    supportedContextMenus: ["USER"],
-    supportsContextMenu: true,
     supportsSlashCommand: true,
+    supportsContextMenu: true,
+    supportedContextMenus: ["USER"],
     run: async (ic, args) => {
         // Type of ic is InteractionCore, which can combine Message and Interaction.
         // You can reply to Message or Interaction in the same method with InteractionCore.
