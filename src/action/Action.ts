@@ -53,20 +53,22 @@ export abstract class InteractionAction extends Action {
 function compressJson(json: JsonElement): string {
     const base64 = Buffer.from(JSON.stringify(json)).toString("base64");
 
-    return base64.replace(/.{2}/g, (match) => {
+    return base64.replace(/=+$/, "").replace(/.{2}/g, (match) => {
         const code = match.charCodeAt(0) * 256 + match.charCodeAt(1);
         return String.fromCharCode(code);
     });
 }
 
 export function decompressJson(str: string): JsonElement {
-    const base64 = str.split("").map(char => {
+    const halfWidth = str.split("").map(char => {
         const code = char.charCodeAt(0);
         const first = Math.floor(code / 256);
         const second = code % 256;
         if (first === 0) return String.fromCharCode(second);
         return String.fromCharCode(first) + String.fromCharCode(second);
     }).join("");
+
+    const base64 = halfWidth + "===".slice((halfWidth.length + 3) % 4);
 
     return JSON.parse(Buffer.from(base64, "base64").toString("utf8"));
 }
