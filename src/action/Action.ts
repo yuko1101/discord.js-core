@@ -60,13 +60,13 @@ function compressJson(json: JsonElement): string {
 }
 
 export function decompressJson(str: string): JsonElement {
-    const base64 = str.replace(/./g, (match) => {
-        const code = match.charCodeAt(0);
+    const base64 = str.split("").map(char => {
+        const code = char.charCodeAt(0);
         const first = Math.floor(code / 256);
         const second = code % 256;
         if (first === 0) return String.fromCharCode(second);
         return String.fromCharCode(first) + String.fromCharCode(second);
-    });
+    }).join("");
 
     return JSON.parse(Buffer.from(base64, "base64").toString("utf8"));
 }
