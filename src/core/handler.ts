@@ -107,7 +107,7 @@ export default {
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isButton()) return;
 
-            const actionDataSeparatorIndex = interaction.customId.lastIndexOf(actionDataSeparator);
+            const actionDataSeparatorIndex = interaction.customId.indexOf(actionDataSeparator);
             const customId = actionDataSeparatorIndex !== -1 ? interaction.customId.slice(0, actionDataSeparatorIndex) : interaction.customId;
 
             const buttonAction = core.buttonActions.find(action => action.customId === customId);
@@ -122,7 +122,7 @@ export default {
         core.client.on("interactionCreate", async (interaction) => {
             if (!interaction.isAnySelectMenu()) return;
 
-            const actionDataSeparatorIndex = interaction.customId.lastIndexOf(actionDataSeparator);
+            const actionDataSeparatorIndex = interaction.customId.indexOf(actionDataSeparator);
             const customId = actionDataSeparatorIndex !== -1 ? interaction.customId.slice(0, actionDataSeparatorIndex) : interaction.customId;
 
             const selectMenuAction = core.selectMenuActions.find(action => action.customId === customId);
