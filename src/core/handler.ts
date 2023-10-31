@@ -3,7 +3,6 @@ import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
-import SelectMenuAction from "../action/SelectMenuAction";
 import { actionDataSeparator } from "../action/Action";
 import { JsonElement } from "config_file.js";
 
@@ -131,7 +130,7 @@ export default {
             if (!selectMenuAction) return;
 
             const data = actionDataSeparatorIndex !== -1 ? JSON.parse(Buffer.from(interaction.customId.slice(actionDataSeparatorIndex + 1), "base64").toString()) as JsonElement : undefined;
-            await (selectMenuAction as SelectMenuAction<typeof interaction>).run(interaction, data);
+            await selectMenuAction.run(interaction, data);
         });
 
 

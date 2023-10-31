@@ -1,4 +1,4 @@
-import { MessageComponentBuilder } from "discord.js";
+import { MessageActionRowComponentData, MessageComponentBuilder } from "discord.js";
 import Core from "../core/Core";
 import { devModeCommandPrefix } from "../core/commandManager";
 import { JsonElement } from "config_file.js";
@@ -44,5 +44,5 @@ export abstract class InteractionAction extends Action {
         return data !== undefined ? `${this.customId}${actionDataSeparator}${Buffer.from(JSON.stringify(data)).toString("base64")}` : this.customId;
     }
 
-    abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder;
+    abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder | MessageActionRowComponentData;
 }

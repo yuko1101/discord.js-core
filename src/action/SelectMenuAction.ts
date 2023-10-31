@@ -1,5 +1,5 @@
-import { APIChannelSelectComponent, APIMentionableSelectComponent, APIRoleSelectComponent, APIUserSelectComponent, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, MentionableSelectMenuBuilder, MentionableSelectMenuInteraction, RoleSelectMenuBuilder, RoleSelectMenuInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
-import { InteractionAction, InteractionActionOptions } from "./Action";
+import { ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, MentionableSelectMenuComponentData, MentionableSelectMenuInteraction, RoleSelectMenuComponentData, RoleSelectMenuInteraction, StringSelectMenuComponentData, StringSelectMenuInteraction, UserSelectMenuComponentData, UserSelectMenuInteraction } from "discord.js";
+import { ActionOptions, InteractionAction } from "./Action";
 import { JsonElement } from "config_file.js";
 
 /** @typedef */
@@ -11,73 +11,69 @@ export type SelectMenuInteractions =
     | ChannelSelectMenuInteraction;
 
 /** @typedef */
-export type SelectMenuBuilderType<Interaction extends SelectMenuInteractions> =
-    Interaction extends StringSelectMenuBuilder
-    ? StringSelectMenuBuilder
-    : Interaction extends UserSelectMenuInteraction
-    ? UserSelectMenuBuilder
-    : Interaction extends RoleSelectMenuInteraction
-    ? RoleSelectMenuBuilder
-    : Interaction extends MentionableSelectMenuInteraction
-    ? MentionableSelectMenuBuilder
-    : ChannelSelectMenuBuilder;
-
-// TODO: better typedef
-/** @typedef */
-export type AnySelectMenuAction =
-    | SelectMenuAction<StringSelectMenuInteraction>
-    | SelectMenuAction<UserSelectMenuInteraction>
-    | SelectMenuAction<RoleSelectMenuInteraction>
-    | SelectMenuAction<MentionableSelectMenuInteraction>
-    | SelectMenuAction<ChannelSelectMenuInteraction>;
+export type SelectMenuComponentData =
+    | StringSelectMenuComponentData
+    | UserSelectMenuComponentData
+    | RoleSelectMenuComponentData
+    | MentionableSelectMenuComponentData
+    | ChannelSelectMenuComponentData;
 
 /** @typedef */
-export interface SelectMenuActionOptions<Interaction extends SelectMenuInteractions> extends InteractionActionOptions {
-    readonly selectMenu: SelectMenuBuilderType<Interaction>;
-    readonly run: (interaction: Interaction, data: JsonElement | undefined) => Promise<void>;
+export type SelectMenuInteractionType<T extends SelectMenuComponentData> =
+    T extends StringSelectMenuComponentData
+    ? StringSelectMenuInteraction
+    : T extends UserSelectMenuComponentData
+    ? UserSelectMenuInteraction
+    : T extends RoleSelectMenuComponentData
+    ? RoleSelectMenuInteraction
+    : T extends MentionableSelectMenuComponentData
+    ? MentionableSelectMenuInteraction
+    : T extends ChannelSelectMenuComponentData
+    ? ChannelSelectMenuInteraction
+    : never;
+
+/** @typedef */
+export interface SelectMenuActionOptions<T extends SelectMenuComponentData> extends ActionOptions {
+    readonly selectMenu: T;
+    readonly run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 }
 
 /** @extends {InteractionAction} */
-export default class SelectMenuAction<Interaction extends SelectMenuInteractions = SelectMenuInteractions> extends InteractionAction {
+export default class SelectMenuAction<T extends SelectMenuComponentData = SelectMenuComponentData> extends InteractionAction {
     /**  */
-    readonly options: SelectMenuActionOptions<Interaction>;
+    readonly options: SelectMenuActionOptions<T>;
     /**  */
-    readonly _selectMenu: SelectMenuBuilderType<Interaction>;
+    readonly selectMenu: T;
     /**  */
-    run: (interaction: Interaction, data: JsonElement | undefined) => Promise<void>;
+    run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 
     /**
      * @param options
      */
-    constructor(options: SelectMenuActionOptions<Interaction>) {
-        super(options);
+    constructor(options: SelectMenuActionOptions<T>) {
+        super({ ...options, customId: options.selectMenu.customId });
         this.options = options;
 
-        this._selectMenu = this.options.selectMenu;
-        this._selectMenu.setCustomId(this.customId);
+        this.selectMenu = this.options.selectMenu;
 
         this.run = this.options.run;
     }
 
-    getComponent(data: JsonElement | undefined = undefined): SelectMenuBuilderType<Interaction> {
-        const constructor = this._selectMenu.constructor as unknown as new (selectMenu: APIUserSelectComponent | APIRoleSelectComponent | APIMentionableSelectComponent | APIChannelSelectComponent) => SelectMenuBuilderType<Interaction>;
-        const component = new constructor(this._selectMenu.toJSON()) as SelectMenuBuilderType<Interaction>;
-        component.setCustomId(this.getCustomIdWithData(data));
-        return component;
+    getComponent(data: JsonElement | undefined = undefined): T {
+        return { ...this.selectMenu, customId: this.getCustomIdWithData(data) };
     }
 
     /**  */
     register(): this {
-        if (!this.core.selectMenuActions.includes(this as unknown as AnySelectMenuAction)) {
-            // TODO: better way to avoid casting errors
-            this.core.selectMenuActions.push(this as unknown as AnySelectMenuAction);
+        if (!this.core.selectMenuActions.includes(this)) {
+            this.core.selectMenuActions.push(this);
         }
         return this;
     }
 
     /**  */
     unregister(): this {
-        const index = this.core.selectMenuActions.indexOf(this as unknown as AnySelectMenuAction);
+        const index = this.core.selectMenuActions.indexOf(this);
         if (index !== -1) {
             this.core.selectMenuActions.splice(index, 1);
         }

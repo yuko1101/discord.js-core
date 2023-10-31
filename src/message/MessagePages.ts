@@ -1,8 +1,8 @@
-import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction, ButtonStyle, Message, MessageComponentInteraction, MessageReaction, PartialMessageReaction, PartialUser, RepliableInteraction, TextBasedChannel, User } from "discord.js";
+import { ActionRowBuilder, BaseMessageOptions, ButtonBuilder, ButtonInteraction, ButtonStyle, ComponentType, Message, MessageComponentInteraction, MessageReaction, PartialMessageReaction, PartialUser, RepliableInteraction, TextBasedChannel, User } from "discord.js";
 import MessageCore from "./MessageCore";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
-import SelectMenuAction, { AnySelectMenuAction } from "../action/SelectMenuAction";
+import SelectMenuAction from "../action/SelectMenuAction";
 import { bindOptions } from "config_file.js";
 import { PageButtonAction, PageEmojiAction } from "../action/PageActions";
 import { canManageMessage, removeAllReactions } from "../utils/permission_utils";
@@ -13,7 +13,7 @@ export const actionsList = ["FIRST", "BACK", "NEXT", "LAST"] as const;
 export interface MessagePagesOptions {
     readonly messageCores: (MessageCore | (() => Promise<MessageCore>))[];
     readonly startPageIndex?: number;
-    readonly pageActions?: (EmojiAction | ButtonAction | AnySelectMenuAction)[][];
+    readonly pageActions?: (EmojiAction | ButtonAction | SelectMenuAction)[][];
     readonly timeout?: number;
     readonly resetTimeoutTimerOnAction?: boolean;
     readonly userFilter?: (user: User | PartialUser) => Promise<boolean>;
@@ -34,7 +34,7 @@ export default class MessagePages {
     /**  */
     readonly startPageIndex: number;
     /**  */
-    readonly pageActions: (EmojiAction | ButtonAction | AnySelectMenuAction)[][];
+    readonly pageActions: (EmojiAction | ButtonAction | SelectMenuAction)[][];
     /**  */
     readonly timeout: number | null;
     /**  */
@@ -240,7 +240,7 @@ export default class MessagePages {
                 })));
             } else if (row.length === 1 && row[0] instanceof SelectMenuAction) {
                 const selectMenu = row[0] as SelectMenuAction;
-                messageCreateOptions.components.push(new ActionRowBuilder<typeof selectMenu["_selectMenu"]>().addComponents(selectMenu.getComponent()));
+                messageCreateOptions.components.push({ type: ComponentType.ActionRow, components: [selectMenu.getComponent()] });
             } else {
                 throw new Error("Each row in pageActions must be only buttons or just a select menu.");
             }
