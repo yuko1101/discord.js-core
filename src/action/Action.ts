@@ -41,8 +41,32 @@ export abstract class InteractionAction extends Action {
     }
 
     getCustomIdWithData(data: JsonElement | undefined): string {
-        return data !== undefined ? `${this.customId}${actionDataSeparator}${Buffer.from(JSON.stringify(data)).toString("base64")}` : this.customId;
+        const customId = data !== undefined ? `${this.customId}${actionDataSeparator}${compressJson(data)}` : this.customId;
+        if (customId.length > 100) throw new Error("The customId of an interaction action cannot be longer than 100 characters. Please shorten the customId or use a shorter data.");
+        return customId;
     }
 
     abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder | MessageActionRowComponentData;
+}
+
+
+function compressJson(json: JsonElement): string {
+    const base64 = Buffer.from(JSON.stringify(json)).toString("base64");
+
+    return base64.replace(/.{2}/g, (match) => {
+        const code = match.charCodeAt(0) * 256 + match.charCodeAt(1);
+        return String.fromCharCode(code);
+    });
+}
+
+export function decompressJson(str: string): JsonElement {
+    const base64 = str.replace(/./g, (match) => {
+        const code = match.charCodeAt(0);
+        const first = Math.floor(code / 256);
+        const second = code % 256;
+        if (first === 0) return String.fromCharCode(second);
+        return String.fromCharCode(first) + String.fromCharCode(second);
+    });
+
+    return JSON.parse(Buffer.from(base64, "base64").toString("utf8"));
 }

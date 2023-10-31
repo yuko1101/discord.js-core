@@ -3,8 +3,7 @@ import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
-import { actionDataSeparator } from "../action/Action";
-import { JsonElement } from "config_file.js";
+import { actionDataSeparator, decompressJson } from "../action/Action";
 
 export default {
     /**
@@ -114,7 +113,7 @@ export default {
             const buttonAction = core.buttonActions.find(action => action.customId === customId);
             if (!buttonAction) return;
 
-            const data = actionDataSeparatorIndex !== -1 ? JSON.parse(Buffer.from(interaction.customId.slice(actionDataSeparatorIndex + 1), "base64").toString()) as JsonElement : undefined;
+            const data = actionDataSeparatorIndex !== -1 ? decompressJson(interaction.customId.slice(actionDataSeparatorIndex + 1)) : undefined;
             await buttonAction.run(interaction, data);
         });
 
@@ -129,7 +128,7 @@ export default {
             const selectMenuAction = core.selectMenuActions.find(action => action.customId === customId);
             if (!selectMenuAction) return;
 
-            const data = actionDataSeparatorIndex !== -1 ? JSON.parse(Buffer.from(interaction.customId.slice(actionDataSeparatorIndex + 1), "base64").toString()) as JsonElement : undefined;
+            const data = actionDataSeparatorIndex !== -1 ? decompressJson(interaction.customId.slice(actionDataSeparatorIndex + 1)) : undefined;
             await selectMenuAction.run(interaction, data);
         });
 
