@@ -42,7 +42,15 @@ export abstract class InteractionAction extends Action {
     }
 
     getCustomIdWithData(data: JsonElement | undefined): string {
-        const customId = data !== undefined ? `${this.customId}${actionDataSeparator}${compressJson(data)}` : this.customId;
+        const customId = (() => {
+            if (!data) return this.customId;
+            const remainingLength = 100 - this.customId.length - actionDataSeparator.length;
+            const jsonStr = JSON.stringify(data);
+            let dataStr = "r" + jsonStr;
+            if (dataStr.length > remainingLength) dataStr = "c" + compressString(jsonStr);
+            if (dataStr.length > remainingLength) dataStr = "g" + compressStringWithGzip(jsonStr);
+            return `${this.customId}${actionDataSeparator}${dataStr}`;
+        })();
         if (customId.length > 100) throw new Error("The customId of an interaction action cannot be longer than 100 characters. Please shorten the customId or use a shorter data.");
         return customId;
     }
@@ -50,22 +58,30 @@ export abstract class InteractionAction extends Action {
     abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder | MessageActionRowComponentData;
 }
 
-
-function compressJson(json: JsonElement): string {
-    const str = JSON.stringify(json);
-    const base64 = zlib.gzipSync(encodeURIComponent(str)).toString("base64");
-
+function compressBase64(base64: string): string {
     const compressed = base64.replace(/=+$/, "").replace(/.{2}/g, (match) => {
         const code = match.charCodeAt(0) * 256 + match.charCodeAt(1);
         return String.fromCharCode(code);
     });
 
-    console.log(`Compressed ${str.length} characters to ${compressed.length} characters. (${Math.round(compressed.length / str.length * 100)}%)`);
-
     return compressed;
 }
 
-export function decompressJson(compressed: string): JsonElement {
+function compressString(str: string): string {
+    const base64 = Buffer.from(str).toString("base64");
+    return compressBase64(base64);
+}
+
+function compressStringWithGzip(str: string): string {
+    const base64 = zlib.gzipSync(encodeURIComponent(str)).toString("base64");
+    return compressBase64(base64);
+}
+
+/**
+ * @param compressed
+ * @returns base64
+ */
+function decompressBase64(compressed: string): string {
     const halfWidth = compressed.split("").map(char => {
         const code = char.charCodeAt(0);
         const first = Math.floor(code / 256);
@@ -74,8 +90,16 @@ export function decompressJson(compressed: string): JsonElement {
         return String.fromCharCode(first) + String.fromCharCode(second);
     }).join("");
 
-    const base64 = halfWidth + "===".slice((halfWidth.length + 3) % 4);
-    const str = decodeURIComponent(zlib.unzipSync(Buffer.from(base64, "base64")).toString("utf8"));
+    const base64 = halfWidth + "===".slice((4 - halfWidth.length) % 4);
+    return base64;
+}
 
-    return JSON.parse(str);
+export function decompressString(compressed: string): string {
+    const base64 = decompressBase64(compressed);
+    return Buffer.from(base64, "base64").toString("utf8");
+}
+
+export function decompressStringWithGzip(compressed: string): string {
+    const base64 = decompressBase64(compressed);
+    return decodeURIComponent(zlib.unzipSync(Buffer.from(base64, "base64")).toString("utf8"));
 }

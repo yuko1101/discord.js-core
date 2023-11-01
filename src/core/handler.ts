@@ -3,7 +3,8 @@ import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
 import InteractionCore from "../command/InteractionCore";
-import { actionDataSeparator, decompressJson } from "../action/Action";
+import { actionDataSeparator, decompressString, decompressStringWithGzip } from "../action/Action";
+import { JsonElement } from "config_file.js";
 
 export default {
     /**
@@ -373,5 +374,20 @@ function getOptionWithPath<SupportsMessageCommand extends boolean>(args: CoreCom
         return getOptionWithPath(option.options ?? {}, path.slice(1)) as CoreCommandOptionData<SupportsMessageCommand, ApplicationCommandValueContainer>;
     } else {
         return option as CoreCommandOptionData<SupportsMessageCommand, ApplicationCommandValueContainer>;
+    }
+}
+
+function decompressJson(compressed: string): JsonElement {
+    const type = compressed[0];
+    const data = compressed.slice(1);
+    switch (type) {
+        case "r":
+            return JSON.parse(data);
+        case "c":
+            return JSON.parse(decompressString(data));
+        case "g":
+            return JSON.parse(decompressStringWithGzip(data));
+        default:
+            throw new Error(`Invalid compression type: ${type}`);
     }
 }
