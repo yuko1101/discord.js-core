@@ -14,7 +14,7 @@ export const devModeCommandPrefix = "dev-";
  * @param core
  */
 export async function applyCommands(core: Core<true>, guildId: string | null) {
-    const commands = core.commands.filter(c => c.supportsSlashCommand);
+    const commands = core.commands.filter(c => c.supportsSlashCommand || c.supportsContextMenu);
 
     const applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager = guildId
         ? await core.client.guilds.fetch(guildId).then(g => g.commands)
@@ -37,7 +37,7 @@ export async function applyCommands(core: Core<true>, guildId: string | null) {
  */
 function getSupportedCommandTypes(command: Command): (keyof typeof commandTypeMap)[] {
     const supported: (keyof typeof commandTypeMap)[] = [];
-    if (command.supportsMessageCommand) supported.push("SLASH_COMMAND");
+    if (command.supportsSlashCommand) supported.push("SLASH_COMMAND");
     if (command.supportsContextMenu) {
         if (command.supportedContextMenus.some(s => s === "USER")) supported.push("USER_CONTEXT_MENU");
         if (command.supportedContextMenus.some(s => s === "MESSAGE")) supported.push("MESSAGE_CONTEXT_MENU");
