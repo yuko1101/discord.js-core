@@ -1,16 +1,16 @@
 import { ButtonInteraction, ButtonStyle, ButtonBuilder } from "discord.js";
-import { InteractionAction, InteractionActionOptions } from "./Action";
+import { InteractiveAction, InteractiveActionOptions } from "./Action";
 import { JsonElement } from "config_file.js";
 
 /** @typedef */
-export interface ButtonActionOptions extends InteractionActionOptions {
+export interface ButtonActionOptions extends InteractiveActionOptions {
     readonly label: string;
     readonly run: (interaction: ButtonInteraction, data: JsonElement | undefined) => Promise<void>;
     readonly style?: ButtonStyle;
 }
 
-/** @extends {InteractionAction} */
-export default class ButtonAction extends InteractionAction {
+/** @extends {InteractiveAction} */
+export default class ButtonAction extends InteractiveAction {
     /**  */
     readonly options: ButtonActionOptions;
     /**  */

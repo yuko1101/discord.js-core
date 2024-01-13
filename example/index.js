@@ -1,7 +1,7 @@
 // @ts-check
 
-const { Core, Command, CustomEmoji } = require("discord.js-core");
-const { ApplicationCommandOptionType, Partials } = require("discord.js");
+const { Core, Command, CustomEmoji, SelectMenuAction } = require("..");
+const { ApplicationCommandOptionType, Partials, ComponentType } = require("discord.js");
 require("dotenv").config();
 
 const token = process.env.TOKEN;
@@ -40,15 +40,34 @@ const command = new Command({
     supportsContextMenu: true,
     supportedContextMenus: ["USER"],
     run: async (ic, args) => {
-        // Type of ic is InteractionCore, which can combine Message and Interaction.
-        // You can reply to Message or Interaction in the same method with InteractionCore.
+        const selectMenu = new SelectMenuAction({
+            core: core,
+            selectMenu: {
+                customId: "ロール選択",
+                type: ComponentType.RoleSelect,
+                maxValues: 1,
+                minValues: 1,
+                placeholder: "Select a role",
+            },
+            run: async (interaction, data) => {
+                await interaction.reply({ content: `You selected ${interaction.roles.first()?.name}! "${data}", ${interaction.customId}` });
+            },
+        }).register();
 
-        // If the interaction is from UserContextMenu, target id is in ic.contextMenuUser (If from MessageContextMenu, in ic.contextMenuMessage)
-        const target = ic.contextMenuUser ?? args?.["target"];
-        if (!target) return ic.reply({ content: "Target user not found" }); // Send reply message
-
-        const mention = `<@${target.id}>`;
-        await ic.reply({ content: mention }); // Send reply message
+        await ic.reply({
+            content: `Hello ${args?.target?.displayName}!`,
+            components: [{
+                type: ComponentType.ActionRow, components: [selectMenu.getComponent({
+                    "id": 100005,
+                    "abilityName": "Activity_Rogue_ElementReactionAttack_Melt",
+                    "paramNameList": [
+                        "Explode_CJB_CD",
+                        "CJB_Damage"
+                    ],
+                },
+                )]
+            }],
+        });
     },
 });
 

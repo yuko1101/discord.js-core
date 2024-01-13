@@ -1,49 +1,48 @@
-import { ChannelSelectMenuComponentData, ChannelSelectMenuInteraction, MentionableSelectMenuComponentData, MentionableSelectMenuInteraction, RoleSelectMenuComponentData, RoleSelectMenuInteraction, StringSelectMenuComponentData, StringSelectMenuInteraction, UserSelectMenuComponentData, UserSelectMenuInteraction } from "discord.js";
-import { ActionOptions, InteractionAction } from "./Action";
+import { ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ComponentType, MentionableSelectMenuBuilder, MentionableSelectMenuInteraction, RoleSelectMenuBuilder, RoleSelectMenuInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
+import { InteractiveAction } from "./Action";
 import { JsonElement } from "config_file.js";
 
 /** @typedef */
-export type SelectMenuInteractions =
-    | StringSelectMenuInteraction
-    | UserSelectMenuInteraction
-    | RoleSelectMenuInteraction
-    | MentionableSelectMenuInteraction
-    | ChannelSelectMenuInteraction;
-
-/** @typedef */
-export type SelectMenuComponentData =
-    | StringSelectMenuComponentData
-    | UserSelectMenuComponentData
-    | RoleSelectMenuComponentData
-    | MentionableSelectMenuComponentData
-    | ChannelSelectMenuComponentData;
-
-/** @typedef */
-export type SelectMenuInteractionType<T extends SelectMenuComponentData> =
-    T extends StringSelectMenuComponentData
+export type SelectMenuInteractionType<T extends ComponentType> =
+    T extends ComponentType.StringSelect
     ? StringSelectMenuInteraction
-    : T extends UserSelectMenuComponentData
+    : T extends ComponentType.UserSelect
     ? UserSelectMenuInteraction
-    : T extends RoleSelectMenuComponentData
+    : T extends ComponentType.RoleSelect
     ? RoleSelectMenuInteraction
-    : T extends MentionableSelectMenuComponentData
+    : T extends ComponentType.MentionableSelect
     ? MentionableSelectMenuInteraction
-    : T extends ChannelSelectMenuComponentData
+    : T extends ComponentType.ChannelSelect
     ? ChannelSelectMenuInteraction
     : never;
 
 /** @typedef */
-export interface SelectMenuActionOptions<T extends SelectMenuComponentData> extends ActionOptions {
-    readonly selectMenu: T;
+export type SelectMenuBuilderType<T extends ComponentType> =
+    T extends ComponentType.StringSelect
+    ? StringSelectMenuBuilder
+    : T extends ComponentType.UserSelect
+    ? UserSelectMenuBuilder
+    : T extends ComponentType.RoleSelect
+    ? RoleSelectMenuBuilder
+    : T extends ComponentType.MentionableSelect
+    ? MentionableSelectMenuBuilder
+    : T extends ComponentType.ChannelSelect
+    ? ChannelSelectMenuBuilder
+    : never;
+
+/** @typedef */
+export interface SelectMenuActionOptions<T extends ComponentType> extends InteractiveAction {
+    readonly type: T;
+    readonly selectMenu: SelectMenuBuilderType<T>;
     readonly run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 }
 
-/** @extends {InteractionAction} */
-export default class SelectMenuAction<T extends SelectMenuComponentData = SelectMenuComponentData> extends InteractionAction {
+/** @extends {InteractiveAction} */
+export default class SelectMenuAction<T extends ComponentType> extends InteractiveAction {
     /**  */
     readonly options: SelectMenuActionOptions<T>;
     /**  */
-    readonly selectMenu: T;
+    readonly selectMenu: SelectMenuBuilderType<T>;
     /**  */
     run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 
@@ -51,7 +50,7 @@ export default class SelectMenuAction<T extends SelectMenuComponentData = Select
      * @param options
      */
     constructor(options: SelectMenuActionOptions<T>) {
-        super({ ...options, customId: options.selectMenu.customId });
+        super(options);
         this.options = options;
 
         this.selectMenu = this.options.selectMenu;
@@ -59,8 +58,11 @@ export default class SelectMenuAction<T extends SelectMenuComponentData = Select
         this.run = this.options.run;
     }
 
-    getComponent(data: JsonElement | undefined = undefined): T {
-        return { ...this.selectMenu, customId: this.getCustomIdWithData(data) };
+    getComponent(data: JsonElement | undefined = undefined): SelectMenuBuilderType<T> {
+        const customId = this.getCustomIdWithData(data);
+        const constructor = this.selectMenu.constructor as new (selectMenuData: typeof this.selectMenu.data) => SelectMenuBuilderType<T>;
+        const selectMenu = new constructor({ ...this.selectMenu.data }).setCustomId(customId);
+        return selectMenu as SelectMenuBuilderType<T>;
     }
 
     /**  */

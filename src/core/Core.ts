@@ -1,4 +1,4 @@
-import { Client, ClientOptions, Snowflake } from "discord.js";
+import { Client, ClientOptions, ComponentType, Snowflake } from "discord.js";
 import EmojiAction from "../action/EmojiAction";
 import ButtonAction from "../action/ButtonAction";
 import SelectMenuAction from "../action/SelectMenuAction";
@@ -31,7 +31,7 @@ export default class Core<IsReady extends boolean = boolean> {
     /**  */
     readonly buttonActions: ButtonAction[];
     /**  */
-    readonly selectMenuActions: SelectMenuAction[];
+    readonly selectMenuActions: SelectMenuAction<ComponentType>[];
 
     /**
      * @param client

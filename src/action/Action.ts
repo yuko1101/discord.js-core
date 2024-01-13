@@ -1,4 +1,4 @@
-import { MessageActionRowComponentData, MessageComponentBuilder } from "discord.js";
+import { MessageComponentBuilder } from "discord.js";
 import Core from "../core/Core";
 import { devModeCommandPrefix } from "../core/commandManager";
 import { JsonElement } from "config_file.js";
@@ -24,16 +24,16 @@ export default class Action {
     }
 }
 
-export interface InteractionActionOptions extends ActionOptions {
+export interface InteractiveActionOptions extends ActionOptions {
     readonly customId: string;
 }
 
 /** @extends {Action} */
-export abstract class InteractionAction extends Action {
+export abstract class InteractiveAction extends Action {
     /**  */
     readonly customId: string;
 
-    constructor(options: InteractionActionOptions) {
+    constructor(options: InteractiveActionOptions) {
         super(options);
 
         if (options.customId.includes(actionDataSeparator)) throw new Error(`The customId of an interaction action cannot contain the character "${actionDataSeparator}".`);
@@ -55,7 +55,7 @@ export abstract class InteractionAction extends Action {
         return customId;
     }
 
-    abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder | MessageActionRowComponentData;
+    abstract getComponent(data: JsonElement | undefined): MessageComponentBuilder;
 }
 
 function compressBase64(base64: string): string {

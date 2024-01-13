@@ -15,12 +15,12 @@
 
 import { BaseMessageOptions, Message, RepliableInteraction, User } from "discord.js";
 import MessagePages from "../message/MessagePages";
-import MessageCore from "../message/MessageCore";
 import { bindOptions } from "config_file.js";
 import { removeAllReactions } from "../utils/permission_utils";
+import { CoreMessageCreateOptions } from "../message/MessageOptions";
 
 /** @typedef */
-export type MessageSource = BaseMessageOptions | MessageCore | MessagePages;
+export type MessageSource = BaseMessageOptions | CoreMessageCreateOptions | MessagePages;
 
 /** @typedef */
 export type InteractionCoreType = "MESSAGE" | "INTERACTION";
@@ -155,25 +155,19 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         if (this.replied) throw new Error("You can't reply twice");
         await this.run({
             async withMessage(ic) {
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    ic.replyMessage = await ic.source.reply(msgSrc.getMessage());
-                    msgSrc.apply(ic.replyMessage);
-                } else if (msgSrc instanceof MessagePages) {
-                    ic.replyMessage = await msgSrc.sendTo(ic.source);
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
                     ic.replyMessage = await ic.source.reply(msgSrc);
                 }
             },
             async withInteraction(ic) {
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    const sent = await ic.source.reply({ ...msgSrc.getMessage(), ephemeral: options.ephemeral, fetchReply: true });
-                    ic.replyMessage = sent;
-                    msgSrc.apply(sent);
-                } else if (msgSrc instanceof MessagePages) {
-                    const sent = await msgSrc.interactionReply(ic.source, { ephemeral: options.ephemeral });
-                    ic.replyMessage = sent;
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
                     const sent = await ic.source.reply({ ...msgSrc, ephemeral: options.ephemeral, fetchReply: true });
                     ic.replyMessage = sent;
@@ -215,14 +209,15 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
 
     /**  */
     async editReply(msgSrc: MessageSource) {
-        if (!this.firstReplyMessage) throw new Error("You cannot edit your reply or follow-up before it is sent.");
+        if (!this.firstReplyMessage || !this.firstReplyMessageData) throw new Error("You cannot edit your reply or follow-up before it is sent.");
 
         const isEditingMessageEphemeral = this.isFollowUpMessageSentAsEphemeral ?? this.isReplyMessageSentAsEphemeral;
 
-        if (this.firstReplyMessageData instanceof MessageCore) {
-            await this.firstReplyMessageData.removeApply(this.firstReplyMessage, { fastMode: true, autoRemoveReaction: false });
-        } else if (this.firstReplyMessageData instanceof MessagePages) {
-            await this.firstReplyMessageData.destroy();
+        // destroy the previous reply message
+        if (this.firstReplyMessageData instanceof MessagePages) {
+            // TODO
+        } else if ("actions" in this.firstReplyMessageData) {
+            // TODO
         } else {
             // do nothing with MessageCreateOptions
         }
@@ -233,28 +228,21 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         await this.run({
             async withMessage(ic) {
                 if (!ic.firstReplyMessage) throw new Error("This error cannot be happened.");
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    ic.firstReplyMessage = await ic.firstReplyMessage.edit(msgSrc.getMessage());
-                    msgSrc.apply(ic.firstReplyMessage);
-                } else if (msgSrc instanceof MessagePages) {
-                    ic.firstReplyMessage = await msgSrc.sendTo(ic.source, { edit: true });
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
-                    ic.firstReplyMessage = await ic.firstReplyMessage.edit(msgSrc);
+                    // TODO
                 }
             },
             async withInteraction(ic) {
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    const sent = await ic.source.editReply(msgSrc.getMessage());
-                    ic.firstReplyMessage = sent;
-                    msgSrc.apply(sent);
-                } else if (msgSrc instanceof MessagePages) {
-                    const sent = await msgSrc.interactionReply(ic.source, { edit: true });
-                    ic.firstReplyMessage = sent;
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
-                    const message = await ic.source.editReply(msgSrc);
-                    ic.firstReplyMessage = message;
+                    // TODO
                 }
             },
         });
@@ -296,28 +284,21 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 const sendFunction = async (messageOptions: BaseMessageOptions) => {
                     return await (options.reply ? ic.source.reply(messageOptions) : ic.source.channel.send(messageOptions));
                 };
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    ic.followUpMessage = await sendFunction(msgSrc.getMessage());
-                    msgSrc.apply(ic.followUpMessage);
-                } else if (msgSrc instanceof MessagePages) {
-                    ic.followUpMessage = await msgSrc.sendTo(ic.source);
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
-                    ic.followUpMessage = await sendFunction(msgSrc);
+                    // TODO
                 }
             },
             async withInteraction(ic) {
-                if (msgSrc instanceof MessageCore) {
-                    msgSrc.buttonActions.forEach(array => array.forEach(action => action.register()));
-                    const sent = await ic.source.followUp({ ...msgSrc.getMessage(), ephemeral: options.ephemeral });
-                    ic.followUpMessage = sent;
-                    msgSrc.apply(sent);
-                } else if (msgSrc instanceof MessagePages) {
-                    const sent = await msgSrc.interactionReply(ic.source, { ephemeral: options.ephemeral, followUp: true });
-                    ic.followUpMessage = sent;
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                } else if ("actions" in msgSrc) {
+                    // TODO
                 } else {
-                    const sent = await ic.source.followUp({ ...msgSrc, ephemeral: options.ephemeral });
-                    ic.followUpMessage = sent;
+                    // TODO
                 }
             },
         });
