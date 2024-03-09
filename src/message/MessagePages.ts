@@ -1,5 +1,5 @@
 import { bindOptions } from "config_file.js";
-import { CoreMessageCreateOptions } from "./MessageOptions";
+import { CoreMessageOptions } from "./MessageOptions";
 
 export interface MessagePagesOptions {
     readonly timeout?: number;
@@ -12,16 +12,16 @@ const defaultOptions = {
 } satisfies MessagePagesOptions;
 
 export default class MessagePages {
-    readonly pages: (CoreMessageCreateOptions | Promise<CoreMessageCreateOptions> | (() => CoreMessageCreateOptions) | (() => Promise<CoreMessageCreateOptions>))[];
+    readonly pages: (CoreMessageOptions | Promise<CoreMessageOptions> | (() => CoreMessageOptions) | (() => Promise<CoreMessageOptions>))[];
     readonly options: MessagePagesOptions;
-    readonly pageCache: CoreMessageCreateOptions[] = [];
+    readonly pageCache: CoreMessageOptions[] = [];
 
-    constructor(pages: (CoreMessageCreateOptions | Promise<CoreMessageCreateOptions> | (() => CoreMessageCreateOptions) | (() => Promise<CoreMessageCreateOptions>))[], options: Partial<MessagePagesOptions>) {
+    constructor(pages: (CoreMessageOptions | Promise<CoreMessageOptions> | (() => CoreMessageOptions) | (() => Promise<CoreMessageOptions>))[], options: Partial<MessagePagesOptions>) {
         this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
     }
 
-    async getPage(index: number): Promise<CoreMessageCreateOptions> {
+    async getPage(index: number): Promise<CoreMessageOptions> {
         if (this.options.cachedPages && this.pageCache[index]) {
             return this.pageCache[index];
         }
@@ -35,4 +35,6 @@ export default class MessagePages {
         }
         return await page;
     }
+
+    // TODO: implement send method and other methods
 }

@@ -17,10 +17,10 @@ import { BaseMessageOptions, Message, RepliableInteraction, User } from "discord
 import MessagePages from "../message/MessagePages";
 import { bindOptions } from "config_file.js";
 import { removeAllReactions } from "../utils/permission_utils";
-import { CoreMessageCreateOptions } from "../message/MessageOptions";
+import { CoreMessageOptions } from "../message/MessageOptions";
 
 /** @typedef */
-export type MessageSource = BaseMessageOptions | CoreMessageCreateOptions | MessagePages;
+export type MessageSource = BaseMessageOptions | CoreMessageOptions | MessagePages;
 
 /** @typedef */
 export type InteractionCoreType = "MESSAGE" | "INTERACTION";

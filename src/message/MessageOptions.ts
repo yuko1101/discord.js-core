@@ -1,12 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, MessageCreateOptions, PartialMessage } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage, MessageCreateOptions } from "discord.js";
 import { SelectMenuBuilderType } from "../action/SelectMenuAction";
 import EmojiAction from "../action/EmojiAction";
 
 export type CoreComponents = (ButtonBuilder[] | SelectMenuBuilderType<ComponentType> | EmojiAction)[];
 
-export type CoreMessageCreateOptions = Omit<MessageCreateOptions, "components"> & { actions: CoreComponents };
+export type CoreMessageOptions<T extends BaseMessageOptions = MessageCreateOptions> = Omit<T, "components"> & { actions: CoreComponents };
 
-export function convertToMessageOptions(options: CoreMessageCreateOptions): MessageCreateOptions {
+export function convertToMessageOptions<T extends BaseMessageOptions>(options: CoreMessageOptions<T>): T {
     const components: (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>)[] = options.actions.filter((row): row is (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>) => !(row instanceof EmojiAction));
 
     const actionRows: (ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<SelectMenuBuilderType<ComponentType>>)[] = components.map(row => {
@@ -17,10 +17,12 @@ export function convertToMessageOptions(options: CoreMessageCreateOptions): Mess
         }
     });
 
-    return { ...options, components: actionRows };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { actions: _, ...converted } = { ...options, components: actionRows };
+    return converted as unknown as T;
 }
 
-export async function removeReactions(msg: Message | PartialMessage, original: CoreMessageCreateOptions, fastMode = false) {
+export async function removeReactions<T extends BaseMessageOptions>(msg: Message | PartialMessage, original: CoreMessageOptions<T>, fastMode = false) {
     const emojiActions = getEmojiActions(original);
     if (emojiActions.length === 0) return;
     if (fastMode) {
@@ -34,6 +36,6 @@ export async function removeReactions(msg: Message | PartialMessage, original: C
     }
 }
 
-export function getEmojiActions(coreMessageOptions: CoreMessageCreateOptions): EmojiAction[] {
+export function getEmojiActions<T extends BaseMessageOptions>(coreMessageOptions: CoreMessageOptions<T>): EmojiAction[] {
     return (coreMessageOptions.actions.filter(row => row instanceof EmojiAction)) as EmojiAction[];
 }
