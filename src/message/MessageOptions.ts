@@ -1,10 +1,10 @@
-import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage, MessageCreateOptions } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage } from "discord.js";
 import { SelectMenuBuilderType } from "../action/SelectMenuAction";
 import EmojiAction from "../action/EmojiAction";
 
 export type CoreComponents = (ButtonBuilder[] | SelectMenuBuilderType<ComponentType> | EmojiAction)[];
 
-export type CoreMessageOptions<T extends BaseMessageOptions = MessageCreateOptions> = Omit<T, "components"> & { actions: CoreComponents };
+export type CoreMessageOptions<T extends BaseMessageOptions> = Omit<T, "components"> & { actions: CoreComponents };
 
 export function convertToMessageOptions<T extends BaseMessageOptions>(options: CoreMessageOptions<T>): T {
     const components: (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>)[] = options.actions.filter((row): row is (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>) => !(row instanceof EmojiAction));

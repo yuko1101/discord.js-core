@@ -52,17 +52,16 @@ const command = new Command({
 
         await ic.reply({
             content: `Hello ${args?.target?.displayName}!`,
-            components: [{
-                type: ComponentType.ActionRow, components: [selectMenu.getComponent({
+            actions: [
+                selectMenu.getComponent({
                     "id": 100005,
                     "abilityName": "Activity_Rogue_ElementReactionAttack_Melt",
                     "paramNameList": [
                         "Explode_CJB_CD",
                         "CJB_Damage"
                     ],
-                },
-                )]
-            }],
+                }),
+            ],
         });
     },
 });

@@ -1,5 +1,6 @@
 import { bindOptions } from "config_file.js";
 import { CoreMessageOptions } from "./MessageOptions";
+import { MessageCreateOptions } from "discord.js";
 
 export interface MessagePagesOptions {
     readonly timeout?: number;
@@ -12,16 +13,16 @@ const defaultOptions = {
 } satisfies MessagePagesOptions;
 
 export default class MessagePages {
-    readonly pages: (CoreMessageOptions | Promise<CoreMessageOptions> | (() => CoreMessageOptions) | (() => Promise<CoreMessageOptions>))[];
+    readonly pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[];
     readonly options: MessagePagesOptions;
-    readonly pageCache: CoreMessageOptions[] = [];
+    readonly pageCache: CoreMessageOptions<MessageCreateOptions>[] = [];
 
-    constructor(pages: (CoreMessageOptions | Promise<CoreMessageOptions> | (() => CoreMessageOptions) | (() => Promise<CoreMessageOptions>))[], options: Partial<MessagePagesOptions>) {
+    constructor(pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[], options: Partial<MessagePagesOptions>) {
         this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
     }
 
-    async getPage(index: number): Promise<CoreMessageOptions> {
+    async getPage(index: number): Promise<CoreMessageOptions<MessageCreateOptions>> {
         if (this.options.cachedPages && this.pageCache[index]) {
             return this.pageCache[index];
         }
