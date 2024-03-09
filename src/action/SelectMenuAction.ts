@@ -1,5 +1,5 @@
 import { ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ComponentType, MentionableSelectMenuBuilder, MentionableSelectMenuInteraction, RoleSelectMenuBuilder, RoleSelectMenuInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js";
-import { InteractiveAction } from "./Action";
+import { InteractiveAction, InteractiveActionOptions } from "./Action";
 import { JsonElement } from "config_file.js";
 
 /** @typedef */
@@ -31,7 +31,7 @@ export type SelectMenuBuilderType<T extends ComponentType> =
     : never;
 
 /** @typedef */
-export interface SelectMenuActionOptions<T extends ComponentType> extends InteractiveAction {
+export interface SelectMenuActionOptions<T extends ComponentType> extends InteractiveActionOptions {
     readonly type: T;
     readonly selectMenu: SelectMenuBuilderType<T>;
     readonly run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
@@ -41,6 +41,8 @@ export interface SelectMenuActionOptions<T extends ComponentType> extends Intera
 export default class SelectMenuAction<T extends ComponentType> extends InteractiveAction {
     /**  */
     readonly options: SelectMenuActionOptions<T>;
+    /**  */
+    readonly type: T;
     /**  */
     readonly selectMenu: SelectMenuBuilderType<T>;
     /**  */
@@ -53,6 +55,7 @@ export default class SelectMenuAction<T extends ComponentType> extends Interacti
         super(options);
         this.options = options;
 
+        this.type = this.options.type;
         this.selectMenu = this.options.selectMenu;
 
         this.run = this.options.run;

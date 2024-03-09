@@ -1,7 +1,7 @@
 // @ts-check
 
 const { Core, Command, CustomEmoji, SelectMenuAction } = require("..");
-const { ApplicationCommandOptionType, Partials, ComponentType } = require("discord.js");
+const { ApplicationCommandOptionType, Partials, ComponentType, RoleSelectMenuBuilder } = require("discord.js");
 require("dotenv").config();
 
 const token = process.env.TOKEN;
@@ -42,13 +42,9 @@ const command = new Command({
     run: async (ic, args) => {
         const selectMenu = new SelectMenuAction({
             core: core,
-            selectMenu: {
-                customId: "ロール選択",
-                type: ComponentType.RoleSelect,
-                maxValues: 1,
-                minValues: 1,
-                placeholder: "Select a role",
-            },
+            customId: "roleSelect",
+            type: ComponentType.RoleSelect,
+            selectMenu: new RoleSelectMenuBuilder().setMinValues(1).setMaxValues(1).setPlaceholder("Select a role"),
             run: async (interaction, data) => {
                 await interaction.reply({ content: `You selected ${interaction.roles.first()?.name}! "${data}", ${interaction.customId}` });
             },
