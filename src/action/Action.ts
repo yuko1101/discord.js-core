@@ -3,6 +3,7 @@ import Core from "../core/Core";
 import { devModeCommandPrefix } from "../core/commandManager";
 import { JsonElement } from "config_file.js";
 import zlib from "zlib";
+import { SimpleBuilder } from "../utils/Builder";
 
 export const actionDataSeparator = "#";
 
@@ -12,7 +13,7 @@ export interface ActionOptions {
 }
 
 /** Action is a message action which is a reaction or a button. */
-export default class Action {
+export default class Action extends SimpleBuilder {
     /**  */
     readonly core: Core;
 
@@ -20,6 +21,7 @@ export default class Action {
      * @param options
      */
     constructor(options: { core: Core }) {
+        super();
         this.core = options.core;
     }
 }

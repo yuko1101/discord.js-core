@@ -2,6 +2,7 @@ import { APIRole, ApplicationCommandAutocompleteNumericOptionData, ApplicationCo
 import { Overwrite } from "../utils/ts_utils";
 import Core from "../core/Core";
 import InteractionCore from "./InteractionCore";
+import { SimpleBuilder } from "../utils/Builder";
 
 /**
  * @typedef
@@ -69,7 +70,7 @@ export interface CommandData<SupportsMessageCommand extends boolean, SupportsCon
     readonly run: (ic: InteractionCore, args: Args<SupportsMessageCommand, SupportsContextMenu, ArgsData>, core: Core<true>) => Awaitable<unknown>;
 }
 
-export default class Command<SupportsMessageCommand extends boolean = boolean, SupportsContextMenu extends boolean = boolean, ArgsData extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> {
+export default class Command<SupportsMessageCommand extends boolean = boolean, SupportsContextMenu extends boolean = boolean, ArgsData extends CoreCommandArgs<SupportsMessageCommand> = CoreCommandArgs<SupportsMessageCommand>> extends SimpleBuilder {
     /**  */
     readonly data: CommandData<SupportsMessageCommand, SupportsContextMenu, ArgsData>;
     /**  */
@@ -95,6 +96,7 @@ export default class Command<SupportsMessageCommand extends boolean = boolean, S
      * @param data
     */
     constructor(data: CommandData<SupportsMessageCommand, SupportsContextMenu, ArgsData>) {
+        super();
         this.data = data;
         this.name = this.data.name;
         this.description = this.data.description ?? null;

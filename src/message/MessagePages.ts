@@ -1,6 +1,7 @@
 import { bindOptions } from "config_file.js";
 import { CoreMessageOptions } from "./MessageOptions";
 import { MessageCreateOptions } from "discord.js";
+import { SimpleBuilder } from "../utils/Builder";
 
 export interface MessagePagesOptions {
     readonly timeout?: number;
@@ -12,12 +13,13 @@ const defaultOptions = {
     cachedPages: false,
 } satisfies MessagePagesOptions;
 
-export default class MessagePages {
+export default class MessagePages extends SimpleBuilder {
     readonly pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[];
     readonly options: MessagePagesOptions;
     readonly pageCache: CoreMessageOptions<MessageCreateOptions>[] = [];
 
     constructor(pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[], options: Partial<MessagePagesOptions>) {
+        super();
         this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
     }
