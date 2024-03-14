@@ -20,7 +20,7 @@ export default class Action extends SimpleBuilder {
     /**
      * @param options
      */
-    constructor(options: { core: Core }) {
+    constructor(options: ActionOptions) {
         super();
         this.core = options.core;
     }
