@@ -43,7 +43,7 @@ export default class EmojiAction extends Action {
      * @param options
      */
     async apply(message: Message | PartialMessage, options: { timeout?: number, autoReact?: boolean } = {}) {
-        options = bindOptions({ timeout: null, autoReact: true }, options);
+        const opt = bindOptions({ autoReact: true }, options);
 
         if (this.deleted) throw new Error("This emoji action has been deleted.");
 
@@ -52,7 +52,7 @@ export default class EmojiAction extends Action {
             this.core.emojiActions.push(this);
         }
 
-        if (options.autoReact) {
+        if (opt.autoReact) {
             const core = await this.core.waitReady();
             // if the message doesn't have the reaction, add this reaction to it
             if (!message.reactions.resolve(this.emoji)?.users?.resolve(core.client.user.id)) {
@@ -61,7 +61,7 @@ export default class EmojiAction extends Action {
         }
         this.appliedMessages.push(message.id);
 
-        if (options.timeout !== null) {
+        if (opt.timeout !== null) {
             setTimeout(async () => {
                 this.appliedMessages.splice(this.appliedMessages.indexOf(message.id), 1);
                 const resolvedEmoji = message.reactions.resolve(this.emoji);
@@ -69,7 +69,7 @@ export default class EmojiAction extends Action {
                 if (resolvedEmoji?.users?.resolve(core.client.user.id)) {
                     resolvedEmoji.users.remove(core.client.user);
                 }
-            }, options.timeout);
+            }, opt.timeout);
         }
 
     }
@@ -79,7 +79,7 @@ export default class EmojiAction extends Action {
      * @param options
      */
     async removeApply(message: Message | PartialMessage, options: { autoRemoveReaction?: boolean } = {}) {
-        options = bindOptions({ autoRemoveReaction: true }, options);
+        const opt = bindOptions({ autoRemoveReaction: true }, options);
 
         if (this.deleted) throw new Error("This emoji action has been deleted.");
 
@@ -88,7 +88,7 @@ export default class EmojiAction extends Action {
             this.appliedMessages.splice(index, 1);
         }
 
-        if (options.autoRemoveReaction) {
+        if (opt.autoRemoveReaction) {
             const resolvedEmoji = message.reactions.resolve(this.emoji);
             const core = await this.core.waitReady();
             if (resolvedEmoji?.users?.resolve(core.client.user.id)) {

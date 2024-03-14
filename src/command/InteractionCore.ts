@@ -132,7 +132,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
      * @param options
      */
     async deferReply(options: { fetchReply?: boolean, ephemeral?: boolean } = {}) {
-        options = bindOptions({ fetchReply: false, ephemeral: false }, options);
+        const opt = bindOptions({ fetchReply: false, ephemeral: false }, options);
         if (this.deferred) throw new Error("You can't defer a `InteractionCore` twice");
         if (this.replied) throw new Error("You can't defer a `InteractionCore` after it has replied");
         await this.run({
@@ -140,17 +140,17 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 await ic.source.channel.sendTyping();
             },
             async withInteraction(ic) {
-                await ic.source.deferReply({ fetchReply: options.fetchReply, ephemeral: options.ephemeral });
+                await ic.source.deferReply({ fetchReply: opt.fetchReply, ephemeral: opt.ephemeral });
             },
         });
         this.deferred = true;
         this.replied = true;
-        this.isReplyMessageSentAsEphemeral = options.ephemeral ?? null;
+        this.isReplyMessageSentAsEphemeral = opt.ephemeral;
     }
 
     /**  */
     async reply(msgSrc: MessageSource, options: { ephemeral?: boolean } = {}): Promise<Message> {
-        options = bindOptions({ ephemeral: false }, options);
+        const opt = bindOptions({ ephemeral: false }, options);
         if (this.deferred) throw new Error("You cannot reply to a message after deferring it. Consider using `followUp` instead.");
         if (this.replied) throw new Error("You can't reply twice");
         await this.run({
@@ -168,16 +168,16 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 if (msgSrc instanceof MessagePages) {
                     // TODO
                 } else if ("actions" in msgSrc) {
-                    ic.replyMessage = await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: options.ephemeral, fetchReply: true });
+                    ic.replyMessage = await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral, fetchReply: true });
                     // TODO: manage actions and emojis
                 } else {
-                    ic.replyMessage = await ic.source.reply({ ...msgSrc, ephemeral: options.ephemeral, fetchReply: true });
+                    ic.replyMessage = await ic.source.reply({ ...msgSrc, ephemeral: opt.ephemeral, fetchReply: true });
 
                 }
             },
         });
         this.replied = true;
-        this.isReplyMessageSentAsEphemeral = options.ephemeral as boolean;
+        this.isReplyMessageSentAsEphemeral = opt.ephemeral;
         this.replyMessageData = msgSrc;
 
         return this.replyMessage as Message;
@@ -278,13 +278,13 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
      * @param options
      */
     async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean, reply?: boolean } = {}): Promise<Message> {
-        options = bindOptions({ ephemeral: false, reply: true }, options);
-        options.reply = options.reply || this.deferred;
+        const opt = bindOptions({ ephemeral: false, reply: true }, options);
+        opt.reply = opt.reply || this.deferred;
         this.run({
             async withMessage(ic) {
                 if (!ic.replyMessage && !ic.deferred) throw new Error("You must reply to a message before following up to it");
                 const sendFunction = async (messageOptions: BaseMessageOptions) => {
-                    return await (options.reply ? ic.source.reply(messageOptions) : ic.source.channel.send(messageOptions));
+                    return await (opt.reply ? ic.source.reply(messageOptions) : ic.source.channel.send(messageOptions));
                 };
                 if (msgSrc instanceof MessagePages) {
                     // TODO
@@ -309,7 +309,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         if (this.deferred && this.isReplyMessageSentAsEphemeral === true) {
             this.isFollowUpMessageSentAsEphemeral = true;
         } else {
-            this.isFollowUpMessageSentAsEphemeral = options.ephemeral as boolean;
+            this.isFollowUpMessageSentAsEphemeral = opt.ephemeral;
         }
         this.followUpMessageData = msgSrc;
         return this.followUpMessage as Message;
