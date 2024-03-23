@@ -1,24 +1,26 @@
-import { bindOptions } from "config_file.js";
+import { Complement, PartialSome, bindOptions } from "config_file.js";
 import { CoreMessageOptions } from "./MessageOptions";
 import { MessageCreateOptions } from "discord.js";
 import { SimpleBuilder } from "../utils/Builder";
+import Core from "../core/Core";
 
 export interface MessagePagesOptions {
     readonly timeout?: number;
     readonly cachedPages?: boolean;
+    readonly core: Core
 }
 
 const defaultOptions = {
     timeout: 60000,
     cachedPages: false,
-} satisfies MessagePagesOptions;
+} as const satisfies PartialSome<MessagePagesOptions, "core">;
 
 export default class MessagePages extends SimpleBuilder {
     readonly pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[];
     readonly options: MessagePagesOptions;
     readonly pageCache: CoreMessageOptions<MessageCreateOptions>[] = [];
 
-    constructor(pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[], options: Partial<MessagePagesOptions>) {
+    constructor(pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[], options: Complement<typeof defaultOptions, MessagePagesOptions>) {
         super();
         this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
