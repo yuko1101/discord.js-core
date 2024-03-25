@@ -35,25 +35,10 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
     readonly user: User;
 
     /**  */
-    replyMessage: Message | null;
+    replyMessage: MessageDataContainer<boolean, T extends "MESSAGE" ? false : boolean> | null = null;
+
     /**  */
-    replyMessageData: MessageSource | null;
-    /**  */
-    followUpMessage: Message | null;
-    /**  */
-    followUpMessageData: MessageSource | null;
-    /**  */
-    deferred: boolean;
-    /**  */
-    replied: boolean;
-    /**  */
-    followedUp: boolean;
-    /**  */
-    isReplyMessageSentAsEphemeral: boolean | null;
-    /**  */
-    isFollowUpMessageSentAsEphemeral: boolean | null;
-    /**  */
-    isReplyMessageDeleted: boolean;
+    followUpMessage: MessageDataContainer<boolean, T extends "MESSAGE" ? false : boolean> | null = null;
 
     /**
      * @param source
@@ -69,32 +54,10 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 return ic.source.author;
             },
         });
-
-        /* Data */
-
-        this.replyMessage = null;
-
-        this.replyMessageData = null;
-
-        this.followUpMessage = null;
-
-        this.followUpMessageData = null;
-
-        this.deferred = false;
-
-        this.replied = false;
-
-        this.followedUp = false;
-
-        this.isReplyMessageSentAsEphemeral = null;
-
-        this.isFollowUpMessageSentAsEphemeral = null;
-
-        this.isReplyMessageDeleted = false;
     }
 
     /** target user of UserContextMenu */
-    public get contextMenuUser(): User | null {
+    get contextMenuUser(): User | null {
         if (this.hasInteraction()) {
             if (this.source.isUserContextMenuCommand()) {
                 return this.source.targetUser;
@@ -104,13 +67,29 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
     }
 
     /** target message of MessageContextMenu */
-    public get contextMenuMessage(): Message | null {
+    get contextMenuMessage(): Message | null {
         if (this.hasInteraction()) {
             if (this.source.isMessageContextMenuCommand()) {
                 return this.source.targetMessage;
             }
         }
         return null;
+    }
+
+    get firstReplyMessage() {
+        return this.replyMessage ?? this.followUpMessage;
+    }
+
+    get lastReplyMessage() {
+        return this.followUpMessage ?? this.replyMessage;
+    }
+
+    get isReplied() {
+        return this.replyMessage !== null;
+    }
+
+    get isDeferring() {
+        return this.replyMessage !== null && this.replyMessage.msgSrc === null && this.followUpMessage === null;
     }
 
     /**  */
@@ -133,8 +112,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
      */
     async deferReply(options: { fetchReply?: boolean, ephemeral?: boolean } = {}) {
         const opt = bindOptions({ fetchReply: false, ephemeral: false }, options);
-        if (this.deferred) throw new Error("You can't defer a `InteractionCore` twice");
-        if (this.replied) throw new Error("You can't defer a `InteractionCore` after it has replied");
+        if (this.isReplied) throw new Error("You can't defer a `InteractionCore` after it has replied");
         await this.run({
             async withMessage(ic) {
                 await ic.source.channel.sendTyping();
@@ -143,89 +121,70 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 await ic.source.deferReply({ fetchReply: opt.fetchReply, ephemeral: opt.ephemeral });
             },
         });
-        this.deferred = true;
-        this.replied = true;
-        this.isReplyMessageSentAsEphemeral = opt.ephemeral;
+        this.replyMessage = new MessageDataContainer({ msg: null, msgSrc: null, ephemeral: opt.ephemeral });
     }
 
     /**  */
-    async reply(msgSrc: MessageSource, options: { ephemeral?: boolean } = {}): Promise<Message> {
+    async reply(msgSrc: MessageSource, options: { ephemeral?: boolean } = {}): Promise<MessageDataContainer> {
         const opt = bindOptions({ ephemeral: false }, options);
-        if (this.deferred) throw new Error("You cannot reply to a message after deferring it. Consider using `followUp` instead.");
-        if (this.replied) throw new Error("You can't reply twice");
+        if (this.isReplied) throw new Error("You can't reply twice");
+        // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
+
+        let msg: Message | null = null;
+
         await this.run({
             async withMessage(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
                 } else if ("actions" in msgSrc) {
-                    ic.replyMessage = await ic.source.reply(convertToMessageOptions(msgSrc));
+                    msg = await ic.source.reply(convertToMessageOptions(msgSrc));
                     // TODO: manage actions and emojis
                 } else {
-                    ic.replyMessage = await ic.source.reply(msgSrc);
+                    msg = await ic.source.reply(msgSrc);
                 }
             },
             async withInteraction(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
                 } else if ("actions" in msgSrc) {
-                    ic.replyMessage = await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral, fetchReply: true });
+                    msg = await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral, fetchReply: true });
                     // TODO: manage actions and emojis
                 } else {
-                    ic.replyMessage = await ic.source.reply({ ...msgSrc, ephemeral: opt.ephemeral, fetchReply: true });
+                    msg = await ic.source.reply({ ...msgSrc, ephemeral: opt.ephemeral, fetchReply: true });
 
                 }
             },
         });
-        this.replied = true;
-        this.isReplyMessageSentAsEphemeral = opt.ephemeral;
-        this.replyMessageData = msgSrc;
 
-        return this.replyMessage as Message;
-    }
+        if (msg === null) throw new Error("This error cannot be happened.");
+        const mdc = new MessageDataContainer<false>({ msg, msgSrc, ephemeral: opt.ephemeral });
+        this.replyMessage = mdc as MessageDataContainer<false, T extends "MESSAGE" ? false : boolean>;
 
-
-    // These getters and setters are for editReply
-    // These get or set the first message which is not a deferring.
-
-    public get firstReplyMessage() {
-        return this.deferred ? this.followUpMessage : this.replyMessage;
+        return mdc;
     }
-    public set firstReplyMessage(message: Message | null) {
-        if (this.deferred) {
-            this.followUpMessage = message;
-        } else {
-            this.replyMessage = message;
-        }
-    }
-    public get firstReplyMessageData() {
-        return this.deferred ? this.followUpMessageData : this.replyMessageData;
-    }
-    public set firstReplyMessageData(messageData: MessageSource | null) {
-        if (this.deferred) {
-            this.followUpMessageData = messageData;
-        } else {
-            this.replyMessageData = messageData;
-        }
-    }
-
 
     /**  */
-    async editReply(msgSrc: MessageSource) {
-        if (!this.firstReplyMessage || !this.firstReplyMessageData) throw new Error("You cannot edit your reply or follow-up before it is sent.");
+    async editReply(msgSrc: MessageSource): Promise<Message> {
+        const msgToEdit = this.lastReplyMessage;
+        if (!msgToEdit) throw new Error("You cannot edit your reply or follow-up before it is sent.");
 
-        const isEditingMessageEphemeral = this.isFollowUpMessageSentAsEphemeral ?? this.isReplyMessageSentAsEphemeral;
+        if (msgToEdit.isNotDeferred()) {
+            // destroy the previous reply message
+            if (msgToEdit.msgSrc instanceof MessagePages) {
+                // TODO
+            } else if ("actions" in msgToEdit.msgSrc) {
+                // TODO
+            } else {
+                // do nothing with MessageCreateOptions
+            }
 
-        // destroy the previous reply message
-        if (this.firstReplyMessageData instanceof MessagePages) {
-            // TODO
-        } else if ("actions" in this.firstReplyMessageData) {
-            // TODO
-        } else {
-            // do nothing with MessageCreateOptions
+            // remove all reactions from the previous message
+            if (msgToEdit.isNotEphemeral()) {
+                await removeAllReactions(msgToEdit.msg);
+            }
         }
-        if (!isEditingMessageEphemeral) {
-            await removeAllReactions(this.firstReplyMessage);
-        }
+
+        let msg: Message | null = null;
 
         await this.run({
             async withMessage(ic) {
@@ -248,41 +207,53 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 }
             },
         });
-        this.firstReplyMessageData = msgSrc;
-        return this.firstReplyMessage;
+
+        if (msg === null) throw new Error("This error cannot be happened.");
+
+        msgToEdit.msgSrc = msgSrc;
+        msgToEdit.msg = msg;
+        return msgToEdit.msg;
     }
 
     /**
      * @throws an error if unable to delete the reply.
      */
     async deleteReply() {
-        if (this.isReplyMessageDeleted) throw new Error("You can't delete a reply that has already been deleted.");
+        const msgToDelete = this.lastReplyMessage;
+        if (!msgToDelete) throw new Error("You cannot delete your reply or follow-up before it is sent.");
+        // TODO: clarify if this is correct
+        if (!msgToDelete.isNotDeferred()) throw new Error("You can't delete a deferred reply.");
+        if (msgToDelete.isDeletable()) throw new Error("You can't delete this message. Please check if it's deletable before trying to delete it.");
+
         await this.run({
             async withMessage(ic) {
-                if (!ic.replyMessage) {
-                    throw new Error("You must reply to a message before deleting it");
-                }
-                if (!ic.replyMessage.deletable) throw new Error("You can't delete this message. Please check if it's deletable before trying to delete it.");
-                await ic.replyMessage.delete();
-                ic.isReplyMessageDeleted = true;
+                const toDelete = ic.lastReplyMessage;
+                if (!toDelete || !toDelete.isNotDeferred()) throw new Error("This error cannot be happened.");
+                await toDelete.msg.delete();
             },
             async withInteraction(ic) {
                 await ic.source.deleteReply();
-                ic.isReplyMessageDeleted = true;
             },
         });
+
+        msgToDelete.deleted = true;
     }
 
     /**
      * @param msgSrc
-     * @param options
+     * @param options.reply if true, the message will be sent as a reply. (For MessageCommand only)
      */
-    async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean, reply?: boolean } = {}): Promise<Message> {
+    async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean, reply?: boolean } = {}): Promise<MessageDataContainer> {
         const opt = bindOptions({ ephemeral: false, reply: true }, options);
-        opt.reply = opt.reply || this.deferred;
+        opt.reply = opt.reply || this.isDeferring;
+        // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
+
+        if (!this.replyMessage) throw new Error("You must reply before following up.");
+
+        let msg: Message | null = null;
+
         this.run({
             async withMessage(ic) {
-                if (!ic.replyMessage && !ic.deferred) throw new Error("You must reply to a message before following up to it");
                 const sendFunction = async (messageOptions: BaseMessageOptions) => {
                     return await (opt.reply ? ic.source.reply(messageOptions) : ic.source.channel.send(messageOptions));
                 };
@@ -305,15 +276,52 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
             },
         });
 
-        this.followedUp = true;
-        if (this.deferred && this.isReplyMessageSentAsEphemeral === true) {
-            this.isFollowUpMessageSentAsEphemeral = true;
-        } else {
-            this.isFollowUpMessageSentAsEphemeral = opt.ephemeral;
-        }
-        this.followUpMessageData = msgSrc;
-        return this.followUpMessage as Message;
+        if (msg === null) throw new Error("This error cannot be happened.");
+
+        // TODO: check if the ephemeral is correct
+        const ephemeral = (this.isDeferring && this.replyMessage.ephemeral) || opt.ephemeral;
+
+        const mdc = new MessageDataContainer<false>({ msg, msgSrc, ephemeral });
+        this.followUpMessage = mdc as MessageDataContainer<false, T extends "MESSAGE" ? false : boolean>;
+        return mdc;
     }
 
     // TODO: add editFollowUp, deleteFollowUp, and more
+}
+
+
+class MessageDataContainer<Deferred extends boolean = boolean, Ephemeral extends boolean = boolean> {
+    msg: Deferred extends false ? Ephemeral extends false ? Message : null : null;
+    msgSrc: Deferred extends false ? MessageSource : null;
+    ephemeral: Ephemeral;
+    deleted = false;
+
+    deferred: Deferred;
+
+    constructor({ msg, msgSrc, ephemeral }: { msg: Deferred extends false ? Ephemeral extends false ? Message : null : null, msgSrc: Deferred extends false ? MessageSource : null, ephemeral: Ephemeral }) {
+        this.msg = msg;
+        this.msgSrc = msgSrc;
+        this.ephemeral = ephemeral;
+        this.deferred = (msgSrc === null) as Deferred;
+    }
+
+    isDeferred(): this is MessageDataContainer<true, typeof this.ephemeral> {
+        return this.msgSrc === null;
+    }
+
+    isNotDeferred(): this is MessageDataContainer<false, typeof this.ephemeral> {
+        return this.msgSrc !== null;
+    }
+
+    isEphemeral(): this is MessageDataContainer<Deferred, true> {
+        return this.ephemeral;
+    }
+
+    isNotEphemeral(): this is MessageDataContainer<Deferred, false> {
+        return !this.ephemeral;
+    }
+
+    isDeletable(): boolean {
+        return !this.deleted && ((this.msg !== null && this.msg.deletable) || this.ephemeral);
+    }
 }
