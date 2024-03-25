@@ -113,6 +113,8 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
     async deferReply(options: { fetchReply?: boolean, ephemeral?: boolean } = {}) {
         const opt = bindOptions({ fetchReply: false, ephemeral: false }, options);
         if (this.isReplied) throw new Error("You can't defer a `InteractionCore` after it has replied");
+        // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
+
         await this.run({
             async withMessage(ic) {
                 await ic.source.channel.sendTyping();
@@ -121,7 +123,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                 await ic.source.deferReply({ fetchReply: opt.fetchReply, ephemeral: opt.ephemeral });
             },
         });
-        this.replyMessage = new MessageDataContainer({ msg: null, msgSrc: null, ephemeral: opt.ephemeral });
+        this.replyMessage = new MessageDataContainer<true>({ msg: null, msgSrc: null, ephemeral: opt.ephemeral }) as MessageDataContainer<true, T extends "MESSAGE" ? false : boolean>;
     }
 
     /**  */
