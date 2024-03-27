@@ -246,31 +246,37 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
 
         if (!this.replyMessage) throw new Error("You must reply before following up.");
+        if (this.followUpMessage) throw new Error("You can't follow up twice.");
 
-        let msg: Message | null = null;
-
-        this.run({
+        const msg: Message = await this.run<Promise<Message>>({
             async withMessage(ic) {
+                const sendMessage: (data: BaseMessageOptions) => Promise<Message> =
+                    ic.isDeferring ?
+                        async (data) => ic.source.reply(data) :
+                        async (data) => ic.replyMessage?.msg?.reply(data) as Promise<Message>;
+
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
-                    // TODO
+                    return await sendMessage(convertToMessageOptions(msgSrc));
+                    // TODO: manage actions and emojis
                 } else {
-                    // TODO
+                    return await sendMessage(msgSrc);
                 }
             },
             async withInteraction(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
-                    // TODO
+                    return await ic.source.followUp(convertToMessageOptions(msgSrc));
+                    // TODO: manage actions and emojis
                 } else {
-                    // TODO
+                    return await ic.source.followUp(msgSrc);
                 }
             },
         });
-
-        if (msg === null) throw new Error("This error cannot be happened.");
 
         // TODO: check if the ephemeral is correct
         const ephemeral = (this.isDeferring && this.replyMessage.ephemeral) || opt.ephemeral;
