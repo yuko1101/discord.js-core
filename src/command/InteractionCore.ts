@@ -241,13 +241,8 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         msgToDelete.deleted = true;
     }
 
-    /**
-     * @param msgSrc
-     * @param options.reply if true, the message will be sent as a reply. (For MessageCommand only)
-     */
-    async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean, reply?: boolean } = {}): Promise<MessageDataContainer> {
-        const opt = bindOptions({ ephemeral: false, reply: true }, options);
-        opt.reply = opt.reply || this.isDeferring;
+    async followUp(msgSrc: MessageSource, options: { ephemeral?: boolean } = {}): Promise<MessageDataContainer> {
+        const opt = bindOptions({ ephemeral: false }, options);
         // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
 
         if (!this.replyMessage) throw new Error("You must reply before following up.");
@@ -256,9 +251,6 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
 
         this.run({
             async withMessage(ic) {
-                const sendFunction = async (messageOptions: BaseMessageOptions) => {
-                    return await (opt.reply ? ic.source.reply(messageOptions) : ic.source.channel.send(messageOptions));
-                };
                 if (msgSrc instanceof MessagePages) {
                     // TODO
                 } else if ("actions" in msgSrc) {
