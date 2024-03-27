@@ -27,6 +27,12 @@ export type InteractionCoreType = "MESSAGE" | "INTERACTION";
 /** @typedef */
 export type InteractionCoreSource<T extends InteractionCoreType> = T extends "INTERACTION" ? RepliableInteraction : Message;
 
+/**
+ * @typedef
+ * For INTERACTION, the sent message can be ephemeral.
+ */
+export type SentMessageType<Ephemeral extends boolean> = Ephemeral extends true ? null : Message;
+
 export default class InteractionCore<T extends InteractionCoreType = InteractionCoreType> {
     /**  */
     readonly source: InteractionCoreSource<T>;
@@ -132,27 +138,27 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         if (this.isReplied) throw new Error("You can't reply twice");
         // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
 
-        let msg: Message | null = null;
-
-        await this.run({
+        const msg = await this.run<Promise<SentMessageType<typeof opt.ephemeral>>>({
             async withMessage(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
-                    msg = await ic.source.reply(convertToMessageOptions(msgSrc));
+                    return await ic.source.reply(convertToMessageOptions(msgSrc));
                     // TODO: manage actions and emojis
                 } else {
-                    msg = await ic.source.reply(msgSrc);
+                    return await ic.source.reply(msgSrc);
                 }
             },
             async withInteraction(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
-                    msg = await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral, fetchReply: true });
+                    return await ic.source.reply({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral, fetchReply: true });
                     // TODO: manage actions and emojis
                 } else {
-                    msg = await ic.source.reply({ ...msgSrc, ephemeral: opt.ephemeral, fetchReply: true });
+                    return await ic.source.reply({ ...msgSrc, ephemeral: opt.ephemeral, fetchReply: true });
 
                 }
             },
@@ -166,7 +172,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
     }
 
     /**  */
-    async editReply(msgSrc: MessageSource): Promise<Message> {
+    async editReply(msgSrc: MessageSource): Promise<MessageDataContainer> {
         const msgToEdit = this.lastReplyMessage;
         if (!msgToEdit) throw new Error("You cannot edit your reply or follow-up before it is sent.");
 
@@ -186,35 +192,39 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
             }
         }
 
-        let msg: Message | null = null;
-
-        await this.run({
+        const msg = await this.run<Promise<SentMessageType<typeof msgToEdit.ephemeral>>>({
             async withMessage(ic) {
                 if (!ic.firstReplyMessage) throw new Error("This error cannot be happened.");
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 }
             },
             async withInteraction(ic) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 } else {
                     // TODO
+                    throw new Error("Not implemented yet.");
                 }
             },
         });
 
-        if (msg === null) throw new Error("This error cannot be happened.");
-
         msgToEdit.msgSrc = msgSrc;
+        msgToEdit.deferred = false;
+        if (!msgToEdit.isNotDeferred()) throw new Error("This error cannot be happened.");
         msgToEdit.msg = msg;
-        return msgToEdit.msg;
+        return msgToEdit;
     }
 
     /**
@@ -248,7 +258,7 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         if (!this.replyMessage) throw new Error("You must reply before following up.");
         if (this.followUpMessage) throw new Error("You can't follow up twice.");
 
-        const msg: Message = await this.run<Promise<Message>>({
+        const msg = await this.run<Promise<SentMessageType<typeof opt.ephemeral>>>({
             async withMessage(ic) {
                 const sendMessage: (data: BaseMessageOptions) => Promise<Message> =
                     ic.isDeferring ?
@@ -270,10 +280,10 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
                     // TODO
                     throw new Error("Not implemented yet.");
                 } else if ("actions" in msgSrc) {
-                    return await ic.source.followUp(convertToMessageOptions(msgSrc));
+                    return await ic.source.followUp({ ...convertToMessageOptions(msgSrc), ephemeral: opt.ephemeral });
                     // TODO: manage actions and emojis
                 } else {
-                    return await ic.source.followUp(msgSrc);
+                    return await ic.source.followUp({ ...msgSrc, ephemeral: opt.ephemeral });
                 }
             },
         });
@@ -282,7 +292,8 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
         const ephemeral = (this.isDeferring && this.replyMessage.ephemeral) || opt.ephemeral;
 
         const mdc = new MessageDataContainer<false>({ msg, msgSrc, ephemeral });
-        this.followUpMessage = mdc as MessageDataContainer<false, T extends "MESSAGE" ? false : boolean>;
+        // TODO: better way to indicate that it is guaranteed that the ephemeral is true only for InteractionCore<"INTERACTION"> (`T extends "MESSAGE" ? false :` should be not necessary here)
+        this.followUpMessage = mdc as MessageDataContainer<false, T extends "MESSAGE" ? false : typeof opt.ephemeral>;
         return mdc;
     }
 
@@ -291,14 +302,14 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
 
 
 class MessageDataContainer<Deferred extends boolean = boolean, Ephemeral extends boolean = boolean> {
-    msg: Deferred extends false ? Ephemeral extends false ? Message : null : null;
+    msg: Deferred extends false ? SentMessageType<Ephemeral> : null;
     msgSrc: Deferred extends false ? MessageSource : null;
     ephemeral: Ephemeral;
     deleted = false;
 
     deferred: Deferred;
 
-    constructor({ msg, msgSrc, ephemeral }: { msg: Deferred extends false ? Ephemeral extends false ? Message : null : null, msgSrc: Deferred extends false ? MessageSource : null, ephemeral: Ephemeral }) {
+    constructor({ msg, msgSrc, ephemeral }: { msg: Deferred extends false ? SentMessageType<Ephemeral> : null, msgSrc: Deferred extends false ? MessageSource : null, ephemeral: Ephemeral }) {
         this.msg = msg;
         this.msgSrc = msgSrc;
         this.ephemeral = ephemeral;
