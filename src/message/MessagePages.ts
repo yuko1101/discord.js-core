@@ -1,5 +1,5 @@
 import { Complement, PartialSome, bindOptions } from "config_file.js";
-import { FlexibleMessageOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions";import { Message, MessageCreateOptions } from "discord.js";
+import { FlexibleMessageOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions"; import { Message, MessageCreateOptions, MessageEditOptions } from "discord.js";
 import { SimpleBuilder } from "../utils/Builder";
 import Core from "../core/Core";
 
@@ -19,6 +19,7 @@ export default class MessagePages extends SimpleBuilder {
     readonly options: MessagePagesOptions;
     readonly pageCache: FlexibleMessageOptions<MessageCreateOptions>[] = [];
 
+    sent = false;
     message: Message | null = null;
     currentPage = 0;
 
@@ -43,25 +44,27 @@ export default class MessagePages extends SimpleBuilder {
         return await page;
     }
 
-    async send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message>): Promise<Message> {
+    async send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | null>) {
         if (this.message) throw new Error("Message already sent");
         const page = await this.getPage(this.currentPage);
         const message = await sendFn(page);
         this.message = message;
-
-        return message;
+        this.sent = true;
     }
 
-    async goto(index: number) {
+    async goto(index: number, editFn?: (messageOptions: MessageEditOptions) => Promise<void>) {
         if (index < 0 || index >= this.pages.length) {
             throw new Error("Index out of bounds");
         }
         this.currentPage = index;
-        if (this.message) {
-            const page = await this.getPage(index);
-            const editOptions = convertToMessageEditOptions(convertToMessageOptions(page));
-            await this.message.edit(editOptions);
-        }
+        if (!this.sent) return;
+
+        const edit = editFn ?? this.message ? (async (m: MessageEditOptions) => await this.message?.edit(m)) : null;
+        if (!edit) throw new Error("No edit function provided");
+
+        const page = await this.getPage(index);
+        const editOptions = convertToMessageEditOptions(convertToMessageOptions(page));
+        await edit(editOptions);
     }
 
     clone(): MessagePages {
