@@ -1,5 +1,5 @@
 import { Complement, PartialSome, bindOptions } from "config_file.js";
-import { CoreMessageOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions";import { Message, MessageCreateOptions } from "discord.js";
+import { FlexibleMessageOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions";import { Message, MessageCreateOptions } from "discord.js";
 import { SimpleBuilder } from "../utils/Builder";
 import Core from "../core/Core";
 
@@ -15,20 +15,20 @@ const defaultOptions = {
 } as const satisfies PartialSome<MessagePagesOptions, "core">;
 
 export default class MessagePages extends SimpleBuilder {
-    readonly pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[];
+    readonly pages: (FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>))[];
     readonly options: MessagePagesOptions;
-    readonly pageCache: CoreMessageOptions<MessageCreateOptions>[] = [];
+    readonly pageCache: FlexibleMessageOptions<MessageCreateOptions>[] = [];
 
     message: Message | null = null;
     currentPage = 0;
 
-    constructor(pages: (CoreMessageOptions<MessageCreateOptions> | Promise<CoreMessageOptions<MessageCreateOptions>> | (() => CoreMessageOptions<MessageCreateOptions>) | (() => Promise<CoreMessageOptions<MessageCreateOptions>>))[], options: Complement<typeof defaultOptions, MessagePagesOptions>) {
+    constructor(pages: (FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>))[], options: Complement<typeof defaultOptions, MessagePagesOptions>) {
         super();
         this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
     }
 
-    async getPage(index: number): Promise<CoreMessageOptions<MessageCreateOptions>> {
+    async getPage(index: number): Promise<FlexibleMessageOptions<MessageCreateOptions>> {
         if (this.options.pageCaching && this.pageCache[index]) {
             return this.pageCache[index];
         }
@@ -43,7 +43,7 @@ export default class MessagePages extends SimpleBuilder {
         return await page;
     }
 
-    async send(sendFn: (messageOptions: CoreMessageOptions<MessageCreateOptions>) => Promise<Message>): Promise<Message> {
+    async send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message>): Promise<Message> {
         if (this.message) throw new Error("Message already sent");
         const page = await this.getPage(this.currentPage);
         const message = await sendFn(page);

@@ -5,8 +5,14 @@ import EmojiAction from "../action/EmojiAction";
 export type CoreComponents = (ButtonBuilder[] | SelectMenuBuilderType<ComponentType> | EmojiAction)[];
 
 export type CoreMessageOptions<T extends BaseMessageOptions> = Omit<T, "components"> & { actions: CoreComponents };
+export type FlexibleMessageOptions<T extends BaseMessageOptions> = CoreMessageOptions<T> | T;
 
-export function convertToMessageOptions<T extends BaseMessageOptions>(options: CoreMessageOptions<T>): T {
+export function convertToMessageOptions<T extends BaseMessageOptions>(options: FlexibleMessageOptions<T>): T {
+    // already converted
+    if (!("actions" in options)) {
+        return options;
+    }
+
     const components: (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>)[] = options.actions.filter((row): row is (ButtonBuilder[] | SelectMenuBuilderType<ComponentType>) => !(row instanceof EmojiAction));
 
     const actionRows: (ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<SelectMenuBuilderType<ComponentType>>)[] = components.map(row => {
