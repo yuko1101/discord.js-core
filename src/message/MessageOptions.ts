@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage, MessageCreateOptions, MessageEditOptions } from "discord.js";
 import { SelectMenuBuilderType } from "../action/SelectMenuAction";
 import EmojiAction from "../action/EmojiAction";
 
@@ -38,4 +38,13 @@ export async function removeReactions<T extends BaseMessageOptions>(msg: Message
 
 export function getEmojiActions<T extends BaseMessageOptions>(coreMessageOptions: CoreMessageOptions<T>): EmojiAction[] {
     return (coreMessageOptions.actions.filter(row => row instanceof EmojiAction)) as EmojiAction[];
+}
+
+export function convertToMessageEditOptions(options: MessageCreateOptions): MessageEditOptions {
+    const editOptions = { ...options } as MessageEditOptions;
+    if (!("content" in options)) {
+        editOptions.content = null;
+    }
+
+    return editOptions;
 }
