@@ -54,7 +54,9 @@ export default class MessagePages extends SimpleBuilder {
         return message;
     }
 
-    async send(context: TextBasedChannel | RepliableInteraction | Message | User): Promise<Message | InteractionResponse | null> {
+    send(context: TextBasedChannel | RepliableInteraction | Message | User): Promise<Message | InteractionResponse | null> {
+        // TODO: revert to false if send fails
+        this.sent = true;
         function sendFn(messageOptions: FlexibleMessageOptions<MessageCreateOptions>): Promise<Message | InteractionResponse | null> {
             const converted = convertToMessageOptions(messageOptions);
             if ("reply" in context) {
@@ -69,7 +71,7 @@ export default class MessagePages extends SimpleBuilder {
             // channel, user
             return context.send(converted);
         }
-        return await this._send(sendFn);
+        return this._send(sendFn);
     }
 
     async goto(index: number, editFn?: (messageOptions: MessageEditOptions) => Promise<void>) {
