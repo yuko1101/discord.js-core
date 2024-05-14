@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage, MessageCreateOptions, MessageEditOptions } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ComponentType, Message, BaseMessageOptions, PartialMessage, MessageCreateOptions, MessageEditOptions, InteractionReplyOptions } from "discord.js";
 import { SelectMenuBuilderType } from "../action/SelectMenuAction";
 import EmojiAction from "../action/EmojiAction";
 
@@ -53,4 +53,9 @@ export function convertToMessageEditOptions(options: MessageCreateOptions): Mess
     }
 
     return editOptions;
+}
+
+export function convertToInteractionReplyOptions(options: MessageCreateOptions): InteractionReplyOptions {
+    const replyOptions = { ...options } as MessageCreateOptions;
+    return replyOptions as InteractionReplyOptions;
 }

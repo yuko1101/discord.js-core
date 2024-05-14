@@ -1,5 +1,5 @@
 import { Complement, PartialSome, bindOptions } from "config_file.js";
-import { FlexibleMessageOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions"; import { Message, MessageCreateOptions, MessageEditOptions } from "discord.js";
+import { FlexibleMessageOptions, convertToInteractionReplyOptions, convertToMessageEditOptions, convertToMessageOptions } from "./MessageOptions"; import { InteractionResponse, Message, MessageCreateOptions, MessageEditOptions, RepliableInteraction, TextBasedChannel, User } from "discord.js";
 import { SimpleBuilder } from "../utils/Builder";
 import Core from "../core/Core";
 
@@ -20,7 +20,8 @@ export default class MessagePages extends SimpleBuilder {
     readonly pageCache: FlexibleMessageOptions<MessageCreateOptions>[] = [];
 
     sent = false;
-    message: Message | null = null;
+    message: Message | InteractionResponse | null = null;
+    interaction: RepliableInteraction | null = null;
     currentPage = 0;
 
     constructor(pages: (FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>))[], options: Complement<typeof defaultOptions, MessagePagesOptions>) {
@@ -44,12 +45,31 @@ export default class MessagePages extends SimpleBuilder {
         return await page;
     }
 
-    async send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | null>) {
+    async _send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | InteractionResponse | null>): Promise<Message | InteractionResponse | null> {
         if (this.message) throw new Error("Message already sent");
         const page = await this.getPage(this.currentPage);
         const message = await sendFn(page);
         this.message = message;
         this.sent = true;
+        return message;
+    }
+
+    async send(context: TextBasedChannel | RepliableInteraction | Message | User): Promise<Message | InteractionResponse | null> {
+        function sendFn(messageOptions: FlexibleMessageOptions<MessageCreateOptions>): Promise<Message | InteractionResponse | null> {
+            const converted = convertToMessageOptions(messageOptions);
+            if ("reply" in context) {
+                if ("isRepliable" in context) {
+                    // interaction
+                    return context.reply(convertToInteractionReplyOptions(converted));
+                }
+                // message
+                return context.reply(converted);
+            }
+
+            // channel, user
+            return context.send(converted);
+        }
+        return await this._send(sendFn);
     }
 
     async goto(index: number, editFn?: (messageOptions: MessageEditOptions) => Promise<void>) {
@@ -70,5 +90,4 @@ export default class MessagePages extends SimpleBuilder {
     clone(): MessagePages {
         return new MessagePages(this.pages, this.options);
     }
-
 }
