@@ -74,19 +74,25 @@ export default class MessagePages extends SimpleBuilder {
         return this._send(sendFn);
     }
 
-    async goto(index: number, editFn?: (messageOptions: MessageEditOptions) => Promise<void>) {
+    async _goto(index: number, editFn: (messageOptions: MessageEditOptions) => Promise<Message | null>): Promise<Message | null> {
         if (index < 0 || index >= this.pages.length) {
             throw new Error("Index out of bounds");
         }
         this.currentPage = index;
-        if (!this.sent) return;
-
-        const edit = editFn ?? this.message ? (async (m: MessageEditOptions) => await this.message?.edit(m)) : null;
-        if (!edit) throw new Error("No edit function provided");
+        const message = this.message;
+        if (!message) throw new Error("Message not sent");
 
         const page = await this.getPage(index);
         const editOptions = convertToMessageEditOptions(convertToMessageOptions(page));
-        await edit(editOptions);
+        // TODO: wonder if the InteractionResponse#edit does return a non-null Message even if ephemeral
+        return editFn(editOptions);
+    }
+
+    goto(index: number): Promise<Message | null> {
+        const message = this.message;
+        if (!message) throw new Error("Message not sent");
+
+        return this._goto(index, m => message.edit(m));
     }
 
     clone(): MessagePages {
