@@ -5,17 +5,17 @@ import Core from "../core/Core";
 
 export interface MessagePagesOptions {
     readonly timeout?: number;
-    readonly pageCaching?: boolean;
+    readonly pages: Page[];
     readonly core: Core
 }
 
 const defaultOptions = {
     timeout: 60000,
-    pageCaching: false,
-} as const satisfies PartialSome<MessagePagesOptions, "core">;
+} as const satisfies PartialSome<MessagePagesOptions, "pages" | "core">;
+
+export type MessageOptionsResolvable = FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>);
 
 export default class MessagePages extends SimpleBuilder {
-    readonly pages: (FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>))[];
     readonly options: MessagePagesOptions;
     readonly pageCache: FlexibleMessageOptions<MessageCreateOptions>[] = [];
 
@@ -24,25 +24,13 @@ export default class MessagePages extends SimpleBuilder {
     interaction: RepliableInteraction | null = null;
     currentPage = 0;
 
-    constructor(pages: (FlexibleMessageOptions<MessageCreateOptions> | Promise<FlexibleMessageOptions<MessageCreateOptions>> | (() => FlexibleMessageOptions<MessageCreateOptions>) | (() => Promise<FlexibleMessageOptions<MessageCreateOptions>>))[], options: Complement<typeof defaultOptions, MessagePagesOptions>) {
+    constructor(options: Complement<typeof defaultOptions, MessagePagesOptions>) {
         super();
-        this.pages = pages;
         this.options = bindOptions(defaultOptions, options);
     }
 
-    async getPage(index: number): Promise<FlexibleMessageOptions<MessageCreateOptions>> {
-        if (this.options.pageCaching && this.pageCache[index]) {
-            return this.pageCache[index];
-        }
-        const page = this.pages[index];
-        if (typeof page === "function") {
-            const p = await page();
-            if (this.options.pageCaching) {
-                this.pageCache[index] = p;
-            }
-            return p;
-        }
-        return await page;
+    getPage(index: number): Promise<FlexibleMessageOptions<MessageCreateOptions>> {
+        return this.options.pages[index].resolve();
     }
 
     async _send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | InteractionResponse | null>): Promise<Message | InteractionResponse | null> {
@@ -75,7 +63,7 @@ export default class MessagePages extends SimpleBuilder {
     }
 
     async _goto(index: number, editFn: (messageOptions: MessageEditOptions) => Promise<Message | null>): Promise<Message | null> {
-        if (index < 0 || index >= this.pages.length) {
+        if (index < 0 || index >= this.options.pages.length) {
             throw new Error("Index out of bounds");
         }
         this.currentPage = index;
@@ -96,6 +84,42 @@ export default class MessagePages extends SimpleBuilder {
     }
 
     clone(): MessagePages {
-        return new MessagePages(this.pages, this.options);
+        return new MessagePages(this.options);
+    }
+}
+
+export interface PageOptions {
+    readonly caching?: boolean;
+    readonly messageOptions: MessageOptionsResolvable;
+}
+
+const defaultPageOptions = {
+    caching: true,
+} as const satisfies PartialSome<PageOptions, "messageOptions">;
+
+class Page {
+    readonly options: PageOptions;
+
+    isResolved: boolean;
+    messageOptionsCache: FlexibleMessageOptions<MessageCreateOptions> | null = null;
+
+    constructor(options: Complement<typeof defaultPageOptions, PageOptions>) {
+        this.options = bindOptions(defaultPageOptions, options);
+        this.isResolved = typeof this.options.messageOptions !== "function" && !(this.options.messageOptions instanceof Promise);
+    }
+
+    async resolve(): Promise<FlexibleMessageOptions<MessageCreateOptions>> {
+        if (this.options.caching && this.messageOptionsCache) {
+            return this.messageOptionsCache;
+        }
+        const msgOptResolvable = this.options.messageOptions;
+        if (typeof msgOptResolvable === "function") {
+            const msgOptions = await msgOptResolvable();
+            if (this.options.caching) {
+                this.messageOptionsCache = msgOptions;
+            }
+            return msgOptions;
+        }
+        return await msgOptResolvable;
     }
 }
