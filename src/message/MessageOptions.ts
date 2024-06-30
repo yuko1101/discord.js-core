@@ -8,7 +8,7 @@ export type CoreMessageOptions<T extends BaseMessageOptions> = Omit<T, "componen
 export type FlexibleMessageOptions<T extends BaseMessageOptions> = CoreMessageOptions<T> | T;
 
 export function convertToMessageOptions<T extends BaseMessageOptions>(options: FlexibleMessageOptions<T>): T {
-    // already converted
+    // if already converted
     if (!("actions" in options)) {
         return options;
     }

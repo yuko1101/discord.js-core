@@ -164,7 +164,6 @@ export default class InteractionCore<T extends InteractionCoreType = Interaction
             },
         });
 
-        if (msg === null) throw new Error("This error cannot be happened.");
         const mdc = new MessageDataContainer<false>({ msg, msgSrc, ephemeral: opt.ephemeral });
         this.replyMessage = mdc as MessageDataContainer<false, T extends "MESSAGE" ? false : boolean>;
 
