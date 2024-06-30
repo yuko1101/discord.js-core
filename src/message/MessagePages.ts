@@ -33,7 +33,7 @@ export default class MessagePages extends SimpleBuilder {
         return this.options.pages[index].resolve();
     }
 
-    async _send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | InteractionResponse | null>): Promise<Message | InteractionResponse | null> {
+    async _send(sendFn: (messageOptions: FlexibleMessageOptions<MessageCreateOptions>) => Promise<Message | InteractionResponse>): Promise<Message | InteractionResponse> {
         if (this.message) throw new Error("Message already sent");
         const page = await this.getPage(this.currentPage);
         const message = await sendFn(page);
@@ -42,14 +42,15 @@ export default class MessagePages extends SimpleBuilder {
         return message;
     }
 
-    send(context: TextBasedChannel | RepliableInteraction | Message | User): Promise<Message | InteractionResponse | null> {
+    send(context: TextBasedChannel | RepliableInteraction | Message | User, followUp = false): Promise<Message | InteractionResponse> {
         // TODO: revert to false if send fails
         this.sent = true;
-        function sendFn(messageOptions: FlexibleMessageOptions<MessageCreateOptions>): Promise<Message | InteractionResponse | null> {
+        function sendFn(messageOptions: FlexibleMessageOptions<MessageCreateOptions>): Promise<Message | InteractionResponse> {
             const converted = convertToMessageOptions(messageOptions);
             if ("reply" in context) {
                 if ("isRepliable" in context) {
                     // interaction
+                    if (followUp) return context.followUp(convertToInteractionReplyOptions(converted));
                     return context.reply(convertToInteractionReplyOptions(converted));
                 }
                 // message
@@ -97,7 +98,7 @@ const defaultPageOptions = {
     caching: true,
 } as const satisfies PartialSome<PageOptions, "messageOptions">;
 
-class Page {
+export class Page {
     readonly options: PageOptions;
 
     isResolved: boolean;
