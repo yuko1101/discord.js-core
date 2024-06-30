@@ -7,19 +7,14 @@ import { SimpleBuilder } from "../utils/Builder";
 
 export const actionDataSeparator = "#";
 
-/** @typedef */
 export interface ActionOptions {
     readonly core: Core;
 }
 
 /** Action is a message action which is a reaction or a button. */
 export default class Action extends SimpleBuilder {
-    /**  */
     readonly core: Core;
 
-    /**
-     * @param options
-     */
     constructor(options: ActionOptions) {
         super();
         this.core = options.core;
@@ -30,9 +25,7 @@ export interface InteractiveActionOptions extends ActionOptions {
     readonly customId: string;
 }
 
-/** @extends {Action} */
 export abstract class InteractiveAction extends Action {
-    /**  */
     readonly customId: string;
 
     constructor(options: InteractiveActionOptions) {
@@ -79,10 +72,7 @@ function compressStringWithGzip(str: string): string {
     return compressBase64(base64);
 }
 
-/**
- * @param compressed
- * @returns base64
- */
+/** @returns base64 encoded string */
 function decompressBase64(compressed: string): string {
     const halfWidth = compressed.split("").map(char => {
         const code = char.charCodeAt(0);

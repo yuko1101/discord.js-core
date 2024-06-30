@@ -10,9 +10,6 @@ const commandTypeMap = {
 
 export const devModeCommandPrefix = "dev-";
 
-/**
- * @param core
- */
 export async function applyCommands(core: Core<true>, guildId: string | null) {
     const commands = core.commands.filter(c => c.supportsSlashCommand || c.supportsContextMenu);
 
@@ -32,9 +29,6 @@ export async function applyCommands(core: Core<true>, guildId: string | null) {
     await apply(applicationCommandManager, [...oldCommands.values()], newCommands.flat());
 }
 
-/**
- * @param command
- */
 function getSupportedCommandTypes(command: Command): (keyof typeof commandTypeMap)[] {
     const supported: (keyof typeof commandTypeMap)[] = [];
     if (command.supportsSlashCommand) supported.push("SLASH_COMMAND");
@@ -45,22 +39,12 @@ function getSupportedCommandTypes(command: Command): (keyof typeof commandTypeMa
     return supported;
 }
 
-/**
- * @param applicationCommandManager
- * @param oldCommands
- * @param newCommands
- */
 async function apply(applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager, oldCommands: ApplicationCommand[], newCommands: ApplicationCommandData[]) {
     await applySlashCommands(applicationCommandManager, oldCommands.filter(c => c.type === commandTypeMap.SLASH_COMMAND), newCommands.filter(c => c.type === commandTypeMap.SLASH_COMMAND));
     await applyContextMenus("USER", applicationCommandManager, oldCommands.filter(c => c.type === commandTypeMap.USER_CONTEXT_MENU), newCommands.filter(c => c.type === commandTypeMap.USER_CONTEXT_MENU));
     await applyContextMenus("MESSAGE", applicationCommandManager, oldCommands.filter(c => c.type === commandTypeMap.MESSAGE_CONTEXT_MENU), newCommands.filter(c => c.type === commandTypeMap.MESSAGE_CONTEXT_MENU));
 }
 
-/**
- * @param applicationCommandManager
- * @param oldCommands
- * @param newCommands
- */
 async function applySlashCommands(applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager, oldCommands: ApplicationCommand[], newCommands: ApplicationCommandData[]) {
     const oldNames = oldCommands.map(c => c.name);
     const newNames = newCommands.map(c => c.name);
@@ -86,12 +70,6 @@ async function applySlashCommands(applicationCommandManager: ApplicationCommandM
     // console.log(oldCommands, newCommands);
 }
 
-/**
- * @param type
- * @param applicationCommandManager
- * @param oldCommands
- * @param newCommands
- */
 async function applyContextMenus(type: "USER" | "MESSAGE", applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager, oldCommands: ApplicationCommand[], newCommands: ApplicationCommandData[]) {
     const oldNames = oldCommands.map(c => c.name);
     const newNames = newCommands.map(c => c.name);
@@ -117,18 +95,10 @@ async function applyContextMenus(type: "USER" | "MESSAGE", applicationCommandMan
     // console.log(oldCommands, newCommands);
 }
 
-/**
- * @param newCommand
- * @param oldCommand
- */
 function isSameCommand(newCommand: ApplicationCommandData, oldCommand: ApplicationCommand): boolean {
     return oldCommand.equals(newCommand);
 }
 
-
-/**
- * @param coreCommandArgs
- */
 function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = ApplicationCommandOptionData>(args: CoreCommandArgs<boolean>): T[] {
     const options: T[] = [];
 
@@ -153,10 +123,6 @@ function convertToDiscordJsArgs<T extends ApplicationCommandOptionData = Applica
     return options;
 }
 
-
-/**
- * @param applicationCommandManager
- */
 function getApplicationCommandManagerLabel(applicationCommandManager: ApplicationCommandManager | GuildApplicationCommandManager): string {
     return "guild" in applicationCommandManager ? applicationCommandManager.guild.id : "Global";
 }

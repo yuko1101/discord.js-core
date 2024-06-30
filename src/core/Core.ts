@@ -7,7 +7,6 @@ import Command from "../command/Command";
 import { applyCommands } from "./commandManager";
 import handler from "./handler";
 
-/** @typedef */
 export interface CoreOptions extends ClientOptions {
     readonly devMode: boolean;
     readonly devGuildId?: Snowflake;
@@ -17,26 +16,16 @@ export interface CoreOptions extends ClientOptions {
 }
 
 export default class Core<IsReady extends boolean = boolean> {
-    /**  */
     readonly client: Client<IsReady>;
-    /**  */
     readonly options: CoreOptions;
 
-    /**  */
     // TODO: not to use any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readonly commands: Command<any, any, any>[];
-    /**  */
     readonly emojiActions: EmojiAction[];
-    /**  */
     readonly buttonActions: ButtonAction[];
-    /**  */
     readonly selectMenuActions: SelectMenuAction<ComponentType>[];
 
-    /**
-     * @param client
-     * @param options
-     */
     constructor(options: CoreOptions) {
         this.client = new Client(options);
         this.options = options;
@@ -66,14 +55,10 @@ export default class Core<IsReady extends boolean = boolean> {
         return this as Core<true>;
     }
 
-    /**  */
     isReady(): this is Core<true> {
         return this.client.isReady();
     }
 
-    /**
-     * @param callback
-    */
     async login(callback?: (client: Client<true>) => void) {
         this.client.login(this.options.token);
         const core = await this.waitReady();
@@ -81,19 +66,12 @@ export default class Core<IsReady extends boolean = boolean> {
         if (callback) callback(core.client);
     }
 
-    /**
-     * @param commands
-     */
     // TODO: not to use any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addCommands(...commands: Command<any, any, any>[]) {
         this.commands.push(...commands);
     }
 
-    /**
-     * @param dir
-     * @param recursive
-     */
     // TODO: not to use any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async addCommandsInDir(dir: string, recursive = true): Promise<Command<any, any, any>[]> {
@@ -118,7 +96,6 @@ export default class Core<IsReady extends boolean = boolean> {
         return commands;
     }
 
-    /** @param name */
     removeCommand(name: string) {
         const index = this.commands.findIndex(c => c.name === name);
         if (index === -1) return;

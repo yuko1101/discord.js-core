@@ -2,7 +2,6 @@ import { ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ComponentType, 
 import { InteractiveAction, InteractiveActionOptions } from "./Action";
 import { JsonElement } from "config_file.js";
 
-/** @typedef */
 export type SelectMenuInteractionType<T extends ComponentType> =
     T extends ComponentType.StringSelect
     ? StringSelectMenuInteraction
@@ -16,7 +15,6 @@ export type SelectMenuInteractionType<T extends ComponentType> =
     ? ChannelSelectMenuInteraction
     : never;
 
-/** @typedef */
 export type SelectMenuBuilderType<T extends ComponentType> =
     T extends ComponentType.StringSelect
     ? StringSelectMenuBuilder
@@ -30,27 +28,18 @@ export type SelectMenuBuilderType<T extends ComponentType> =
     ? ChannelSelectMenuBuilder
     : never;
 
-/** @typedef */
 export interface SelectMenuActionOptions<T extends ComponentType> extends InteractiveActionOptions {
     readonly type: T;
     readonly selectMenu: SelectMenuBuilderType<T>;
     readonly run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 }
 
-/** @extends {InteractiveAction} */
 export default class SelectMenuAction<T extends ComponentType> extends InteractiveAction {
-    /**  */
     readonly options: SelectMenuActionOptions<T>;
-    /**  */
     readonly type: T;
-    /**  */
     readonly selectMenu: SelectMenuBuilderType<T>;
-    /**  */
     run: (interaction: SelectMenuInteractionType<T>, data: JsonElement | undefined) => Promise<void>;
 
-    /**
-     * @param options
-     */
     constructor(options: SelectMenuActionOptions<T>) {
         super(options);
         this.options = options;
@@ -68,7 +57,6 @@ export default class SelectMenuAction<T extends ComponentType> extends Interacti
         return selectMenu as SelectMenuBuilderType<T>;
     }
 
-    /**  */
     register(): this {
         if (!this.core.selectMenuActions.includes(this)) {
             this.core.selectMenuActions.push(this);
@@ -76,7 +64,6 @@ export default class SelectMenuAction<T extends ComponentType> extends Interacti
         return this;
     }
 
-    /**  */
     unregister(): this {
         const index = this.core.selectMenuActions.indexOf(this);
         if (index !== -1) {

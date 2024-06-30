@@ -7,9 +7,6 @@ import { actionDataSeparator, decompressString, decompressStringWithGzip } from 
 import { JsonElement } from "config_file.js";
 
 export default {
-    /**
-     * @param core
-     */
     init: (core: Core<true>) => {
         // handle message command
         async function runMessageCommand(msg: Message) {
@@ -159,7 +156,6 @@ export default {
 export type SimpleObject<T> = { [key: string]: T | _SimpleObject<T> };
 type _SimpleObject<T> = SimpleObject<T>;
 
-/** @param str */
 function parseMessageCommand(str: string): [string, string[]] {
     str = str.trim();
     const commandName = str.trim().split(" ")[0];
@@ -198,10 +194,6 @@ function parseMessageCommand(str: string): [string, string[]] {
     return [commandName, args];
 }
 
-/**
- * @param messageArgs
- * @param commandOptions
- */
 function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: string[], coreCommandArgs: CoreCommandArgs<true>): SimpleObject<CommandOptionValue | undefined> {
     const coreArgsEntries = Object.entries(coreCommandArgs).filter(([, value]) => value.messageCommand);
 
@@ -227,9 +219,6 @@ function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: strin
     return argObj;
 }
 
-/**
- * @param options
- */
 function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, options: CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
     if (!options) return {};
     const obj: SimpleObject<CommandOptionValue> = {};
@@ -245,12 +234,8 @@ function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResol
 }
 
 // TODO: simplify the type by removing APIRole if possible.
-/** @typedef */
 export type CommandOptionValue = string | number | boolean | User | GuildBasedChannel | Role | APIRole | Attachment | null;
 
-/**
- * @param commandOption
- */
 function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, commandOption: CommandInteractionOption): CommandOptionValue {
     switch (commandOption.type) {
         case ApplicationCommandOptionType.String:
@@ -277,10 +262,6 @@ function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOpt
     }
 }
 
-/**
- * @param commandOption
- * @param str
- */
 function getCommandOptionValueFromString(core: Core<true>, guild: Guild | null, commandOption: CoreCommandOptionData, str: string): CommandOptionValue {
     switch (commandOption.type) {
         case ApplicationCommandOptionType.String:
@@ -325,10 +306,6 @@ function getCommandOptionValueFromString(core: Core<true>, guild: Guild | null, 
     }
 }
 
-/**
- * @param options
- * @param path
- */
 function getAllAutoCompleteOptions(options: SimpleObject<CommandInteractionOption>, path: string[] = []): { path: string[], option: CommandInteractionOption }[] {
     const result: { path: string[], option: CommandInteractionOption }[] = [];
     for (const key of Object.keys(options)) {
@@ -342,9 +319,6 @@ function getAllAutoCompleteOptions(options: SimpleObject<CommandInteractionOptio
     return result;
 }
 
-/**
- * @param options
- */
 function autoCompleteOptionsToObject(options: CommandInteractionOption[]): SimpleObject<CommandInteractionOption> {
     if (!options) return {};
     const obj: SimpleObject<CommandInteractionOption> = {};
@@ -360,10 +334,6 @@ function autoCompleteOptionsToObject(options: CommandInteractionOption[]): Simpl
 }
 
 
-/**
- * @param args
- * @param path
- */
 function getOptionWithPath<SupportsMessageCommand extends boolean>(args: CoreCommandArgs<SupportsMessageCommand>, path: string[]): CoreCommandOptionData<SupportsMessageCommand, ApplicationCommandValueContainer> | null {
     if (!args) return null;
     if (path.length === 0) return null;

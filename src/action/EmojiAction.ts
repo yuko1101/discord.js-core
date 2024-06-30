@@ -2,29 +2,19 @@ import { Snowflake, User, MessageReaction, Message, PartialMessageReaction, Part
 import { bindOptions } from "config_file.js";
 import Action, { ActionOptions } from "./Action";
 
-/** @typedef */
 export interface EmojiActionOptions extends ActionOptions {
     readonly emoji: string;
     readonly run: (messageReaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, isReactionAdded: boolean) => Promise<void>;
 }
 
-/** @extends {Action} */
 export default class EmojiAction extends Action {
-    /**  */
     readonly options: EmojiActionOptions;
-    /**  */
     readonly emoji: string;
-    /**  */
     run: (messageReaction: MessageReaction | PartialMessageReaction, user: User | PartialUser, isReactionAdded: boolean) => Promise<void>;
 
-    /**  */
     readonly appliedMessages: Snowflake[];
-    /**  */
     deleted: boolean;
 
-    /**
-     * @param options
-     */
     constructor(options: EmojiActionOptions) {
         super(options);
 
@@ -37,11 +27,6 @@ export default class EmojiAction extends Action {
         this.deleted = false;
     }
 
-
-    /**
-     * @param message
-     * @param options
-     */
     async apply(message: Message | PartialMessage, options: { timeout?: number, autoReact?: boolean } = {}) {
         const opt = bindOptions({ autoReact: true }, options);
 
@@ -74,10 +59,6 @@ export default class EmojiAction extends Action {
 
     }
 
-    /**
-     * @param message
-     * @param options
-     */
     async removeApply(message: Message | PartialMessage, options: { autoRemoveReaction?: boolean } = {}) {
         const opt = bindOptions({ autoRemoveReaction: true }, options);
 
