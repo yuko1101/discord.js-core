@@ -94,11 +94,11 @@ export default class InteractionCore<T extends SourceType = SourceType> {
     }
 
     hasInteraction(): this is InteractionCore<SourceType.INTERACTION> {
-        return !this.hasMessage();
+        return this.sourceType === SourceType.INTERACTION;
     }
 
     hasMessage(): this is InteractionCore<SourceType.MESSAGE> {
-        return this.source instanceof Message;
+        return this.sourceType === SourceType.MESSAGE;
     }
 
     run<U>(data: { withInteraction: (ic: InteractionCore<SourceType.INTERACTION>) => U, withMessage: (ic: InteractionCore<SourceType.MESSAGE>) => U }): U {
