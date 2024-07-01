@@ -84,7 +84,8 @@
                 "maxBOF": 0
             }
         ],
-        "no-shadow": [
+        "no-shadow": "off",
+        "@typescript-eslint/no-shadow": [
             "error",
             {
                 "allow": [
@@ -98,9 +99,7 @@
             "error"
         ],
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-            "error"
-        ],
+        "@typescript-eslint/no-unused-vars": "error",
         "no-var": "error",
         "object-curly-spacing": [
             "error",

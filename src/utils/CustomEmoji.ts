@@ -8,7 +8,7 @@ export default class CustomEmoji {
     emoji: GuildEmoji | null;
     fetched: boolean;
 
-    constructor(client: Core<true> | Client, emojiId: Snowflake) {
+    constructor(client: Core<true> | Client<true>, emojiId: Snowflake) {
         this.client = client instanceof Core ? client.client : client;
         this.emojiId = emojiId;
 

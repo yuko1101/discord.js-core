@@ -1,4 +1,4 @@
-import { APIRole, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, Attachment, CommandInteractionOption, CommandInteractionOptionResolver, Guild, GuildBasedChannel, Message, Role, User } from "discord.js";
+import { ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, CommandInteractionOption, CommandInteractionOptionResolver, Guild, Message } from "discord.js";
 import Core from "./Core";
 import { devModeCommandPrefix } from "./commandManager";
 import { ApplicationCommandAutoCompleterContainer, ApplicationCommandValueContainer, ConvertArgsType, CoreCommandArgs, CoreCommandOptionData, isApplicationCommandOptionsContainer } from "../command/Command";
@@ -219,7 +219,7 @@ function stringsToArgs(core: Core<true>, guild: Guild | null, messageArgs: strin
     return argObj;
 }
 
-function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, options: CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
+function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, options: readonly CommandInteractionOption[]): SimpleObject<CommandOptionValue> {
     if (!options) return {};
     const obj: SimpleObject<CommandOptionValue> = {};
     for (const option of options) {
@@ -234,7 +234,15 @@ function optionsToArgs(commandOptionResolver: Omit<CommandInteractionOptionResol
 }
 
 // TODO: simplify the type by removing APIRole if possible.
-export type CommandOptionValue = string | number | boolean | User | GuildBasedChannel | Role | APIRole | Attachment | null;
+export type CommandOptionValue =
+    | ReturnType<CommandInteractionOptionResolver["getString"]>
+    | ReturnType<CommandInteractionOptionResolver["getNumber"]>
+    | ReturnType<CommandInteractionOptionResolver["getInteger"]>
+    | ReturnType<CommandInteractionOptionResolver["getBoolean"]>
+    | ReturnType<CommandInteractionOptionResolver["getChannel"]>
+    | ReturnType<CommandInteractionOptionResolver["getUser"]>
+    | ReturnType<CommandInteractionOptionResolver["getRole"]>
+    | ReturnType<CommandInteractionOptionResolver["getAttachment"]>;
 
 function getCommandOptionValue(commandOptionResolver: Omit<CommandInteractionOptionResolver, "getMessage" | "getFocused">, commandOption: CommandInteractionOption): CommandOptionValue {
     switch (commandOption.type) {
@@ -319,7 +327,7 @@ function getAllAutoCompleteOptions(options: SimpleObject<CommandInteractionOptio
     return result;
 }
 
-function autoCompleteOptionsToObject(options: CommandInteractionOption[]): SimpleObject<CommandInteractionOption> {
+function autoCompleteOptionsToObject(options: readonly CommandInteractionOption[]): SimpleObject<CommandInteractionOption> {
     if (!options) return {};
     const obj: SimpleObject<CommandInteractionOption> = {};
     for (const option of options) {
