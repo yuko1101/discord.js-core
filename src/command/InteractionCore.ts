@@ -13,7 +13,7 @@
 
  */
 
-import { BaseMessageOptions, InteractionResponse, Message, RepliableInteraction, User } from "discord.js";
+import { BaseMessageOptions, If, InteractionResponse, Message, RepliableInteraction, User } from "discord.js";
 import MessagePages from "../message/MessagePages";
 import { bindOptions } from "config_file.js";
 import { removeAllReactions } from "../utils/permission_utils";
@@ -21,17 +21,19 @@ import { FlexibleMessageOptions, convertToMessageOptions } from "../message/Mess
 
 export type MessageSource = FlexibleMessageOptions<BaseMessageOptions> | MessagePages;
 
-export type InteractionCoreSource<IsInteraction extends boolean> = IsInteraction extends true ? RepliableInteraction : Message;
-export type IsEphemeralByIsInteraction<IsInteraction extends boolean> = IsInteraction extends true ? boolean : false;
+export type InteractionCoreSource<IsInteraction extends boolean> = If<IsInteraction, RepliableInteraction, Message>;
+export type IsEphemeralByIsInteraction<IsInteraction extends boolean> = If<IsInteraction, boolean, false>;
 
 /** For INTERACTION, the sent message can be ephemeral. */
-export type SentMessageType<IsInteraction extends boolean> = IsInteraction extends true ? InteractionResponse : Message
+export type SentMessageType<IsInteraction extends boolean> = If<IsInteraction, InteractionResponse, Message>;
+export type SentDataContainerType<IsInteraction extends boolean, Deferred extends boolean> = If<IsInteraction, InteractionResponseDataContainer<Deferred>, MessageDataContainer<Deferred>>;
 
 export default class InteractionCore<IsInteraction extends boolean = boolean> {
     readonly source: InteractionCoreSource<IsInteraction>;
     readonly user: User;
-    replyMessage: SentDataContainer<boolean> | null = null;
-    followUpMessage: SentDataContainer<boolean> | null = null;
+
+    replyMessage: SentDataContainerType<IsInteraction, boolean> | null = null;
+    followUpMessage: SentDataContainerType<IsInteraction, boolean> | null = null;
 
     constructor(source: InteractionCoreSource<IsInteraction>) {
         this.source = source;
@@ -100,8 +102,8 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
         }
     }
 
-    async deferReply(options: { fetchReply?: boolean, ephemeral?: boolean } = {}): Promise<SentDataContainer<true>> {
-        const opt = bindOptions({ fetchReply: false, ephemeral: false }, options);
+    async deferReply(options: { ephemeral?: boolean } = {}): Promise<SentDataContainerType<IsInteraction, true>> {
+        const opt = bindOptions({ ephemeral: false }, options);
         if (this.isReplied) throw new Error("You can't defer a `InteractionCore` after it has replied");
         // TODO: block ephemeral reply if this instance is InteractionCore<"MESSAGE">
 
@@ -111,20 +113,18 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
                 return null;
             },
             async withInteraction(ic) {
-                return await ic.source.deferReply({ fetchReply: opt.fetchReply, ephemeral: opt.ephemeral });
+                return await ic.source.deferReply({ ephemeral: opt.ephemeral });
             },
         });
 
-        const sdc = this.hasInteraction()
-            ? new InteractionResponseDataContainer({ msgSrc: null, interactionResponse: interactionResponse as InteractionResponse, ephemeral: opt.ephemeral })
-            : new MessageDataContainer({ msg: null, msgSrc: null });
-
-        this.replyMessage = sdc;
-
-        if (sdc.isDeferred()) {
-            return sdc;
+        if (this.hasInteraction()) {
+            const sdc = new InteractionResponseDataContainer({ msgSrc: null, interactionResponse: interactionResponse as InteractionResponse, ephemeral: opt.ephemeral });
+            (this as InteractionCore<true>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, true>;
         } else {
-            throw new Error("This error cannot be happened.");
+            const sdc = new MessageDataContainer({ msg: null, msgSrc: null });
+            (this as InteractionCore<false>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, true>;
         }
     }
 
@@ -158,15 +158,14 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
             }
         })() as SentMessageType<IsInteraction>;
 
-        const sdc = this.hasInteraction()
-            ? new InteractionResponseDataContainer<false>({ msgSrc, ephemeral: opt.ephemeral, interactionResponse: msg as InteractionResponse })
-            : new MessageDataContainer({ msg: msg as Message, msgSrc });
-        this.replyMessage = sdc;
-
-        if (sdc.isNotDeferred()) {
-            return sdc;
+        if (this.hasInteraction()) {
+            const sdc = new InteractionResponseDataContainer<false>({ msgSrc, ephemeral: opt.ephemeral, interactionResponse: msg as InteractionResponse });
+            (this as InteractionCore<true>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, false>;
         } else {
-            throw new Error("This error cannot be happened.");
+            const sdc = new MessageDataContainer({ msg: msg as Message, msgSrc });
+            (this as InteractionCore<false>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, false>;
         }
     }
 
@@ -189,9 +188,19 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
             if (oldMsg) await removeAllReactions(oldMsg);
         }
 
-        const msg = await this.run<Promise<SentMessageType<IsInteraction>>>({
-            async withMessage(ic) {
-                if (!ic.firstReplyMessage) throw new Error("This error cannot be happened.");
+        const msg = await (async () => {
+            if (this.hasMessage()) {
+                if (msgSrc instanceof MessagePages) {
+                    // TODO
+                    throw new Error("Not implemented yet.");
+                } else if ("actions" in msgSrc) {
+                    // TODO
+                    throw new Error("Not implemented yet.");
+                } else {
+                    if (!msgToEdit.isMessage() || !msgToEdit.isNotDeferred()) throw new Error("This error cannot be happened.");
+                    return await msgToEdit.msg.edit(msgSrc);
+                }
+            } else if (this.hasInteraction()) {
                 if (msgSrc instanceof MessagePages) {
                     // TODO
                     throw new Error("Not implemented yet.");
@@ -202,20 +211,10 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
                     // TODO
                     throw new Error("Not implemented yet.");
                 }
-            },
-            async withInteraction(ic) {
-                if (msgSrc instanceof MessagePages) {
-                    // TODO
-                    throw new Error("Not implemented yet.");
-                } else if ("actions" in msgSrc) {
-                    // TODO
-                    throw new Error("Not implemented yet.");
-                } else {
-                    // TODO
-                    throw new Error("Not implemented yet.");
-                }
-            },
-        });
+            } else {
+                throw new Error("This error cannot be happened.");
+            }
+        })() as SentMessageType<IsInteraction>;
 
         msgToEdit.msgSrc = msgSrc;
         msgToEdit.deferred = false;
@@ -294,16 +293,14 @@ export default class InteractionCore<IsInteraction extends boolean = boolean> {
         // TODO: check if the ephemeral is correct
         const ephemeral = (this.isDeferred && this.replyMessage.isEphemeral()) || opt.ephemeral;
 
-        const mdc = this.hasInteraction()
-            ? new InteractionResponseDataContainer<false>({ msgSrc, ephemeral, interactionResponse: msg as InteractionResponse })
-            : new MessageDataContainer({ msg: msg as Message, msgSrc });
-        // TODO: better way to indicate that it is guaranteed that the ephemeral is true only for InteractionCore<"INTERACTION"> (`T extends "MESSAGE" ? false :` should be not necessary here)
-        this.followUpMessage = mdc;
-
-        if (mdc.isNotDeferred()) {
-            return mdc;
+        if (this.hasInteraction()) {
+            const sdc = new InteractionResponseDataContainer<false>({ msgSrc, ephemeral, interactionResponse: msg as InteractionResponse });
+            (this as InteractionCore<true>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, false>;
         } else {
-            throw new Error("This error cannot be happened.");
+            const sdc = new MessageDataContainer({ msg: msg as Message, msgSrc });
+            (this as InteractionCore<false>).replyMessage = sdc;
+            return sdc as SentDataContainerType<IsInteraction, false>;
         }
     }
 
@@ -416,7 +413,7 @@ class InteractionResponseDataContainer<Deferred extends boolean = boolean> imple
 
         const fetched = await this.response.fetch();
 
-        (this as InteractionResponseDataContainer<false>).msg = fetched
+        (this as InteractionResponseDataContainer<false>).msg = fetched;
         return fetched;
     }
 }
